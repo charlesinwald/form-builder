@@ -1,32 +1,45 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface TrendData {
-  date: string
-  responses: number
+  date: string;
+  responses: number;
 }
 
 interface ResponseTrendsProps {
-  trends: TrendData[]
+  trends: TrendData[];
 }
 
 export function ResponseTrends({ trends }: ResponseTrendsProps) {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 
   const chartData = trends.map((trend) => ({
     ...trend,
     formattedDate: formatDate(trend.date),
-  }))
+  }));
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-serif">Response Trends</CardTitle>
+        <CardTitle className="text-lg font-inter">Response Trends</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-80">
@@ -40,7 +53,12 @@ export function ResponseTrends({ trends }: ResponseTrendsProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <YAxis className="text-muted-foreground" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis
+                className="text-muted-foreground"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(var(--card))",
@@ -55,12 +73,16 @@ export function ResponseTrends({ trends }: ResponseTrendsProps) {
                 stroke="hsl(var(--chart-1))"
                 strokeWidth={3}
                 dot={{ fill: "hsl(var(--chart-1))", strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: "hsl(var(--chart-1))", strokeWidth: 2 }}
+                activeDot={{
+                  r: 6,
+                  stroke: "hsl(var(--chart-1))",
+                  strokeWidth: 2,
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

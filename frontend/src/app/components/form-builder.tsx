@@ -1,36 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card } from "@/app/components/ui/card"
-import { Input } from "@/app/components/ui/input"
-import { Textarea } from "@/app/components/ui/textarea"
-import { FieldToolbox } from "@/app/components/field-toolbox"
-import { FormField } from "@/app/components/form-field"
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
-import { Plus } from "lucide-react"
+import { useState } from "react";
+import { Card } from "@/app/components/ui/card";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
+import { FieldToolbox } from "@/app/components/field-toolbox";
+import { FormField } from "@/app/components/form-field";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Plus } from "lucide-react";
 
 interface FormData {
-  title: string
-  description: string
-  fields: FormFieldData[]
+  title: string;
+  description: string;
+  fields: FormFieldData[];
 }
 
 interface FormFieldData {
-  id: string
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating"
-  label: string
-  placeholder?: string
-  required: boolean
-  options?: string[]
+  id: string;
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  options?: string[];
 }
 
 interface FormBuilderProps {
-  formData: FormData
-  onFormDataChange: (data: FormData) => void
+  formData: FormData;
+  onFormDataChange: (data: FormData) => void;
 }
 
 export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
-  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
 
   const addField = (type: FormFieldData["type"]) => {
     const newField: FormFieldData = {
@@ -38,42 +38,46 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
       type,
       label: `New ${type} field`,
       required: false,
-      ...(type === "select" || type === "radio" || type === "checkbox" ? { options: ["Option 1", "Option 2"] } : {}),
-    }
+      ...(type === "select" || type === "radio" || type === "checkbox"
+        ? { options: ["Option 1", "Option 2"] }
+        : {}),
+    };
 
     onFormDataChange({
       ...formData,
       fields: [...formData.fields, newField],
-    })
-  }
+    });
+  };
 
   const updateField = (fieldId: string, updates: Partial<FormFieldData>) => {
     onFormDataChange({
       ...formData,
-      fields: formData.fields.map((field) => (field.id === fieldId ? { ...field, ...updates } : field)),
-    })
-  }
+      fields: formData.fields.map((field) =>
+        field.id === fieldId ? { ...field, ...updates } : field
+      ),
+    });
+  };
 
   const deleteField = (fieldId: string) => {
     onFormDataChange({
       ...formData,
       fields: formData.fields.filter((field) => field.id !== fieldId),
-    })
-    setSelectedFieldId(null)
-  }
+    });
+    setSelectedFieldId(null);
+  };
 
   const handleDragEnd = (result: any) => {
-    if (!result.destination) return
+    if (!result.destination) return;
 
-    const items = Array.from(formData.fields)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
+    const items = Array.from(formData.fields);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
 
     onFormDataChange({
       ...formData,
       fields: items,
-    })
-  }
+    });
+  };
 
   return (
     <div className="flex h-full">
@@ -90,13 +94,17 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
             <div className="space-y-4">
               <Input
                 value={formData.title}
-                onChange={(e) => onFormDataChange({ ...formData, title: e.target.value })}
-                className="text-2xl font-serif font-bold border-none p-0 focus-visible:ring-0"
+                onChange={(e) =>
+                  onFormDataChange({ ...formData, title: e.target.value })
+                }
+                className="text-2xl font-inter font-bold border-none p-0 focus-visible:ring-0"
                 placeholder="Form Title"
               />
               <Textarea
                 value={formData.description}
-                onChange={(e) => onFormDataChange({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  onFormDataChange({ ...formData, description: e.target.value })
+                }
                 placeholder="Form description (optional)"
                 className="border-none p-0 focus-visible:ring-0 resize-none"
                 rows={2}
@@ -108,21 +116,33 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="form-fields">
               {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-4"
+                >
                   {formData.fields.map((field, index) => (
-                    <Draggable key={field.id} draggableId={field.id} index={index}>
+                    <Draggable
+                      key={field.id}
+                      draggableId={field.id}
+                      index={index}
+                    >
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`${snapshot.isDragging ? "opacity-50" : ""}`}
+                          className={`${
+                            snapshot.isDragging ? "opacity-50" : ""
+                          }`}
                         >
                           <FormField
                             field={field}
                             isSelected={selectedFieldId === field.id}
                             onSelect={() => setSelectedFieldId(field.id)}
-                            onUpdate={(updates) => updateField(field.id, updates)}
+                            onUpdate={(updates) =>
+                              updateField(field.id, updates)
+                            }
                             onDelete={() => deleteField(field.id)}
                           />
                         </div>
@@ -143,8 +163,12 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
                   <Plus className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-foreground">Start building your form</h3>
-                  <p className="text-sm text-muted-foreground">Drag field types from the left panel to get started</p>
+                  <h3 className="font-medium text-foreground">
+                    Start building your form
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Drag field types from the left panel to get started
+                  </p>
                 </div>
               </div>
             </Card>
@@ -152,5 +176,5 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

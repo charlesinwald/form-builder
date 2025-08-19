@@ -1,45 +1,54 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui/dialog"
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Textarea } from "@/app/components/ui/textarea"
-import { Label } from "@/app/components/ui/label"
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/app/components/ui/dialog";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Label } from "@/app/components/ui/label";
 
 interface CreateFormModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onCreateForm: (formData: { title: string; description: string }) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateForm: (formData: { title: string; description: string }) => void;
 }
 
-export function CreateFormModal({ isOpen, onClose, onCreateForm }: CreateFormModalProps) {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
+export function CreateFormModal({
+  isOpen,
+  onClose,
+  onCreateForm,
+}: CreateFormModalProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (title.trim()) {
-      onCreateForm({ title: title.trim(), description: description.trim() })
-      setTitle("")
-      setDescription("")
-      onClose()
+      onCreateForm({ title: title.trim(), description: description.trim() });
+      setTitle("");
+      setDescription("");
+      onClose();
     }
-  }
+  };
 
   const handleClose = () => {
-    setTitle("")
-    setDescription("")
-    onClose()
-  }
+    setTitle("");
+    setDescription("");
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-serif">Create New Form</DialogTitle>
+          <DialogTitle className="font-inter">Create New Form</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,7 +75,12 @@ export function CreateFormModal({ isOpen, onClose, onCreateForm }: CreateFormMod
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} className="bg-transparent">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="bg-transparent"
+            >
               Cancel
             </Button>
             <Button type="submit">Create Form</Button>
@@ -74,5 +88,5 @@ export function CreateFormModal({ isOpen, onClose, onCreateForm }: CreateFormMod
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

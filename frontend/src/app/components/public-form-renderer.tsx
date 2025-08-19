@@ -1,85 +1,98 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card } from "@/app/components/ui/card"
-import { Input } from "@/app/components/ui/input"
-import { Textarea } from "@/app/components/ui/textarea"
-import { Button } from "@/app/components/ui/button"
-import { Label } from "@/app/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import { Loader2, Send, Wifi } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react";
+import { Card } from "@/app/components/ui/card";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Button } from "@/app/components/ui/button";
+import { Label } from "@/app/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { Loader2, Send, Wifi } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface FormData {
-  id: string
-  title: string
-  description: string
-  fields: FormFieldData[]
+  id: string;
+  title: string;
+  description: string;
+  fields: FormFieldData[];
 }
 
 interface FormFieldData {
-  id: string
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating"
-  label: string
-  placeholder?: string
-  required: boolean
-  options?: string[]
+  id: string;
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  options?: string[];
 }
 
 interface PublicFormRendererProps {
-  formData: FormData
-  onSubmissionSuccess: () => void
+  formData: FormData;
+  onSubmissionSuccess: () => void;
 }
 
-export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicFormRendererProps) {
-  const [responses, setResponses] = useState<Record<string, any>>({})
-  const [submitting, setSubmitting] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const { toast } = useToast()
+export function PublicFormRenderer({
+  formData,
+  onSubmissionSuccess,
+}: PublicFormRendererProps) {
+  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
 
   const updateResponse = (fieldId: string, value: any) => {
-    setResponses((prev) => ({ ...prev, [fieldId]: value }))
+    setResponses((prev) => ({ ...prev, [fieldId]: value }));
     // Clear error when user starts typing
     if (errors[fieldId]) {
-      setErrors((prev) => ({ ...prev, [fieldId]: "" }))
+      setErrors((prev) => ({ ...prev, [fieldId]: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     formData.fields.forEach((field) => {
       if (field.required) {
-        const value = responses[field.id]
-        if (!value || (Array.isArray(value) && value.length === 0) || value === "") {
-          newErrors[field.id] = `${field.label} is required`
+        const value = responses[field.id];
+        if (
+          !value ||
+          (Array.isArray(value) && value.length === 0) ||
+          value === ""
+        ) {
+          newErrors[field.id] = `${field.label} is required`;
         }
       }
-    })
+    });
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
       toast({
         title: "Please fix the errors",
         description: "Some required fields are missing or invalid.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     try {
       // Simulate API submission with real-time update
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // In a real app, you would send the data to your backend:
       // const response = await fetch('/api/forms/submit', {
@@ -96,7 +109,7 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
         formId: formData.id,
         responses,
         submittedAt: new Date().toISOString(),
-      })
+      });
 
       toast({
         title: "Form submitted successfully!",
@@ -107,22 +120,22 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
             Live
           </div>
         ),
-      })
+      });
 
-      onSubmissionSuccess()
+      onSubmissionSuccess();
     } catch (error) {
       toast({
         title: "Submission failed",
         description: "Please try again later.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const renderField = (field: FormFieldData) => {
-    const hasError = !!errors[field.id]
+    const hasError = !!errors[field.id];
 
     switch (field.type) {
       case "text":
@@ -132,11 +145,17 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
               placeholder={field.placeholder}
               value={responses[field.id] || ""}
               onChange={(e) => updateResponse(field.id, e.target.value)}
-              className={hasError ? "border-destructive focus-visible:ring-destructive" : ""}
+              className={
+                hasError
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : ""
+              }
             />
-            {hasError && <p className="text-sm text-destructive">{errors[field.id]}</p>}
+            {hasError && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
           </div>
-        )
+        );
 
       case "textarea":
         return (
@@ -146,17 +165,30 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
               value={responses[field.id] || ""}
               onChange={(e) => updateResponse(field.id, e.target.value)}
               rows={4}
-              className={hasError ? "border-destructive focus-visible:ring-destructive" : ""}
+              className={
+                hasError
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : ""
+              }
             />
-            {hasError && <p className="text-sm text-destructive">{errors[field.id]}</p>}
+            {hasError && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
           </div>
-        )
+        );
 
       case "select":
         return (
           <div className="space-y-2">
-            <Select value={responses[field.id] || ""} onValueChange={(value) => updateResponse(field.id, value)}>
-              <SelectTrigger className={hasError ? "border-destructive focus:ring-destructive" : ""}>
+            <Select
+              value={responses[field.id] || ""}
+              onValueChange={(value) => updateResponse(field.id, value)}
+            >
+              <SelectTrigger
+                className={
+                  hasError ? "border-destructive focus:ring-destructive" : ""
+                }
+              >
                 <SelectValue placeholder="Select an option..." />
               </SelectTrigger>
               <SelectContent>
@@ -167,9 +199,11 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
                 ))}
               </SelectContent>
             </Select>
-            {hasError && <p className="text-sm text-destructive">{errors[field.id]}</p>}
+            {hasError && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
           </div>
-        )
+        );
 
       case "radio":
         return (
@@ -186,15 +220,20 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
                     onChange={(e) => updateResponse(field.id, e.target.value)}
                     className="w-4 h-4 text-primary border-border focus:ring-primary focus:ring-2"
                   />
-                  <Label htmlFor={`${field.id}-${index}`} className="text-sm font-normal cursor-pointer">
+                  <Label
+                    htmlFor={`${field.id}-${index}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
                     {option}
                   </Label>
                 </div>
               ))}
             </div>
-            {hasError && <p className="text-sm text-destructive">{errors[field.id]}</p>}
+            {hasError && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
           </div>
-        )
+        );
 
       case "checkbox":
         return (
@@ -208,23 +247,28 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
                     value={option}
                     checked={(responses[field.id] || []).includes(option)}
                     onChange={(e) => {
-                      const currentValues = responses[field.id] || []
+                      const currentValues = responses[field.id] || [];
                       const newValues = e.target.checked
                         ? [...currentValues, option]
-                        : currentValues.filter((v: string) => v !== option)
-                      updateResponse(field.id, newValues)
+                        : currentValues.filter((v: string) => v !== option);
+                      updateResponse(field.id, newValues);
                     }}
                     className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2"
                   />
-                  <Label htmlFor={`${field.id}-${index}`} className="text-sm font-normal cursor-pointer">
+                  <Label
+                    htmlFor={`${field.id}-${index}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
                     {option}
                   </Label>
                 </div>
               ))}
             </div>
-            {hasError && <p className="text-sm text-destructive">{errors[field.id]}</p>}
+            {hasError && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
           </div>
-        )
+        );
 
       case "rating":
         return (
@@ -236,24 +280,30 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
                   type="button"
                   onClick={() => updateResponse(field.id, star)}
                   className={`text-3xl transition-colors hover:scale-110 transform ${
-                    (responses[field.id] || 0) >= star ? "text-secondary" : "text-muted-foreground hover:text-secondary"
+                    (responses[field.id] || 0) >= star
+                      ? "text-secondary"
+                      : "text-muted-foreground hover:text-secondary"
                   }`}
                 >
                   ⭐
                 </button>
               ))}
               {responses[field.id] && (
-                <span className="ml-3 text-sm text-muted-foreground self-center">{responses[field.id]} out of 5</span>
+                <span className="ml-3 text-sm text-muted-foreground self-center">
+                  {responses[field.id]} out of 5
+                </span>
               )}
             </div>
-            {hasError && <p className="text-sm text-destructive">{errors[field.id]}</p>}
+            {hasError && (
+              <p className="text-sm text-destructive">{errors[field.id]}</p>
+            )}
           </div>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -261,8 +311,14 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Form Header */}
           <div className="space-y-3 text-center">
-            <h1 className="text-3xl font-serif font-bold text-foreground">{formData.title}</h1>
-            {formData.description && <p className="text-muted-foreground text-lg">{formData.description}</p>}
+            <h1 className="text-3xl font-inter font-bold text-foreground">
+              {formData.title}
+            </h1>
+            {formData.description && (
+              <p className="text-muted-foreground text-lg">
+                {formData.description}
+              </p>
+            )}
           </div>
 
           {/* Form Fields */}
@@ -271,7 +327,9 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
               <div key={field.id} className="space-y-3">
                 <Label className="text-base font-medium text-foreground">
                   {field.label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
+                  {field.required && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
                 </Label>
                 {renderField(field)}
               </div>
@@ -280,7 +338,11 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
 
           {/* Submit Button */}
           <div className="pt-4">
-            <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-12 text-base"
+            >
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -297,5 +359,5 @@ export function PublicFormRenderer({ formData, onSubmissionSuccess }: PublicForm
         </form>
       </Card>
     </div>
-  )
+  );
 }

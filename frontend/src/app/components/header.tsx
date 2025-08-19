@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Badge } from "@/app/components/ui/badge"
-import { Save, Share, Eye } from "lucide-react"
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Badge } from "@/app/components/ui/badge";
+import { Save, Share, Eye } from "lucide-react";
 
 interface HeaderProps {
-  formTitle: string
-  onTitleChange: (title: string) => void
-  activeView: "dashboard" | "builder" | "preview" | "analytics"
-  onShare: () => void
-  formStatus?: "draft" | "published" | "archived"
-  showFormControls?: boolean
+  formTitle: string;
+  onTitleChange: (title: string) => void;
+  activeView: "dashboard" | "builder" | "preview" | "analytics";
+  onShare: () => void;
+  formStatus?: "draft" | "published" | "archived";
+  showFormControls?: boolean;
 }
 
 export function Header({
@@ -25,22 +25,24 @@ export function Header({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "published":
-        return "bg-secondary text-secondary-foreground"
+        return "bg-secondary text-secondary-foreground";
       case "archived":
-        return "bg-muted text-muted-foreground"
+        return "bg-muted text-muted-foreground";
       default:
-        return "bg-chart-2 text-white"
+        return "bg-chart-2 text-white";
     }
-  }
+  };
 
   if (!showFormControls) {
     return (
       <header className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-serif font-bold text-foreground">Forms Dashboard</h2>
+          <h2 className="text-xl font-inter font-bold text-foreground">
+            Forms Dashboard
+          </h2>
         </div>
       </header>
-    )
+    );
   }
 
   return (
@@ -54,7 +56,9 @@ export function Header({
         />
         <div className="flex items-center gap-2">
           <Badge className={getStatusColor(formStatus)}>{formStatus}</Badge>
-          <span className="text-sm text-muted-foreground capitalize">{activeView}</span>
+          <span className="text-sm text-muted-foreground capitalize">
+            {activeView}
+          </span>
         </div>
       </div>
 
@@ -73,5 +77,5 @@ export function Header({
         </Button>
       </div>
     </header>
-  )
+  );
 }
