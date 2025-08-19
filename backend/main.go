@@ -49,10 +49,28 @@ func main() {
 		Prefork: false,
 	})
 
+	// CORS Configuration
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		allowedOrigins = "https://www.formcraft.digital,https://formcraft.digital,http://localhost:3000,http://localhost:3001"
+	}
+
+	log.Printf("CORS allowed origins: %s", allowedOrigins)
+
 	// Middleware
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Requested-With",
+		AllowCredentials: true,
+		ExposeHeaders:    "Content-Length,Content-Range",
+		Next: func(c *fiber.Ctx) bool {
+			// Log CORS requests for debugging
+			if c.Method() == "OPTIONS" {
+				log.Printf("CORS preflight request from origin: %s", c.Get("Origin"))
+			}
+			return false
+		},
 	}))
 	app.Use(logger.New())
 
@@ -102,7 +120,16 @@ func setupRoutes(app *fiber.App) {
 			"status":  "ok",
 			"message": "Form Builder API is running",
 			"wsClients": wsHub.GetConnectedClientsCount(),
+			"cors": fiber.Map{
+				"origin": c.Get("Origin"),
+				"allowedOrigins": allowedOrigins,
+			},
 		})
+	})
+
+	// Handle OPTIONS requests for CORS preflight
+	api.Options("/*", func(c *fiber.Ctx) error {
+		return c.SendStatus(200)
 	})
 
 	// WebSocket endpoint
