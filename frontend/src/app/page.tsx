@@ -12,10 +12,26 @@ import { Form } from "@/lib/api";
 import { useForms } from "@/hooks/use-forms";
 import { useToast } from "@/hooks/use-toast";
 
+interface FormFieldData {
+  id: string;
+  type:
+    | "text"
+    | "textarea"
+    | "select"
+    | "radio"
+    | "checkbox"
+    | "rating"
+    | "date";
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  options?: string[];
+}
+
 interface FormData {
   title: string;
   description: string;
-  fields: unknown[];
+  fields: FormFieldData[];
 }
 
 export default function HomePage() {
@@ -30,7 +46,7 @@ export default function HomePage() {
   });
   const [isPublishing, setIsPublishing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  
+
   const { saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,15 +54,15 @@ export default function HomePage() {
   // Auto-save functionality
   const performAutoSave = useCallback(async () => {
     if (!currentForm) return;
-    
+
     try {
       await saveDraft(currentForm.id, {
         title: formData.title,
         description: formData.description,
-        fields: formData.fields
+        fields: formData.fields,
       });
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      console.error("Auto-save failed:", error);
     }
   }, [currentForm, formData, saveDraft]);
 
@@ -85,7 +101,7 @@ export default function HomePage() {
         title: "Untitled Form",
         description: "",
         fields: [],
-        status: "draft"
+        status: "draft",
       });
       setCurrentForm(newForm);
       setFormData({
@@ -100,7 +116,7 @@ export default function HomePage() {
       });
     } catch {
       toast({
-        variant: "destructive", 
+        variant: "destructive",
         title: "Error",
         description: "Failed to create new form",
       });
@@ -109,7 +125,7 @@ export default function HomePage() {
 
   const handlePublishForm = async () => {
     if (!currentForm || isPublishing) return;
-    
+
     setIsPublishing(true);
     try {
       // Clear any pending auto-save to prevent conflicts
@@ -121,16 +137,16 @@ export default function HomePage() {
       await saveDraft(currentForm.id, {
         title: formData.title,
         description: formData.description,
-        fields: formData.fields
+        fields: formData.fields,
       });
 
       // Then publish using the dedicated publishForm method for consistency
       const publishedForm = await publishForm(currentForm.id);
       setCurrentForm(publishedForm);
-      
+
       // Refresh forms list to ensure dashboard shows correct state
       await refetch();
-      
+
       toast({
         title: "Success",
         description: "Form published successfully",
@@ -153,9 +169,9 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar 
-        activeView={activeView} 
-        onViewChange={setActiveView} 
+      <Sidebar
+        activeView={activeView}
+        onViewChange={setActiveView}
         onNewForm={handleNewForm}
       />
 
@@ -163,18 +179,17 @@ export default function HomePage() {
         <Header
           formTitle={formData.title}
           onTitleChange={(title) => setFormData((prev) => ({ ...prev, title }))}
-          activeView={activeView}
           onPreview={() => setActiveView("preview")}
           onPublish={handlePublishForm}
           onShare={() => setShowShareModal(true)}
-          isFormDraft={currentForm?.status === 'draft'}
-          isFormPublished={currentForm?.status === 'published'}
+          isFormDraft={currentForm?.status === "draft"}
+          isFormPublished={currentForm?.status === "published"}
           isPublishing={isPublishing}
         />
 
         <main className="flex-1 overflow-hidden">
           {activeView === "dashboard" && (
-            <FormsDashboard 
+            <FormsDashboard
               onFormSelect={handleFormSelect}
               onNewForm={handleNewForm}
               onViewResponses={handleViewResponses}
@@ -195,7 +210,7 @@ export default function HomePage() {
             </div>
           )}
           {activeView === "responses" && currentForm && (
-            <ResponsesView 
+            <ResponsesView
               form={currentForm}
               onBack={() => setActiveView("dashboard")}
             />

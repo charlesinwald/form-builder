@@ -1,9 +1,26 @@
-"use client"
-import { Button } from "@/app/components/ui/button"
-import { Type, AlignLeft, List, CheckSquare, Circle, Star } from "lucide-react"
+"use client";
+import { Button } from "@/app/components/ui/button";
+import {
+  Type,
+  AlignLeft,
+  List,
+  CheckSquare,
+  Circle,
+  Star,
+  Calendar,
+} from "lucide-react";
 
 interface FieldToolboxProps {
-  onAddField: (type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating") => void
+  onAddField: (
+    type:
+      | "text"
+      | "textarea"
+      | "select"
+      | "radio"
+      | "checkbox"
+      | "rating"
+      | "date"
+  ) => void;
 }
 
 export function FieldToolbox({ onAddField }: FieldToolboxProps) {
@@ -14,7 +31,8 @@ export function FieldToolbox({ onAddField }: FieldToolboxProps) {
     { type: "radio" as const, label: "Multiple Choice", icon: Circle },
     { type: "checkbox" as const, label: "Checkboxes", icon: CheckSquare },
     { type: "rating" as const, label: "Rating", icon: Star },
-  ]
+    { type: "date" as const, label: "Date Picker", icon: Calendar },
+  ];
 
   return (
     <div className="space-y-4">
@@ -22,7 +40,7 @@ export function FieldToolbox({ onAddField }: FieldToolboxProps) {
         <h3 className="font-medium text-foreground mb-3">Field Types</h3>
         <div className="space-y-2">
           {fieldTypes.map((fieldType) => {
-            const Icon = fieldType.icon
+            const Icon = fieldType.icon;
             return (
               <Button
                 key={fieldType.type}
@@ -33,10 +51,10 @@ export function FieldToolbox({ onAddField }: FieldToolboxProps) {
                 <Icon className="h-4 w-4" />
                 <span className="text-sm">{fieldType.label}</span>
               </Button>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }

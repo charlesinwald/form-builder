@@ -28,7 +28,14 @@ interface FormData {
 
 interface FormFieldData {
   id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
+  type:
+    | "text"
+    | "textarea"
+    | "select"
+    | "radio"
+    | "checkbox"
+    | "rating"
+    | "date";
   label: string;
   placeholder?: string;
   required: boolean;

@@ -75,7 +75,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
               </div>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="text-center">
+              <div className="text-center cursor-pointer" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onViewResponses?.(); }}>
                 <div className="font-medium text-foreground">{form.responseCount || 0}</div>
                 <div>Responses</div>
               </div>
@@ -88,14 +88,14 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                 <div>Updated</div>
               </div>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                   <Button variant="ghost" size="sm">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation()
                       onSelect()
                     }}
@@ -104,7 +104,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation()
                       onDuplicate()
                     }}
@@ -114,7 +114,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                   </DropdownMenuItem>
                   {onViewResponses && (
                     <DropdownMenuItem
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         onViewResponses()
                       }}
@@ -127,7 +127,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                   {form.status !== "published" && (
                     <DropdownMenuItem
                       disabled={isStatusChanging}
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         if (!isStatusChanging) onStatusChange("published")
                       }}
@@ -139,7 +139,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                   {form.status !== "archived" && (
                     <DropdownMenuItem
                       disabled={isStatusChanging}
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         if (!isStatusChanging) onStatusChange("archived")
                       }}
@@ -150,7 +150,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                   )}
                   {form.status === "published" && onShare && (
                     <DropdownMenuItem
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         onShare()
                       }}
@@ -161,7 +161,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation()
                       onDelete()
                     }}
@@ -193,14 +193,14 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
             <p className="text-sm text-muted-foreground line-clamp-2">{form.description}</p>
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuTrigger asChild onClick={(e: React.MouseEvent) => e.stopPropagation()}>
               <Button variant="ghost" size="sm">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation()
                   onSelect()
                 }}
@@ -209,7 +209,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation()
                   onDuplicate()
                 }}
@@ -219,7 +219,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
               </DropdownMenuItem>
               {onViewResponses && (
                 <DropdownMenuItem
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation()
                     onViewResponses()
                   }}
@@ -232,7 +232,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
               {form.status !== "published" && (
                 <DropdownMenuItem
                   disabled={isStatusChanging}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation()
                     if (!isStatusChanging) onStatusChange("published")
                   }}
@@ -244,7 +244,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
               {form.status !== "archived" && (
                 <DropdownMenuItem
                   disabled={isStatusChanging}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation()
                     if (!isStatusChanging) onStatusChange("archived")
                   }}
@@ -255,7 +255,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
               )}
               {form.status === "published" && onShare && (
                 <DropdownMenuItem
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation()
                     onShare()
                   }}
@@ -266,7 +266,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation()
                   onDelete()
                 }}
@@ -282,7 +282,7 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
       <CardContent className="pt-0">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 cursor-pointer" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onViewResponses?.(); }}>
               <BarChart3 className="h-4 w-4" />
               <span>{form.responseCount || 0} responses</span>
             </div>

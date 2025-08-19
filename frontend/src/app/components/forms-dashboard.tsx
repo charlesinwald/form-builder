@@ -1,37 +1,55 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import { FormCard } from "@/app/components/form-card"
-import { CreateFormModal } from "@/app/components/create-form-modal"
-import { DeleteFormModal } from "@/app/components/delete-form-modal"
-import { ShareFormModal } from "@/app/components/share-form-modal"
-import { Plus, Search, Filter, Grid, List } from "lucide-react"
-import { useForms } from "@/hooks/use-forms"
-import { Form } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { FormCard } from "@/app/components/form-card";
+import { CreateFormModal } from "@/app/components/create-form-modal";
+import { DeleteFormModal } from "@/app/components/delete-form-modal";
+import { ShareFormModal } from "@/app/components/share-form-modal";
+import { Plus, Search, Filter, Grid, List } from "lucide-react";
+import { useForms } from "@/hooks/use-forms";
+import { Form } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface FormsDashboardProps {
-  onFormSelect: (form: Form) => void
-  onViewResponses: (form: Form) => void
+  onFormSelect: (form: Form) => void;
+  onViewResponses: (form: Form) => void;
+  onNewForm: () => void;
 }
 
-export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboardProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published" | "archived">("all")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [formToDelete, setFormToDelete] = useState<Form | null>(null)
-  const [formToShare, setFormToShare] = useState<Form | null>(null)
-  const [statusChanging, setStatusChanging] = useState<Set<string>>(new Set())
-  const { toast } = useToast()
+export function FormsDashboard({
+  onFormSelect,
+  onViewResponses,
+  onNewForm,
+}: FormsDashboardProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "draft" | "published" | "archived"
+  >("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [formToDelete, setFormToDelete] = useState<Form | null>(null);
+  const [formToShare, setFormToShare] = useState<Form | null>(null);
+  const [statusChanging, setStatusChanging] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
-  const { 
-    forms, 
-    loading, 
+  const {
+    forms,
+    loading,
     error,
     createForm,
     deleteForm,
@@ -39,8 +57,8 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
     publishForm,
     unpublishForm,
     archiveForm,
-    refetch
-  } = useForms()
+    refetch,
+  } = useForms();
 
   useEffect(() => {
     if (error) {
@@ -48,17 +66,18 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
         variant: "destructive",
         title: "Error",
         description: error,
-      })
+      });
     }
-  }, [error, toast])
+  }, [error, toast]);
 
   const filteredForms = forms.filter((form) => {
     const matchesSearch =
       form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      form.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || form.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+      form.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || form.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const handleCreateForm = async (formData: Partial<Form>) => {
     try {
@@ -66,114 +85,123 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
         title: formData.title || "Untitled Form",
         description: formData.description || "",
         fields: [],
-        status: "draft"
-      })
-      onFormSelect(newForm)
+        status: "draft",
+      });
+      onFormSelect(newForm);
       toast({
         title: "Success",
         description: "Form created successfully",
-      })
+      });
     } catch {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to create form",
-      })
+      });
     }
-  }
+  };
 
   const handleDuplicateForm = async (form: Form) => {
     try {
-      await duplicateForm(form)
+      await duplicateForm(form);
       toast({
         title: "Success",
         description: "Form duplicated successfully",
-      })
+      });
     } catch {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to duplicate form",
-      })
+      });
     }
-  }
+  };
 
   const handleDeleteForm = async (formId: string) => {
     try {
-      await deleteForm(formId)
-      setFormToDelete(null)
+      await deleteForm(formId);
+      setFormToDelete(null);
       toast({
         title: "Success",
         description: "Form deleted successfully",
-      })
+      });
     } catch {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to delete form",
-      })
+      });
     }
-  }
+  };
 
-  const handleStatusChange = async (formId: string, newStatus: "draft" | "published" | "archived") => {
+  const handleStatusChange = async (
+    formId: string,
+    newStatus: "draft" | "published" | "archived"
+  ) => {
     // Prevent double-clicking/concurrent status changes
-    if (statusChanging.has(formId)) return
-    
-    setStatusChanging(prev => new Set(prev).add(formId))
-    
+    if (statusChanging.has(formId)) return;
+
+    setStatusChanging((prev) => new Set(prev).add(formId));
+
     try {
       switch (newStatus) {
-        case 'published':
-          await publishForm(formId)
-          break
-        case 'draft':
-          await unpublishForm(formId)
-          break
-        case 'archived':
-          await archiveForm(formId)
-          break
+        case "published":
+          await publishForm(formId);
+          break;
+        case "draft":
+          await unpublishForm(formId);
+          break;
+        case "archived":
+          await archiveForm(formId);
+          break;
       }
-      
+
       // Refresh the forms list to ensure UI is in sync with backend
-      await refetch()
-      
+      await refetch();
+
       toast({
         title: "Success",
         description: `Form ${newStatus} successfully`,
-      })
+      });
     } catch (error) {
-      console.error(`Failed to ${newStatus} form:`, error)
-      
+      console.error(`Failed to ${newStatus} form:`, error);
+
       // Refresh forms even on error to ensure we show correct state
-      await refetch()
-      
+      await refetch();
+
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to ${newStatus === 'published' ? 'publish' : newStatus === 'archived' ? 'archive' : 'unpublish'} form`,
-      })
+        description: `Failed to ${
+          newStatus === "published"
+            ? "publish"
+            : newStatus === "archived"
+            ? "archive"
+            : "unpublish"
+        } form`,
+      });
     } finally {
-      setStatusChanging(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(formId)
-        return newSet
-      })
+      setStatusChanging((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(formId);
+        return newSet;
+      });
     }
-  }
+  };
 
   const getStatusStats = () => {
     const stats = forms.reduce(
       (acc, form) => {
-        acc[form.status]++
-        acc.total++
-        return acc
+        acc[form.status]++;
+        acc.total++;
+        return acc;
       },
-      { total: 0, draft: 0, published: 0, archived: 0 },
-    )
-    return stats
-  }
+      { total: 0, draft: 0, published: 0, archived: 0 }
+    );
+    return stats;
+  };
 
-  const stats = getStatusStats()
+  const stats = getStatusStats();
 
   if (loading) {
     return (
@@ -189,7 +217,7 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -198,7 +226,9 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Forms</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Forms
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -206,15 +236,21 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Published</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Published
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-secondary">{stats.published}</div>
+            <div className="text-2xl font-bold text-secondary">
+              {stats.published}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Drafts</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Drafts
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-chart-2">{stats.draft}</div>
@@ -222,10 +258,14 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Archived</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Archived
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-muted-foreground">{stats.archived}</div>
+            <div className="text-2xl font-bold text-muted-foreground">
+              {stats.archived}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -242,7 +282,12 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(value: typeof statusFilter) => setStatusFilter(value)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value: typeof statusFilter) =>
+              setStatusFilter(value)
+            }
+          >
             <SelectTrigger className="w-40">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue />
@@ -289,7 +334,9 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
             <Plus className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium text-foreground mb-2">
-            {searchQuery || statusFilter !== "all" ? "No forms found" : "No forms yet"}
+            {searchQuery || statusFilter !== "all"
+              ? "No forms found"
+              : "No forms yet"}
           </h3>
           <p className="text-muted-foreground mb-4">
             {searchQuery || statusFilter !== "all"
@@ -304,7 +351,13 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
           )}
         </div>
       ) : (
-        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
+          }
+        >
           {filteredForms.map((form) => (
             <FormCard
               key={form.id}
@@ -343,5 +396,5 @@ export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboard
         formTitle={formToShare?.title || ""}
       />
     </div>
-  )
+  );
 }
