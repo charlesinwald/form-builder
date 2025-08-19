@@ -104,11 +104,24 @@ class ApiService {
   }
 
   async unpublishForm(id: string): Promise<Form> {
-    return this.updateForm(id, { status: 'draft', isActive: false });
+    return this.request<Form>(`/forms/${id}/unpublish`, {
+      method: 'POST',
+    });
   }
 
   async archiveForm(id: string): Promise<Form> {
     return this.updateForm(id, { status: 'archived', isActive: false });
+  }
+
+  async getPublicForm(id: string): Promise<Form> {
+    return this.request<Form>(`/public/forms/${id}`);
+  }
+
+  async submitFormResponse(formId: string, data: Record<string, any>): Promise<{ message: string; id: string }> {
+    return this.request<{ message: string; id: string }>('/responses', {
+      method: 'POST',
+      body: JSON.stringify({ formId, data }),
+    });
   }
 }
 

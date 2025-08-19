@@ -26,13 +26,14 @@ interface FormData {
 interface FormCardProps {
   form: FormData
   viewMode: "grid" | "list"
+  isStatusChanging?: boolean
   onSelect: () => void
   onDuplicate: () => void
   onDelete: () => void
   onStatusChange: (status: "draft" | "published" | "archived") => void
 }
 
-export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onStatusChange }: FormCardProps) {
+export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, onDuplicate, onDelete, onStatusChange }: FormCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "published":
@@ -64,7 +65,9 @@ export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onSt
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-medium text-foreground truncate">{form.title}</h3>
-                  <Badge className={getStatusColor(form.status)}>{form.status}</Badge>
+                  <Badge className={`${getStatusColor(form.status)} ${isStatusChanging ? 'animate-pulse' : ''}`}>
+                    {isStatusChanging ? 'updating...' : form.status}
+                  </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground truncate">{form.description}</p>
               </div>
@@ -110,24 +113,26 @@ export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onSt
                   <DropdownMenuSeparator />
                   {form.status !== "published" && (
                     <DropdownMenuItem
+                      disabled={isStatusChanging}
                       onClick={(e) => {
                         e.stopPropagation()
-                        onStatusChange("published")
+                        if (!isStatusChanging) onStatusChange("published")
                       }}
                     >
                       <Share className="h-4 w-4 mr-2" />
-                      Publish
+                      {isStatusChanging ? "Publishing..." : "Publish"}
                     </DropdownMenuItem>
                   )}
                   {form.status !== "archived" && (
                     <DropdownMenuItem
+                      disabled={isStatusChanging}
                       onClick={(e) => {
                         e.stopPropagation()
-                        onStatusChange("archived")
+                        if (!isStatusChanging) onStatusChange("archived")
                       }}
                     >
                       <Archive className="h-4 w-4 mr-2" />
-                      Archive
+                      {isStatusChanging ? "Archiving..." : "Archive"}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -157,7 +162,9 @@ export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onSt
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-medium text-foreground truncate">{form.title}</h3>
-              <Badge className={getStatusColor(form.status)}>{form.status}</Badge>
+              <Badge className={`${getStatusColor(form.status)} ${isStatusChanging ? 'animate-pulse' : ''}`}>
+                {isStatusChanging ? 'updating...' : form.status}
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground line-clamp-2">{form.description}</p>
           </div>
@@ -189,24 +196,26 @@ export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onSt
               <DropdownMenuSeparator />
               {form.status !== "published" && (
                 <DropdownMenuItem
+                  disabled={isStatusChanging}
                   onClick={(e) => {
                     e.stopPropagation()
-                    onStatusChange("published")
+                    if (!isStatusChanging) onStatusChange("published")
                   }}
                 >
                   <Share className="h-4 w-4 mr-2" />
-                  Publish
+                  {isStatusChanging ? "Publishing..." : "Publish"}
                 </DropdownMenuItem>
               )}
               {form.status !== "archived" && (
                 <DropdownMenuItem
+                  disabled={isStatusChanging}
                   onClick={(e) => {
                     e.stopPropagation()
-                    onStatusChange("archived")
+                    if (!isStatusChanging) onStatusChange("archived")
                   }}
                 >
                   <Archive className="h-4 w-4 mr-2" />
-                  Archive
+                  {isStatusChanging ? "Archiving..." : "Archive"}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

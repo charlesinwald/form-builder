@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -97,6 +99,11 @@ func setupRoutes(app *fiber.App) {
 	forms.Put("/:id", updateForm)
 	forms.Delete("/:id", deleteForm)
 	forms.Post("/:id/save-draft", saveDraft)
+	forms.Post("/:id/unpublish", unpublishForm)
+	
+	// Public routes (no authentication required)
+	public := api.Group("/public")
+	public.Get("/forms/:id", getPublicForm)
 
 	// Responses routes
 	responses := api.Group("/responses")
@@ -311,7 +318,231 @@ func deleteForm(c *fiber.Ctx) error {
 }
 
 func createResponse(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"message": "Create response endpoint"})
+	var req struct {
+		FormID string                 `json:"formId" validate:"required"`
+		Data   map[string]interface{} `json:"data" validate:"required"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	if req.FormID == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Form ID is required",
+		})
+	}
+
+	if req.Data == nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Form data is required",
+		})
+	}
+
+	// Convert form ID to ObjectID
+	formObjID, err := primitive.ObjectIDFromHex(req.FormID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid form ID",
+		})
+	}
+
+	// Verify the form exists and is published
+	formsCollection := database.Collection("forms")
+	var form models.Form
+	err = formsCollection.FindOne(context.Background(), bson.M{
+		"_id":      formObjID,
+		"status":   "published",
+		"isActive": true,
+	}).Decode(&form)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(404).JSON(fiber.Map{
+				"error": "Form not found or not published",
+			})
+		}
+		log.Printf("Error finding form: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to verify form",
+		})
+	}
+
+	// Validate form data against form fields
+	if err := validateFormData(req.Data, form.Fields); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Create form response
+	response := models.FormResponse{
+		FormID:    formObjID,
+		Data:      req.Data,
+		CreatedAt: time.Now(),
+		IPAddress: c.IP(),
+		UserAgent: c.Get("User-Agent"),
+	}
+
+	// Insert response into database
+	responsesCollection := database.Collection("responses")
+	result, err := responsesCollection.InsertOne(context.Background(), response)
+	if err != nil {
+		log.Printf("Error creating response: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to save response",
+		})
+	}
+
+	response.ID = result.InsertedID.(primitive.ObjectID)
+
+	return c.Status(201).JSON(fiber.Map{
+		"message": "Response submitted successfully",
+		"id":      response.ID.Hex(),
+	})
+}
+
+func validateFormData(data map[string]interface{}, fields []models.FormField) error {
+	// Create a map of field IDs for quick lookup
+	fieldMap := make(map[string]models.FormField)
+	for _, field := range fields {
+		fieldMap[field.ID] = field
+	}
+
+	// Check required fields
+	for _, field := range fields {
+		if field.Required {
+			value, exists := data[field.ID]
+			if !exists || value == nil || (fmt.Sprintf("%v", value) == "") {
+				return fmt.Errorf("%s is required", field.Label)
+			}
+		}
+	}
+
+	// Validate field types and constraints
+	for fieldID, value := range data {
+		field, exists := fieldMap[fieldID]
+		if !exists {
+			continue // Skip unknown fields
+		}
+
+		if value == nil {
+			continue // Skip empty optional fields
+		}
+
+		// Type-specific validation
+		switch field.Type {
+		case "email":
+			if str, ok := value.(string); ok {
+				if !isValidEmail(str) {
+					return fmt.Errorf("%s must be a valid email address", field.Label)
+				}
+			}
+		case "number":
+			if _, ok := value.(float64); !ok {
+				return fmt.Errorf("%s must be a number", field.Label)
+			}
+		}
+
+		// Validation rules
+		if field.Validation != nil {
+			if err := validateFieldValue(value, field); err != nil {
+				return fmt.Errorf("%s: %s", field.Label, err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+func validateFieldValue(value interface{}, field models.FormField) error {
+	validation := field.Validation
+
+	if minVal, exists := validation["min"]; exists {
+		min := int(minVal.(float64))
+		
+		switch v := value.(type) {
+		case string:
+			if len(v) < min {
+				return fmt.Errorf("must be at least %d characters", min)
+			}
+		case float64:
+			if int(v) < min {
+				return fmt.Errorf("must be at least %d", min)
+			}
+		}
+	}
+
+	if maxVal, exists := validation["max"]; exists {
+		max := int(maxVal.(float64))
+		
+		switch v := value.(type) {
+		case string:
+			if len(v) > max {
+				return fmt.Errorf("must be no more than %d characters", max)
+			}
+		case float64:
+			if int(v) > max {
+				return fmt.Errorf("must be no more than %d", max)
+			}
+		}
+	}
+
+	if patternVal, exists := validation["pattern"]; exists {
+		if str, ok := value.(string); ok {
+			pattern := patternVal.(string)
+			matched, err := regexp.MatchString(pattern, str)
+			if err != nil {
+				return fmt.Errorf("invalid pattern validation")
+			}
+			if !matched {
+				if message, exists := validation["message"]; exists {
+					return fmt.Errorf(message.(string))
+				}
+				return fmt.Errorf("format is invalid")
+			}
+		}
+	}
+
+	return nil
+}
+
+func isValidEmail(email string) bool {
+	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	matched, _ := regexp.MatchString(pattern, email)
+	return matched
+}
+
+func getPublicForm(c *fiber.Ctx) error {
+	id := c.Params("id")
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid form ID",
+		})
+	}
+
+	collection := database.Collection("forms")
+	var form models.Form
+	err = collection.FindOne(context.Background(), bson.M{
+		"_id":      objID,
+		"status":   "published",
+		"isActive": true,
+	}).Decode(&form)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(404).JSON(fiber.Map{
+				"error": "Form not found or not published",
+			})
+		}
+		log.Printf("Error fetching public form: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to fetch form",
+		})
+	}
+
+	return c.JSON(form)
 }
 
 func getResponsesByForm(c *fiber.Ctx) error {
@@ -342,20 +573,29 @@ func saveDraft(c *fiber.Ctx) error {
 		})
 	}
 
-	// Force status to draft
-	draftStatus := "draft"
-	req.Status = &draftStatus
-	isActiveStatus := false
-	req.IsActive = &isActiveStatus
+	// First, get the current form to preserve its status
+	collection := database.Collection("forms")
+	var currentForm models.Form
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&currentForm)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(404).JSON(fiber.Map{
+				"error": "Form not found",
+			})
+		}
+		log.Printf("Error fetching current form: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to fetch form",
+		})
+	}
 
 	update := bson.M{
 		"$set": bson.M{
 			"updatedAt": time.Now(),
-			"status":    "draft",
-			"isActive":  false,
 		},
 	}
 
+	// Only update fields that are provided, preserve status and isActive
 	if req.Title != nil {
 		update["$set"].(bson.M)["title"] = *req.Title
 	}
@@ -366,7 +606,6 @@ func saveDraft(c *fiber.Ctx) error {
 		update["$set"].(bson.M)["fields"] = *req.Fields
 	}
 
-	collection := database.Collection("forms")
 	result, err := collection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
 	if err != nil {
 		log.Printf("Error saving draft: %v", err)
@@ -395,4 +634,49 @@ func saveDraft(c *fiber.Ctx) error {
 		"message": "Draft saved successfully",
 		"form":    updatedForm,
 	})
+}
+
+func unpublishForm(c *fiber.Ctx) error {
+	id := c.Params("id")
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid form ID",
+		})
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"updatedAt": time.Now(),
+			"status":    "draft",
+			"isActive":  false,
+		},
+	}
+
+	collection := database.Collection("forms")
+	result, err := collection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
+	if err != nil {
+		log.Printf("Error unpublishing form: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to unpublish form",
+		})
+	}
+
+	if result.MatchedCount == 0 {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Form not found",
+		})
+	}
+
+	// Fetch and return the updated form
+	var updatedForm models.Form
+	err = collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&updatedForm)
+	if err != nil {
+		log.Printf("Error fetching unpublished form: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Form unpublished but failed to fetch updated data",
+		})
+	}
+
+	return c.JSON(updatedForm)
 }

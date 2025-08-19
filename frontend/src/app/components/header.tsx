@@ -16,6 +16,7 @@ interface HeaderProps {
   showFormControls?: boolean;
   isFormDraft?: boolean;
   isFormPublished?: boolean;
+  isPublishing?: boolean;
 }
 
 export function Header({
@@ -29,6 +30,7 @@ export function Header({
   showFormControls = true,
   isFormDraft = true,
   isFormPublished = false,
+  isPublishing = false,
 }: HeaderProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,12 +64,6 @@ export function Header({
           className="text-lg font-medium bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
           placeholder="Form Title"
         />
-        <div className="flex items-center gap-2">
-          <Badge className={getStatusColor(formStatus)}>{formStatus}</Badge>
-          <span className="text-sm text-muted-foreground capitalize">
-            {activeView}
-          </span>
-        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -82,9 +78,9 @@ export function Header({
         </Button>
         
         {isFormDraft && onPublish && (
-          <Button size="sm" className="gap-2" onClick={onPublish}>
+          <Button size="sm" className="gap-2" onClick={onPublish} disabled={isPublishing}>
             <Globe className="h-4 w-4" />
-            Publish
+            {isPublishing ? "Publishing..." : "Publish"}
           </Button>
         )}
         

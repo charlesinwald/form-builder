@@ -24,6 +24,7 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [formToDelete, setFormToDelete] = useState<Form | null>(null)
+  const [statusChanging, setStatusChanging] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
   const { 
@@ -35,7 +36,8 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
     duplicateForm,
     publishForm,
     unpublishForm,
-    archiveForm
+    archiveForm,
+    refetch
   } = useForms()
 
   useEffect(() => {
@@ -112,6 +114,11 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
   }
 
   const handleStatusChange = async (formId: string, newStatus: "draft" | "published" | "archived") => {
+    // Prevent double-clicking/concurrent status changes
+    if (statusChanging.has(formId)) return
+    
+    setStatusChanging(prev => new Set(prev).add(formId))
+    
     try {
       switch (newStatus) {
         case 'published':
@@ -124,15 +131,30 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
           await archiveForm(formId)
           break
       }
+      
+      // Refresh the forms list to ensure UI is in sync with backend
+      await refetch()
+      
       toast({
         title: "Success",
         description: `Form ${newStatus} successfully`,
       })
     } catch (error) {
+      console.error(`Failed to ${newStatus} form:`, error)
+      
+      // Refresh forms even on error to ensure we show correct state
+      await refetch()
+      
       toast({
         variant: "destructive",
         title: "Error",
         description: `Failed to ${newStatus === 'published' ? 'publish' : newStatus === 'archived' ? 'archive' : 'unpublish'} form`,
+      })
+    } finally {
+      setStatusChanging(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(formId)
+        return newSet
       })
     }
   }
@@ -286,6 +308,7 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
               key={form.id}
               form={form}
               viewMode={viewMode}
+              isStatusChanging={statusChanging.has(form.id)}
               onSelect={() => onFormSelect(form)}
               onDuplicate={() => handleDuplicateForm(form)}
               onDelete={() => setFormToDelete(form)}

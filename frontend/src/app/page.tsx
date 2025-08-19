@@ -26,8 +26,9 @@ export default function HomePage() {
     description: "",
     fields: [],
   });
+  const [isPublishing, setIsPublishing] = useState(false);
   
-  const { saveDraft, updateForm, createForm } = useForms();
+  const { saveDraft, updateForm, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -104,17 +105,29 @@ export default function HomePage() {
   };
 
   const handlePublishForm = async () => {
-    if (!currentForm) return;
+    if (!currentForm || isPublishing) return;
     
+    setIsPublishing(true);
     try {
-      // First save current changes
-      const updatedForm = await updateForm(currentForm.id, {
+      // Clear any pending auto-save to prevent conflicts
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+
+      // First save current changes as draft to ensure all data is saved
+      await saveDraft(currentForm.id, {
         title: formData.title,
         description: formData.description,
-        fields: formData.fields,
-        status: 'published'
+        fields: formData.fields
       });
-      setCurrentForm(updatedForm);
+
+      // Then publish using the dedicated publishForm method for consistency
+      const publishedForm = await publishForm(currentForm.id);
+      setCurrentForm(publishedForm);
+      
+      // Refresh forms list to ensure dashboard shows correct state
+      await refetch();
+      
       toast({
         title: "Success",
         description: "Form published successfully",
@@ -125,6 +138,8 @@ export default function HomePage() {
         title: "Error",
         description: "Failed to publish form",
       });
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -149,6 +164,7 @@ export default function HomePage() {
           }}
           isFormDraft={currentForm?.status === 'draft'}
           isFormPublished={currentForm?.status === 'published'}
+          isPublishing={isPublishing}
         />
 
         <main className="flex-1 overflow-hidden">

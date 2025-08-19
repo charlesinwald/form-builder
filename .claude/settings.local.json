@@ -14,7 +14,8 @@
       "Bash(true)",
       "Bash(go mod:*)",
       "Bash(npm run build:*)",
-      "Bash(go build:*)"
+      "Bash(go build:*)",
+      "Bash(touch:*)"
     ],
     "deny": [],
     "ask": []
