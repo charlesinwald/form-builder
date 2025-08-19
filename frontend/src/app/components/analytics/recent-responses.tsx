@@ -13,7 +13,7 @@ import { Eye, MoreHorizontal } from "lucide-react";
 interface FormResponse {
   id: string;
   submittedAt: string;
-  responses: Record<string, any>;
+  responses: Record<string, unknown>;
   completionTime: number;
 }
 
@@ -62,9 +62,9 @@ export function RecentResponses({ responses }: RecentResponsesProps) {
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
                   <span className="font-medium text-foreground">
-                    {response.responses.name || "Anonymous"}
+                    {(response.responses.name as string) || "Anonymous"}
                   </span>
-                  {response.responses.rating && (
+                  {(typeof response.responses.rating === 'number') && (
                     <Badge
                       className={getRatingBadgeColor(response.responses.rating)}
                     >
@@ -77,11 +77,11 @@ export function RecentResponses({ responses }: RecentResponsesProps) {
                   <span>
                     Completed in {formatTime(response.completionTime)}
                   </span>
-                  {response.responses.service && (
+                  {(typeof response.responses.service === 'string') && (
                     <span>{response.responses.service}</span>
                   )}
                 </div>
-                {response.responses.feedback && (
+                {(typeof response.responses.feedback === 'string') && (
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {response.responses.feedback}
                   </p>

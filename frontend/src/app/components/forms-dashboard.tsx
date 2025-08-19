@@ -16,11 +16,10 @@ import { useToast } from "@/hooks/use-toast"
 
 interface FormsDashboardProps {
   onFormSelect: (form: Form) => void
-  onNewForm: () => void
   onViewResponses: (form: Form) => void
 }
 
-export function FormsDashboard({ onFormSelect, onNewForm, onViewResponses }: FormsDashboardProps) {
+export function FormsDashboard({ onFormSelect, onViewResponses }: FormsDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published" | "archived">("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -74,7 +73,7 @@ export function FormsDashboard({ onFormSelect, onNewForm, onViewResponses }: For
         title: "Success",
         description: "Form created successfully",
       })
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -90,7 +89,7 @@ export function FormsDashboard({ onFormSelect, onNewForm, onViewResponses }: For
         title: "Success",
         description: "Form duplicated successfully",
       })
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -107,7 +106,7 @@ export function FormsDashboard({ onFormSelect, onNewForm, onViewResponses }: For
         title: "Success",
         description: "Form deleted successfully",
       })
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -243,7 +242,7 @@ export function FormsDashboard({ onFormSelect, onNewForm, onViewResponses }: For
               className="pl-10"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+          <Select value={statusFilter} onValueChange={(value: typeof statusFilter) => setStatusFilter(value)}>
             <SelectTrigger className="w-40">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue />

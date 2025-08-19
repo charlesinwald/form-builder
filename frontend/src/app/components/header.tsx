@@ -2,13 +2,11 @@
 
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { Badge } from "@/app/components/ui/badge";
-import { Save, Share, Eye, Globe } from "lucide-react";
+import { Share, Eye, Globe } from "lucide-react";
 
 interface HeaderProps {
   formTitle: string;
   onTitleChange: (title: string) => void;
-  activeView: "dashboard" | "builder" | "preview" | "analytics";
   onShare: () => void;
   onPreview?: () => void;
   onPublish?: () => void;
@@ -22,26 +20,14 @@ interface HeaderProps {
 export function Header({
   formTitle,
   onTitleChange,
-  activeView,
   onShare,
   onPreview,
   onPublish,
-  formStatus = "draft",
   showFormControls = true,
   isFormDraft = true,
   isFormPublished = false,
   isPublishing = false,
 }: HeaderProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "published":
-        return "bg-secondary text-secondary-foreground";
-      case "archived":
-        return "bg-muted text-muted-foreground";
-      default:
-        return "bg-chart-2 text-white";
-    }
-  };
 
   if (!showFormControls) {
     return (

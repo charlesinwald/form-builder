@@ -43,12 +43,12 @@ export function PublicFormRenderer({
   formData,
   onSubmissionSuccess,
 }: PublicFormRendererProps) {
-  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  const updateResponse = (fieldId: string, value: any) => {
+  const updateResponse = (fieldId: string, value: unknown) => {
     setResponses((prev) => ({ ...prev, [fieldId]: value }));
     // Clear error when user starts typing
     if (errors[fieldId]) {
@@ -123,7 +123,7 @@ export function PublicFormRenderer({
       });
 
       onSubmissionSuccess();
-    } catch (error) {
+    } catch {
       toast({
         title: "Submission failed",
         description: "Please try again later.",

@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 interface FormData {
   title: string;
   description: string;
-  fields: any[];
+  fields: unknown[];
 }
 
 export default function HomePage() {
@@ -31,7 +31,7 @@ export default function HomePage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   
-  const { saveDraft, updateForm, createForm, publishForm, refetch } = useForms();
+  const { saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -98,7 +98,7 @@ export default function HomePage() {
         title: "New form created",
         description: "Your draft form has been created",
       });
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive", 
         title: "Error",
@@ -135,7 +135,7 @@ export default function HomePage() {
         title: "Success",
         description: "Form published successfully",
       });
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",

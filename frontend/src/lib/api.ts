@@ -40,7 +40,7 @@ export interface UpdateFormRequest {
 export interface FormResponse {
   id: string;
   formId: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   createdAt: string;
   ipAddress: string;
   userAgent: string;
@@ -128,7 +128,7 @@ class ApiService {
     return this.request<Form>(`/public/forms/${id}`);
   }
 
-  async submitFormResponse(formId: string, data: Record<string, any>): Promise<{ message: string; id: string }> {
+  async submitFormResponse(formId: string, data: Record<string, unknown>): Promise<{ message: string; id: string }> {
     return this.request<{ message: string; id: string }>('/responses', {
       method: 'POST',
       body: JSON.stringify({ formId, data }),

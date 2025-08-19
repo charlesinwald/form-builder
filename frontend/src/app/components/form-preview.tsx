@@ -36,7 +36,7 @@ interface FormPreviewProps {
 }
 
 export function FormPreview({ formData }: FormPreviewProps) {
-  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +44,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
     // Here you would typically send the data to your backend
   };
 
-  const updateResponse = (fieldId: string, value: any) => {
+  const updateResponse = (fieldId: string, value: unknown) => {
     setResponses((prev) => ({ ...prev, [fieldId]: value }));
   };
 

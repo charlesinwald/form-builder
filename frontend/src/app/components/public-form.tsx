@@ -17,15 +17,15 @@ import { Form, FormField } from "@/lib/api"
 
 interface PublicFormProps {
   form: Form
-  onSubmit: (data: Record<string, any>) => Promise<void>
+  onSubmit: (data: Record<string, unknown>) => Promise<void>
   isSubmitting?: boolean
 }
 
 export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormProps) {
-  const [formData, setFormData] = useState<Record<string, any>>({})
+  const [formData, setFormData] = useState<Record<string, unknown>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const validateField = (field: FormField, value: any): string | null => {
+  const validateField = (field: FormField, value: unknown): string | null => {
     if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
       return `${field.label} is required`
     }
@@ -89,7 +89,7 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
     }
   }
 
-  const handleFieldChange = (fieldId: string, value: any) => {
+  const handleFieldChange = (fieldId: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [fieldId]: value }))
     
     // Clear error when user starts typing

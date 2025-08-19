@@ -6,18 +6,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/components/ui/card";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   ResponsiveContainer,
+//   PieChart,
+//   Pie,
+//   Cell,
+// } from "recharts";
 
 interface FormFieldData {
   id: string;
@@ -28,7 +28,7 @@ interface FormFieldData {
 
 interface FormResponse {
   id: string;
-  responses: Record<string, any>;
+  responses: Record<string, unknown>;
 }
 
 interface FieldAnalyticsProps {
@@ -52,10 +52,10 @@ export function FieldAnalytics({ formData, responses }: FieldAnalyticsProps) {
       : 0;
 
   // Rating distribution
-  const ratingDistribution = [1, 2, 3, 4, 5].map((rating) => ({
-    rating: `${rating} Star`,
-    count: ratingData.filter((r) => r === rating).length,
-  }));
+  // const ratingDistribution = [1, 2, 3, 4, 5].map((rating) => ({
+  //   rating: `${rating} Star`,
+  //   count: ratingData.filter((r) => r === rating).length,
+  // }));
 
   // Service selection distribution (for select/radio fields)
   const serviceField = formData.fields.find(
@@ -69,12 +69,12 @@ export function FieldAnalytics({ formData, responses }: FieldAnalyticsProps) {
       })) || []
     : [];
 
-  const COLORS = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-  ];
+  // const COLORS = [
+  //   "hsl(var(--chart-1))",
+  //   "hsl(var(--chart-2))",
+  //   "hsl(var(--chart-3))",
+  //   "hsl(var(--chart-4))",
+  // ];
 
   return (
     <div className="space-y-6">
@@ -122,40 +122,8 @@ export function FieldAnalytics({ formData, responses }: FieldAnalyticsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ratingDistribution}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-muted"
-                  />
-                  <XAxis
-                    dataKey="rating"
-                    className="text-muted-foreground"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    className="text-muted-foreground"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar
-                    dataKey="count"
-                    fill="hsl(var(--chart-2))"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              <p>Rating distribution chart (coming soon)</p>
             </div>
           </CardContent>
         </Card>
@@ -170,37 +138,8 @@ export function FieldAnalytics({ formData, responses }: FieldAnalyticsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={serviceData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {serviceData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              <p>{serviceField.label} distribution chart (coming soon)</p>
             </div>
           </CardContent>
         </Card>

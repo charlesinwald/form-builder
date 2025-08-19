@@ -42,7 +42,7 @@ export default function PublicFormPage() {
     }
   }, [formId])
 
-  const handleSubmit = async (data: Record<string, any>) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     setIsSubmitting(true)
     setSubmitError(null)
     

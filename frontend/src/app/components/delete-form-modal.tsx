@@ -35,7 +35,7 @@ export function DeleteFormModal({
         <div className="space-y-4">
           <p className="text-muted-foreground">
             Are you sure you want to delete{" "}
-            <span className="font-medium text-foreground">"{formTitle}"</span>?
+            <span className="font-medium text-foreground">&ldquo;{formTitle}&rdquo;</span>?
           </p>
           <p className="text-sm text-muted-foreground">
             This action cannot be undone. All responses and analytics data will

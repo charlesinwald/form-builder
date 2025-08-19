@@ -30,7 +30,7 @@ export function ShareFormModal({ isOpen, onClose, formId, formTitle }: ShareForm
         description: "Share link copied to clipboard",
       })
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Failed to copy",

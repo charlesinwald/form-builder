@@ -9,7 +9,7 @@ import { Bell, X, Eye } from "lucide-react"
 interface FormResponse {
   id: string
   submittedAt: string
-  responses: Record<string, any>
+  responses: Record<string, unknown>
   completionTime: number
 }
 

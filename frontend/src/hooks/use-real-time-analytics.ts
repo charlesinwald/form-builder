@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 interface FormResponse {
   id: string
   submittedAt: string
-  responses: Record<string, any>
+  responses: Record<string, unknown>
   completionTime: number
 }
 
@@ -30,7 +30,6 @@ interface UseRealTimeAnalyticsOptions {
 }
 
 export function useRealTimeAnalytics({
-  formId,
   pollingInterval = 5000,
   onNewResponse,
 }: UseRealTimeAnalyticsOptions = {}) {
@@ -218,7 +217,7 @@ export function useRealTimeAnalytics({
   // Initial data fetch
   useEffect(() => {
     fetchData(false)
-  }, [])
+  }, [fetchData])
 
   // Start/stop polling based on component mount
   useEffect(() => {

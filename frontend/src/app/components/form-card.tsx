@@ -16,7 +16,7 @@ interface FormData {
   id: string
   title: string
   description: string
-  fields: any[]
+  fields: unknown[]
   status: "draft" | "published" | "archived"
   createdAt: string
   updatedAt: string

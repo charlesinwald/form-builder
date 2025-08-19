@@ -66,7 +66,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
     setSelectedFieldId(null);
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: { destination?: { index: number } | null; source: { index: number } }) => {
     if (!result.destination) return;
 
     const items = Array.from(formData.fields);
@@ -115,7 +115,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
           {/* Form Fields */}
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="form-fields">
-              {(provided) => (
+              {(provided: { droppableProps: Record<string, unknown>; innerRef: React.Ref<HTMLDivElement> }) => (
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
@@ -127,7 +127,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
                       draggableId={field.id}
                       index={index}
                     >
-                      {(provided, snapshot) => (
+                      {(provided: { innerRef: React.Ref<HTMLDivElement>; draggableProps: Record<string, unknown>; dragHandleProps: Record<string, unknown> }, snapshot: { isDragging: boolean }) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}

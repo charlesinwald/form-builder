@@ -25,7 +25,7 @@ export function FormSubmissionSuccess({
             </h1>
             <p className="text-muted-foreground">
               Your response to{" "}
-              <span className="font-medium">"{formTitle}"</span> has been
+              <span className="font-medium">&ldquo;{formTitle}&rdquo;</span> has been
               submitted successfully.
             </p>
           </div>
