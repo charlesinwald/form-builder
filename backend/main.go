@@ -27,6 +27,7 @@ var database *mongo.Database
 var wsHub *ws.Hub
 var analyticsService *services.AnalyticsService
 var useMemoryStore bool = false
+var allowedOrigins string
 
 func main() {
 	// Load environment variables
@@ -50,7 +51,7 @@ func main() {
 	})
 
 	// CORS Configuration
-	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	allowedOrigins = os.Getenv("ALLOWED_ORIGINS")
 	if allowedOrigins == "" {
 		allowedOrigins = "https://www.formcraft.digital,https://formcraft.digital,http://localhost:3000,http://localhost:3001"
 	}
