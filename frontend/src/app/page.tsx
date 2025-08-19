@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { FormBuilder } from "@/components/form-builder"
-import { FormPreview } from "@/components/form-preview"
-import { Sidebar } from "@/components/sidebar"
-import { Header } from "@/components/header"
+import { FormBuilder } from "@/app/components/form-builder"
+import { FormPreview } from "@/app/components/form-preview"
+import { Sidebar } from "@/app/components/sidebar"
+import { Header } from "@/app/components/header"
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<"builder" | "preview" | "analytics">("builder")
