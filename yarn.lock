@@ -3134,9 +3134,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.204":
-  version: 1.5.204
-  resolution: "electron-to-chromium@npm:1.5.204"
-  checksum: a6f6faf14665871932ae10a48c808517d1e2905d5fc5f695e72ab94dbfdc6e055c53a4f3c6f06fda6db60ca1167d73f6f96ed3409d82fcd388702877c307a88f
+  version: 1.5.207
+  resolution: "electron-to-chromium@npm:1.5.207"
+  checksum: 1a80f7ae83197d7afe124cfa5ba605c2911f9ff8f1d553cc87d2dcb827f66c2318c7169c26e55301ce627e385c6884784c17528b6014201eab485d62c5f6f933
   languageName: node
   linkType: hard
 
@@ -4635,7 +4635,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-lucide-react@latest:
+"lucide-react@npm:latest":
   version: 0.540.0
   resolution: "lucide-react@npm:0.540.0"
   peerDependencies:
@@ -5118,9 +5118,9 @@ lucide-react@latest:
   linkType: hard
 
 "react-is@npm:^16.13.1":
-  version: 19.1.1
-  resolution: "react-is@npm:19.1.1"
-  checksum: e60ed01c27fe4d22b08f8a31f18831d144a801d08a909ca31fb1d02721b4f4cde0759148d6341f660a4d6ce54a78e22b8b39520b67e2e76254e583885868ab43
+  version: 16.13.1
+  resolution: "react-is@npm:16.13.1"
+  checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
   languageName: node
   linkType: hard
 

@@ -6,6 +6,7 @@ import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { FieldToolbox } from "@/app/components/field-toolbox";
 import { FormField } from "@/app/components/form-field";
+import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 import { Plus } from "lucide-react";
 
 interface FormData {
@@ -16,14 +17,7 @@ interface FormData {
 
 interface FormFieldData {
   id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating"
-    | "date";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
   label: string;
   placeholder?: string;
   required: boolean;
@@ -72,6 +66,19 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
     setSelectedFieldId(null);
   };
 
+  const handleDragEnd = (result: { destination?: { index: number } | null; source: { index: number } }) => {
+    if (!result.destination) return;
+
+    const items = Array.from(formData.fields);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    onFormDataChange({
+      ...formData,
+      fields: items,
+    });
+  };
+
   return (
     <div className="flex h-full">
       {/* Field Toolbox */}
@@ -106,19 +113,47 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
           </Card>
 
           {/* Form Fields */}
-          <div className="space-y-4">
-            {formData.fields.map((field, _index) => (
-              <div key={field.id}>
-                <FormField
-                  field={field}
-                  isSelected={selectedFieldId === field.id}
-                  onSelect={() => setSelectedFieldId(field.id)}
-                  onUpdate={(updates) => updateField(field.id, updates)}
-                  onDelete={() => deleteField(field.id)}
-                />
-              </div>
-            ))}
-          </div>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="form-fields">
+              {(provided: DroppableProvided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-4"
+                >
+                  {formData.fields.map((field, index) => (
+                    <Draggable
+                      key={field.id}
+                      draggableId={field.id}
+                      index={index}
+                    >
+                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`${
+                            snapshot.isDragging ? "opacity-50" : ""
+                          }`}
+                        >
+                          <FormField
+                            field={field}
+                            isSelected={selectedFieldId === field.id}
+                            onSelect={() => setSelectedFieldId(field.id)}
+                            onUpdate={(updates) =>
+                              updateField(field.id, updates)
+                            }
+                            onDelete={() => deleteField(field.id)}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
 
           {/* Add Field Button */}
           {formData.fields.length === 0 && (

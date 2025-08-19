@@ -1,47 +1,43 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { Card } from "@/app/components/ui/card";
-import { Button } from "@/app/components/ui/button";
-import { Badge } from "@/app/components/ui/badge";
-import { Bell, X, Eye } from "lucide-react";
+import { useEffect, useState } from "react"
+import { Card } from "@/app/components/ui/card"
+import { Button } from "@/app/components/ui/button"
+import { Badge } from "@/app/components/ui/badge"
+import { Bell, X, Eye } from "lucide-react"
 
 interface FormResponse {
-  id: string;
-  submittedAt: string;
-  responses: Record<string, unknown>;
-  completionTime: number;
+  id: string
+  submittedAt: string
+  responses: Record<string, unknown>
+  completionTime: number
 }
 
 interface RealTimeNotificationProps {
-  newResponses: FormResponse[];
-  onDismiss: () => void;
-  onViewResponse: (response: FormResponse) => void;
+  newResponses: FormResponse[]
+  onDismiss: () => void
+  onViewResponse: (response: FormResponse) => void
 }
 
-export function RealTimeNotification({
-  newResponses,
-  onDismiss,
-  onViewResponse,
-}: RealTimeNotificationProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export function RealTimeNotification({ newResponses, onDismiss, onViewResponse }: RealTimeNotificationProps) {
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     if (newResponses.length > 0) {
-      setIsVisible(true);
+      setIsVisible(true)
       // Auto-dismiss after 10 seconds
       const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(onDismiss, 300); // Wait for animation
-      }, 10000);
+        setIsVisible(false)
+        setTimeout(onDismiss, 300) // Wait for animation
+      }, 10000)
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer)
     }
-  }, [newResponses, onDismiss]);
+  }, [newResponses, onDismiss])
 
-  if (!isVisible || newResponses.length === 0) return null;
+  if (!isVisible || newResponses.length === 0) return null
 
-  const latestResponse = newResponses[newResponses.length - 1];
+  const latestResponse = newResponses[newResponses.length - 1]
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
@@ -61,41 +57,33 @@ export function RealTimeNotification({
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {(typeof latestResponse.responses.name === "string" &&
-                  latestResponse.responses.name) ||
-                  "Anonymous"}{" "}
-                just submitted a response
+                {(latestResponse.responses.name as string) || "Anonymous"} just submitted a response
               </p>
-              {typeof latestResponse.responses.rating === "number" &&
-                latestResponse.responses.rating && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs text-muted-foreground">
-                      Rating:
-                    </span>
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          className={`text-xs ${
-                            star <= (latestResponse.responses.rating as number)
-                              ? "text-secondary"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          ⭐
-                        </span>
-                      ))}
-                    </div>
+              {(latestResponse.responses.rating as number) && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-xs text-muted-foreground">Rating:</span>
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={`text-xs ${
+                          star <= (latestResponse.responses.rating as number) ? "text-secondary" : "text-muted-foreground"
+                        }`}
+                      >
+                        ⭐
+                      </span>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
-              setIsVisible(false);
-              setTimeout(onDismiss, 300);
+              setIsVisible(false)
+              setTimeout(onDismiss, 300)
             }}
             className="h-6 w-6 p-0"
           >
@@ -116,5 +104,5 @@ export function RealTimeNotification({
         </div>
       </Card>
     </div>
-  );
+  )
 }

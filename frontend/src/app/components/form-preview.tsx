@@ -24,14 +24,7 @@ interface FormData {
 
 interface FormFieldData {
   id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating"
-    | "date";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
   label: string;
   placeholder?: string;
   required: boolean;
@@ -62,9 +55,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
           <Input
             placeholder={field.placeholder}
             value={(responses[field.id] as string) || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updateResponse(field.id, e.target.value)
-            }
+            onChange={(e) => updateResponse(field.id, e.target.value)}
             required={field.required}
           />
         );
@@ -73,9 +64,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
           <Textarea
             placeholder={field.placeholder}
             value={(responses[field.id] as string) || ""}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              updateResponse(field.id, e.target.value)
-            }
+            onChange={(e) => updateResponse(field.id, e.target.value)}
             required={field.required}
             rows={4}
           />
@@ -109,10 +98,8 @@ export function FormPreview({ formData }: FormPreviewProps) {
                   id={`${field.id}-${index}`}
                   name={field.id}
                   value={option}
-                  checked={responses[field.id] === option}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateResponse(field.id, e.target.value)
-                  }
+                  checked={(responses[field.id] as string) === option}
+                  onChange={(e) => updateResponse(field.id, e.target.value)}
                   required={field.required}
                   className="text-primary"
                 />
@@ -135,12 +122,9 @@ export function FormPreview({ formData }: FormPreviewProps) {
                   type="checkbox"
                   id={`${field.id}-${index}`}
                   value={option}
-                  checked={((responses[field.id] as string[]) || []).includes(
-                    option
-                  )}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const currentValues =
-                      (responses[field.id] as string[]) || [];
+                  checked={((responses[field.id] as string[]) || []).includes(option)}
+                  onChange={(e) => {
+                    const currentValues = (responses[field.id] as string[]) || [];
                     const newValues = e.target.checked
                       ? [...currentValues, option]
                       : currentValues.filter((v: string) => v !== option);
@@ -176,17 +160,6 @@ export function FormPreview({ formData }: FormPreviewProps) {
               </button>
             ))}
           </div>
-        );
-      case "date":
-        return (
-          <Input
-            type="date"
-            value={(responses[field.id] as string) || ""}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updateResponse(field.id, e.target.value)
-            }
-            required={field.required}
-          />
         );
       default:
         return null;

@@ -27,14 +27,7 @@ interface FormData {
 
 interface FormFieldData {
   id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating"
-    | "date";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
   label: string;
   placeholder?: string;
   required: boolean;
@@ -151,9 +144,7 @@ export function PublicFormRenderer({
             <Input
               placeholder={field.placeholder}
               value={(responses[field.id] as string) || ""}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                updateResponse(field.id, e.target.value)
-              }
+              onChange={(e) => updateResponse(field.id, e.target.value)}
               className={
                 hasError
                   ? "border-destructive focus-visible:ring-destructive"
@@ -172,9 +163,7 @@ export function PublicFormRenderer({
             <Textarea
               placeholder={field.placeholder}
               value={(responses[field.id] as string) || ""}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                updateResponse(field.id, e.target.value)
-              }
+              onChange={(e) => updateResponse(field.id, e.target.value)}
               rows={4}
               className={
                 hasError
@@ -227,10 +216,8 @@ export function PublicFormRenderer({
                     id={`${field.id}-${index}`}
                     name={field.id}
                     value={option}
-                    checked={responses[field.id] === option}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      updateResponse(field.id, e.target.value)
-                    }
+                    checked={(responses[field.id] as string) === option}
+                    onChange={(e) => updateResponse(field.id, e.target.value)}
                     className="w-4 h-4 text-primary border-border focus:ring-primary focus:ring-2"
                   />
                   <Label
@@ -258,12 +245,9 @@ export function PublicFormRenderer({
                     type="checkbox"
                     id={`${field.id}-${index}`}
                     value={option}
-                    checked={((responses[field.id] as string[]) || []).includes(
-                      option
-                    )}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const currentValues =
-                        (responses[field.id] as string[]) || [];
+                    checked={((responses[field.id] as string[]) || []).includes(option)}
+                    onChange={(e) => {
+                      const currentValues = (responses[field.id] as string[]) || [];
                       const newValues = e.target.checked
                         ? [...currentValues, option]
                         : currentValues.filter((v: string) => v !== option);
@@ -304,33 +288,12 @@ export function PublicFormRenderer({
                   ⭐
                 </button>
               ))}
-              {(responses[field.id] as boolean | number | string) && (
+              {(responses[field.id] as number) > 0 && (
                 <span className="ml-3 text-sm text-muted-foreground self-center">
-                  {responses[field.id] as React.ReactNode} out of 5
+                  {responses[field.id] as number} out of 5
                 </span>
               )}
             </div>
-            {hasError && (
-              <p className="text-sm text-destructive">{errors[field.id]}</p>
-            )}
-          </div>
-        );
-
-      case "date":
-        return (
-          <div className="space-y-2">
-            <Input
-              type="date"
-              value={(responses[field.id] as string) || ""}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                updateResponse(field.id, e.target.value)
-              }
-              className={
-                hasError
-                  ? "border-destructive focus-visible:ring-destructive"
-                  : ""
-              }
-            />
             {hasError && (
               <p className="text-sm text-destructive">{errors[field.id]}</p>
             )}

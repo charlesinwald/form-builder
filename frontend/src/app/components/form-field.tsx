@@ -1,77 +1,55 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Card } from "@/app/components/ui/card";
-import { Input } from "@/app/components/ui/input";
-import { Textarea } from "@/app/components/ui/textarea";
-import { Button } from "@/app/components/ui/button";
-import { Switch } from "@/app/components/ui/switch";
-import { Label } from "@/app/components/ui/label";
-import { Select, SelectTrigger, SelectValue } from "@/app/components/ui/select";
-import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react";
+import { useState } from "react"
+import { Card } from "@/app/components/ui/card"
+import { Input } from "@/app/components/ui/input"
+import { Textarea } from "@/app/components/ui/textarea"
+import { Button } from "@/app/components/ui/button"
+import { Switch } from "@/app/components/ui/switch"
+import { Label } from "@/app/components/ui/label"
+import { Select, SelectTrigger, SelectValue } from "@/app/components/ui/select"
+import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react"
 
 interface FormFieldData {
-  id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating"
-    | "date";
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  options?: string[];
+  id: string
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating"
+  label: string
+  placeholder?: string
+  required: boolean
+  options?: string[]
 }
 
 interface FormFieldProps {
-  field: FormFieldData;
-  isSelected: boolean;
-  onSelect: () => void;
-  onUpdate: (updates: Partial<FormFieldData>) => void;
-  onDelete: () => void;
+  field: FormFieldData
+  isSelected: boolean
+  onSelect: () => void
+  onUpdate: (updates: Partial<FormFieldData>) => void
+  onDelete: () => void
 }
 
-export function FormField({
-  field,
-  isSelected,
-  onSelect,
-  onUpdate,
-  onDelete,
-}: FormFieldProps) {
-  const [showSettings, setShowSettings] = useState(false);
+export function FormField({ field, isSelected, onSelect, onUpdate, onDelete }: FormFieldProps) {
+  const [showSettings, setShowSettings] = useState(false)
 
   const addOption = () => {
-    const newOptions = [
-      ...(field.options || []),
-      `Option ${(field.options?.length || 0) + 1}`,
-    ];
-    onUpdate({ options: newOptions });
-  };
+    const newOptions = [...(field.options || []), `Option ${(field.options?.length || 0) + 1}`]
+    onUpdate({ options: newOptions })
+  }
 
   const updateOption = (index: number, value: string) => {
-    const newOptions = [...(field.options || [])];
-    newOptions[index] = value;
-    onUpdate({ options: newOptions });
-  };
+    const newOptions = [...(field.options || [])]
+    newOptions[index] = value
+    onUpdate({ options: newOptions })
+  }
 
   const removeOption = (index: number) => {
-    const newOptions = field.options?.filter((_, i) => i !== index) || [];
-    onUpdate({ options: newOptions });
-  };
+    const newOptions = field.options?.filter((_, i) => i !== index) || []
+    onUpdate({ options: newOptions })
+  }
 
   const renderFieldPreview = () => {
     switch (field.type) {
       case "text":
-        return (
-          <Input
-            placeholder={field.placeholder || "Enter text..."}
-            disabled
-            className="bg-muted/50"
-          />
-        );
+        return <Input placeholder={field.placeholder || "Enter text..."} disabled className="bg-muted/50" />
       case "textarea":
         return (
           <Textarea
@@ -80,7 +58,7 @@ export function FormField({
             className="bg-muted/50"
             rows={3}
           />
-        );
+        )
       case "select":
         return (
           <Select disabled>
@@ -88,7 +66,7 @@ export function FormField({
               <SelectValue placeholder="Select an option..." />
             </SelectTrigger>
           </Select>
-        );
+        )
       case "radio":
         return (
           <div className="space-y-2">
@@ -99,7 +77,7 @@ export function FormField({
               </div>
             ))}
           </div>
-        );
+        )
       case "checkbox":
         return (
           <div className="space-y-2">
@@ -110,7 +88,7 @@ export function FormField({
               </div>
             ))}
           </div>
-        );
+        )
       case "rating":
         return (
           <div className="flex space-x-1">
@@ -120,26 +98,15 @@ export function FormField({
               </button>
             ))}
           </div>
-        );
-      case "date":
-        return (
-          <Input
-            type="date"
-            disabled
-            className="bg-muted/50"
-            placeholder={field.placeholder || "Select date..."}
-          />
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
     <Card
-      className={`p-4 cursor-pointer transition-all ${
-        isSelected ? "ring-2 ring-primary" : "hover:shadow-md"
-      }`}
+      className={`p-4 cursor-pointer transition-all ${isSelected ? "ring-2 ring-primary" : "hover:shadow-md"}`}
       onClick={onSelect}
     >
       <div className="space-y-4">
@@ -151,20 +118,18 @@ export function FormField({
               value={field.label}
               onChange={(e) => onUpdate({ label: e.target.value })}
               className="border-none p-0 font-medium focus-visible:ring-0"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             />
-            {field.required && (
-              <span className="text-destructive text-sm">*</span>
-            )}
+            {field.required && <span className="text-destructive text-sm">*</span>}
           </div>
 
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                setShowSettings(!showSettings);
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowSettings(!showSettings)
               }}
             >
               <Settings className="h-4 w-4" />
@@ -172,9 +137,9 @@ export function FormField({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                onDelete();
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
               }}
             >
               <Trash2 className="h-4 w-4" />
@@ -187,18 +152,13 @@ export function FormField({
 
         {/* Field Settings */}
         {showSettings && (
-          <div
-            className="border-t pt-4 space-y-4"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
+          <div className="border-t pt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <Label htmlFor={`required-${field.id}`}>Required field</Label>
               <Switch
                 id={`required-${field.id}`}
                 checked={field.required}
-                onCheckedChange={(checked: boolean) =>
-                  onUpdate({ required: checked })
-                }
+                onCheckedChange={(checked: boolean) => onUpdate({ required: checked })}
               />
             </div>
 
@@ -213,34 +173,19 @@ export function FormField({
               </div>
             )}
 
-            {(field.type === "select" ||
-              field.type === "radio" ||
-              field.type === "checkbox") && (
+            {(field.type === "select" || field.type === "radio" || field.type === "checkbox") && (
               <div>
                 <Label>Options</Label>
                 <div className="space-y-2">
                   {field.options?.map((option, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <Input
-                        value={option}
-                        onChange={(e) => updateOption(index, e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeOption(index)}
-                      >
+                      <Input value={option} onChange={(e) => updateOption(index, e.target.value)} className="flex-1" />
+                      <Button variant="ghost" size="sm" onClick={() => removeOption(index)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addOption}
-                    className="w-full bg-transparent"
-                  >
+                  <Button variant="outline" size="sm" onClick={addOption} className="w-full bg-transparent">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Option
                   </Button>
@@ -251,5 +196,5 @@ export function FormField({
         )}
       </div>
     </Card>
-  );
+  )
 }
