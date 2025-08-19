@@ -44,9 +44,10 @@ interface FormResponse {
 
 interface AnalyticsDashboardProps {
   formData: FormData;
+  formId: string;
 }
 
-export function AnalyticsDashboard({ formData }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({ formData, formId }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState("7d");
   const [newResponses, setNewResponses] = useState<FormResponse[]>([]);
   const { toast } = useToast();
@@ -61,7 +62,7 @@ export function AnalyticsDashboard({ formData }: AnalyticsDashboardProps) {
     startPolling,
     stopPolling,
   } = useRealTimeAnalytics({
-    formId: "demo-form-123",
+    formId: formId,
     pollingInterval: 5000,
     onNewResponse: useCallback(
       (response: FormResponse) => {

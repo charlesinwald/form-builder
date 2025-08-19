@@ -8,9 +8,13 @@ import { Sidebar } from "@/app/components/sidebar";
 import { Header } from "@/app/components/header";
 import { ShareFormModal } from "@/app/components/share-form-modal";
 import { ResponsesView } from "@/app/components/responses-view";
+import { Button } from "@/app/components/ui/button";
 import { Form } from "@/lib/api";
 import { useForms } from "@/hooks/use-forms";
 import { useToast } from "@/hooks/use-toast";
+import { AnalyticsDashboard } from "./components/analytics-dashboard";
+import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-dashboard";
+import { FormCard } from "./components/form-card";
 
 interface FormFieldData {
   id: string;
@@ -40,7 +44,7 @@ export default function HomePage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const { saveDraft, createForm, publishForm, refetch } = useForms();
+  const { forms, saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -85,7 +89,7 @@ export default function HomePage() {
       description: form.description,
       fields: form.fields,
     });
-    setActiveView("builder");
+    // Don't change the active view - stay on current view
   };
 
   const handleNewForm = async () => {
@@ -192,16 +196,85 @@ export default function HomePage() {
             <FormBuilder formData={formData} onFormDataChange={setFormData} />
           )}
           {activeView === "preview" && <FormPreview formData={formData} />}
-          {activeView === "analytics" && (
-            <div className="p-6">
-              <h2 className="text-2xl font-inter font-bold text-foreground mb-4">
-                Analytics Dashboard
-              </h2>
-              <p className="text-muted-foreground">
-                Analytics dashboard coming soon...
-              </p>
-            </div>
-          )}
+          {activeView === "analytics" &&
+            (currentForm ? (
+              <RealTimeAnalyticsDashboard
+                formId={currentForm.id}
+                formTitle={currentForm.title}
+              />
+            ) : (
+              <div className="p-6 space-y-6">
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-bold text-foreground">
+                    Analytics Dashboard
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Select a form to view its real-time analytics and insights
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {forms.map((form) => (
+                    <FormCard
+                      key={form.id}
+                      form={form}
+                      viewMode="grid"
+                      isStatusChanging={false}
+                      onSelect={() => handleFormSelect(form)}
+                      onDuplicate={() => {}} // Not needed for analytics view
+                      onDelete={() => {}} // Not needed for analytics view
+                      onStatusChange={() => {}} // Not needed for analytics view
+                      onShare={() => {}} // Not needed for analytics view
+                      onViewResponses={() => handleViewResponses(form)}
+                    />
+                  ))}
+                </div>
+
+                {forms.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                      <svg
+                        className="w-8 h-8 text-muted-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      No forms available
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create a form first to view analytics
+                    </p>
+                    <Button onClick={handleNewForm} className="gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Create Form
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
           {activeView === "responses" && currentForm && (
             <ResponsesView
               form={currentForm}
