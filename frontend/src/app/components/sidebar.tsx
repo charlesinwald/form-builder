@@ -22,8 +22,13 @@ export function Sidebar({ activeView, onViewChange, onNewForm }: SidebarProps) {
   return (
     <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="p-4 border-b border-sidebar-border">
-        <h1 className="text-xl font-inter font-bold text-sidebar-foreground">
-          FormCraft
+        <h1 className="text-4xl font-inter font-black tracking-tight">
+          <span className="bg-gradient-to-b from-cyan-600 via-primary to-teal-700 bg-clip-text text-transparent">
+            Form
+          </span>
+          <span className="bg-gradient-to-b from-teal-500 via-white to-teal-600 bg-clip-text text-transparent">
+            Craft
+          </span>
         </h1>
         <p className="text-sm text-muted-foreground">
           Professional Form Builder
