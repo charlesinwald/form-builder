@@ -8,7 +8,7 @@ import { Header } from "@/app/components/header";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<
-    "builder" | "preview" | "analytics"
+    "dashboard" | "builder" | "preview" | "analytics"
   >("builder");
   const [formData, setFormData] = useState({
     title: "Untitled Form",
@@ -18,13 +18,30 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar activeView={activeView} onViewChange={setActiveView} />
+      <Sidebar 
+        activeView={activeView} 
+        onViewChange={setActiveView} 
+        onNewForm={() => {
+          // Reset form data for new form
+          setFormData({
+            title: "Untitled Form",
+            description: "",
+            fields: [],
+          });
+          setActiveView("builder");
+        }}
+      />
 
       <div className="flex-1 flex flex-col">
         <Header
           formTitle={formData.title}
           onTitleChange={(title) => setFormData((prev) => ({ ...prev, title }))}
           activeView={activeView}
+          onPreview={() => setActiveView("preview")}
+          onShare={() => {
+            // Share functionality to be implemented
+            console.log("Share clicked");
+          }}
         />
 
         <main className="flex-1 overflow-hidden">

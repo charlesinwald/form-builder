@@ -10,6 +10,7 @@ interface HeaderProps {
   onTitleChange: (title: string) => void;
   activeView: "dashboard" | "builder" | "preview" | "analytics";
   onShare: () => void;
+  onPreview?: () => void;
   formStatus?: "draft" | "published" | "archived";
   showFormControls?: boolean;
 }
@@ -19,6 +20,7 @@ export function Header({
   onTitleChange,
   activeView,
   onShare,
+  onPreview,
   formStatus = "draft",
   showFormControls = true,
 }: HeaderProps) {
@@ -67,7 +69,12 @@ export function Header({
           <Save className="h-4 w-4" />
           Save Draft
         </Button>
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2 bg-transparent"
+          onClick={onPreview}
+        >
           <Eye className="h-4 w-4" />
           Preview
         </Button>
