@@ -9,6 +9,7 @@ build/
 */build/
 frontend/.next/
 backend/bin/
+.yarn
 
 # Environment variables
 .env

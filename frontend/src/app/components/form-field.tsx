@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Select, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card } from "@/app/components/ui/card"
+import { Input } from "@/app/components/ui/input"
+import { Textarea } from "@/app/components/ui/textarea"
+import { Button } from "@/app/components/ui/button"
+import { Switch } from "@/app/components/ui/switch"
+import { Label } from "@/app/components/ui/label"
+import { Select, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react"
 
 interface FormFieldData {

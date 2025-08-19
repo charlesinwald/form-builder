@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { FieldToolbox } from "@/components/field-toolbox"
-import { FormField } from "@/components/form-field"
+import { Card } from "@/app/components/ui/card"
+import { Input } from "@/app/components/ui/input"
+import { Textarea } from "@/app/components/ui/textarea"
+import { FieldToolbox } from "@/app/components/field-toolbox"
+import { FormField } from "@/app/components/form-field"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { Plus } from "lucide-react"
 
