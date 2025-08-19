@@ -128,3 +128,7 @@ npm run build
 ## License
 
 MIT License
+
+
+## Challenges faced
+When setting up the backend on my VPS, there were issues installing the dependencies, having to do with renaming node modules, so I used a shell script that finds half-renamed npm package folders, deletes both the temp dir and the real package, then reinstalls cleanly.
