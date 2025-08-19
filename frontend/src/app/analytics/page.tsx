@@ -1,23 +1,50 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { RealTimeAnalyticsDashboard } from '@/app/components/real-time-analytics-dashboard';
-import { RealTimeNotifications, useNotifications } from '@/app/components/real-time-notifications';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Badge } from '@/app/components/ui/badge';
-import { useWebSocketAnalytics } from '@/hooks/use-websocket-analytics';
-import { Activity, Send, Rocket, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { RealTimeAnalyticsDashboard } from "@/app/components/real-time-analytics-dashboard";
+import {
+  RealTimeNotifications,
+  useNotifications,
+} from "@/app/components/real-time-notifications";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Alert, AlertDescription } from "@/app/components/ui/alert";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/app/components/ui/tabs";
+import { Badge } from "@/app/components/ui/badge";
+import { useWebSocketAnalytics } from "@/hooks/use-websocket-analytics";
+import {
+  Activity,
+  Send,
+  Rocket,
+  AlertCircle,
+  CheckCircle,
+  Info,
+} from "lucide-react";
 
 // Demo form ID - in production, this would come from route params or props
-const DEMO_FORM_ID = '6789c7f2e8b9a0d1e2f3a4b5';
+const DEMO_FORM_ID = "6789c7f2e8b9a0d1e2f3a4b5";
 
 export default function AnalyticsPage() {
   const [isSimulating, setIsSimulating] = useState(false);
-  const [simulationInterval, setSimulationInterval] = useState<NodeJS.Timeout | null>(null);
-  const { notifications, addNotification, removeNotification, clearNotifications } = useNotifications();
+  const [simulationInterval, setSimulationInterval] =
+    useState<NodeJS.Timeout | null>(null);
+  const {
+    notifications,
+    addNotification,
+    removeNotification,
+    clearNotifications,
+  } = useNotifications();
 
   // Initialize WebSocket analytics for notifications
   const { lastResponse, newResponsesCount } = useWebSocketAnalytics({
@@ -25,64 +52,75 @@ export default function AnalyticsPage() {
     onNewResponse: (response) => {
       // Add notification for new response
       addNotification({
-        type: 'response',
-        title: '🎉 New Response!',
-        description: `${response.data.name || 'Someone'} just submitted a response from ${response.device}`,
+        type: "response",
+        title: "🎉 New Response!",
+        description: `${
+          response.data.name || "Someone"
+        } just submitted a response from ${response.device}`,
         actions: [
           {
-            label: 'View Response',
-            action: () => console.log('Viewing response:', response)
-          }
-        ]
+            label: "View Response",
+            action: () => console.log("Viewing response:", response),
+          },
+        ],
       });
 
       // Check for milestones
       if (newResponsesCount > 0 && newResponsesCount % 10 === 0) {
         addNotification({
-          type: 'milestone',
-          title: '🏆 Milestone Reached!',
+          type: "milestone",
+          title: "🏆 Milestone Reached!",
           description: `You've received ${newResponsesCount} responses today!`,
         });
       }
     },
-    autoConnect: true
+    autoConnect: true,
   });
 
   // Simulate form submissions for demo
   const simulateSubmission = async () => {
-    const names = ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Brown', 'Charlie Wilson'];
-    const devices = ['Mobile', 'Desktop', 'Tablet'];
+    const names = [
+      "John Doe",
+      "Jane Smith",
+      "Bob Johnson",
+      "Alice Brown",
+      "Charlie Wilson",
+    ];
+    const devices = ["Mobile", "Desktop", "Tablet"];
     const randomName = names[Math.floor(Math.random() * names.length)];
     const randomDevice = devices[Math.floor(Math.random() * devices.length)];
 
     const formData = {
       name: randomName,
-      email: `${randomName.toLowerCase().replace(' ', '.')}@example.com`,
-      feedback: 'This is a simulated response for testing real-time analytics.',
-      rating: Math.floor(Math.random() * 5) + 1
+      email: `${randomName.toLowerCase().replace(" ", ".")}@example.com`,
+      feedback: "This is a simulated response for testing real-time analytics.",
+      rating: Math.floor(Math.random() * 5) + 1,
     };
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'}/responses`,
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"
+        }/responses`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': randomDevice === 'Mobile' ? 'Mobile Device' : 'Desktop Browser'
+            "Content-Type": "application/json",
+            "User-Agent":
+              randomDevice === "Mobile" ? "Mobile Device" : "Desktop Browser",
           },
           body: JSON.stringify({
             formId: DEMO_FORM_ID,
-            data: formData
-          })
+            data: formData,
+          }),
         }
       );
 
       if (response.ok) {
-        console.log('Simulated submission successful');
+        console.log("Simulated submission successful");
       }
     } catch (error) {
-      console.error('Error simulating submission:', error);
+      console.error("Error simulating submission:", error);
     }
   };
 
@@ -95,9 +133,9 @@ export default function AnalyticsPage() {
       }
       setIsSimulating(false);
       addNotification({
-        type: 'info',
-        title: 'Simulation Stopped',
-        description: 'Automatic form submissions have been paused.'
+        type: "info",
+        title: "Simulation Stopped",
+        description: "Automatic form submissions have been paused.",
       });
     } else {
       // Submit immediately, then every 5-15 seconds
@@ -108,9 +146,10 @@ export default function AnalyticsPage() {
       setSimulationInterval(interval);
       setIsSimulating(true);
       addNotification({
-        type: 'info',
-        title: 'Simulation Started',
-        description: 'Automatic form submissions will occur every 5-15 seconds.'
+        type: "info",
+        title: "Simulation Started",
+        description:
+          "Automatic form submissions will occur every 5-15 seconds.",
       });
     }
   };
@@ -141,7 +180,9 @@ export default function AnalyticsPage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Real-Time Analytics Dashboard</h1>
+              <h1 className="text-3xl font-bold">
+                Real-Time Analytics Dashboard
+              </h1>
               <p className="text-muted-foreground mt-1">
                 Monitor form responses with live WebSocket updates
               </p>
@@ -195,9 +236,9 @@ export default function AnalyticsPage() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                This dashboard updates in real-time via WebSocket connection. 
-                {isSimulating 
-                  ? ' Automatic submissions are currently running.'
+                This dashboard updates in real-time via WebSocket connection.
+                {isSimulating
+                  ? " Automatic submissions are currently running."
                   : ' Click "Start Simulation" to see live updates or submit test responses manually.'}
               </AlertDescription>
             </Alert>
@@ -212,7 +253,9 @@ export default function AnalyticsPage() {
           <TabsContent value="instructions" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>How to Use the Real-Time Analytics Dashboard</CardTitle>
+                <CardTitle>
+                  How to Use the Real-Time Analytics Dashboard
+                </CardTitle>
                 <CardDescription>
                   Experience live data updates without page refreshes
                 </CardDescription>
@@ -225,7 +268,9 @@ export default function AnalyticsPage() {
                   </h3>
                   <ul className="space-y-2 ml-6 text-sm">
                     <li>• WebSocket connection for instant updates</li>
-                    <li>• Live response notifications with sound and visual alerts</li>
+                    <li>
+                      • Live response notifications with sound and visual alerts
+                    </li>
                     <li>• Real-time chart updates and animations</li>
                     <li>• Device and field analytics tracking</li>
                     <li>• Response trend visualization</li>
@@ -236,11 +281,21 @@ export default function AnalyticsPage() {
                 <div className="space-y-3">
                   <h3 className="font-semibold">Testing the Dashboard</h3>
                   <ol className="space-y-2 ml-6 text-sm list-decimal">
-                    <li>Click "Start Simulation" to begin automatic form submissions</li>
-                    <li>Watch as responses appear in real-time on the dashboard</li>
-                    <li>Notice the live notifications in the top-right corner</li>
+                    <li>
+                      Click &quot;Start Simulation&quot; to begin automatic form
+                      submissions
+                    </li>
+                    <li>
+                      Watch as responses appear in real-time on the dashboard
+                    </li>
+                    <li>
+                      Notice the live notifications in the top-right corner
+                    </li>
                     <li>Observe chart animations and data updates</li>
-                    <li>Click "Submit Test Response" for manual submissions</li>
+                    <li>
+                      Click &quot;Submit Test Response&quot; for manual
+                      submissions
+                    </li>
                     <li>Toggle connection on/off to test reconnection</li>
                   </ol>
                 </div>
@@ -251,10 +306,30 @@ export default function AnalyticsPage() {
                     Connection States
                   </h3>
                   <ul className="space-y-2 ml-6 text-sm">
-                    <li><Badge variant="default" className="mr-2">CONNECTED</Badge> Receiving live updates</li>
-                    <li><Badge variant="secondary" className="mr-2">CONNECTING</Badge> Establishing connection</li>
-                    <li><Badge variant="outline" className="mr-2">DISCONNECTED</Badge> No live updates</li>
-                    <li><Badge variant="destructive" className="mr-2">ERROR</Badge> Connection failed</li>
+                    <li>
+                      <Badge variant="default" className="mr-2">
+                        CONNECTED
+                      </Badge>{" "}
+                      Receiving live updates
+                    </li>
+                    <li>
+                      <Badge variant="secondary" className="mr-2">
+                        CONNECTING
+                      </Badge>{" "}
+                      Establishing connection
+                    </li>
+                    <li>
+                      <Badge variant="outline" className="mr-2">
+                        DISCONNECTED
+                      </Badge>{" "}
+                      No live updates
+                    </li>
+                    <li>
+                      <Badge variant="destructive" className="mr-2">
+                        ERROR
+                      </Badge>{" "}
+                      Connection failed
+                    </li>
                   </ul>
                 </div>
               </CardContent>
@@ -299,7 +374,9 @@ export default function AnalyticsPage() {
                   <ol className="space-y-2 ml-6 text-sm list-decimal">
                     <li>User submits form response</li>
                     <li>Backend saves to MongoDB</li>
-                    <li>Backend broadcasts via WebSocket to subscribed clients</li>
+                    <li>
+                      Backend broadcasts via WebSocket to subscribed clients
+                    </li>
                     <li>Frontend receives message and updates UI</li>
                     <li>Charts and stats update with animations</li>
                     <li>Notifications appear for important events</li>
@@ -307,7 +384,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold mb-2">WebSocket Message Types</h4>
+                  <h4 className="font-semibold mb-2">
+                    WebSocket Message Types
+                  </h4>
                   <div className="space-y-1 text-sm font-mono">
                     <div>• new_response - New form submission</div>
                     <div>• analytics_update - Updated analytics data</div>
@@ -323,4 +402,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
