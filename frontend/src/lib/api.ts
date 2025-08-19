@@ -1,15 +1,16 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+// Ensure the API URL has a protocol
+const API_BASE_URL = (() => {
+  const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+  // If the URL doesn't start with http:// or https://, add http://
+  if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+    return `http://${url}`;
+  }
+  return url;
+})();
 
 export interface FormField {
   id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
   label: string;
   placeholder?: string;
   required: boolean;

@@ -16,12 +16,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	
+
 	"form-builder-backend/models"
+	"form-builder-backend/services"
+	ws "form-builder-backend/websocket"
 )
 
 var client *mongo.Client
 var database *mongo.Database
+var wsHub *ws.Hub
+var analyticsService *services.AnalyticsService
+var useMemoryStore bool = false
 
 func main() {
 	// Load environment variables
@@ -31,6 +36,13 @@ func main() {
 
 	// Connect to MongoDB
 	connectMongoDB()
+
+	// Initialize services
+	analyticsService = services.NewAnalyticsService(database)
+
+	// Initialize WebSocket hub
+	wsHub = ws.NewHub()
+	go wsHub.Run()
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
@@ -54,6 +66,7 @@ func main() {
 	}
 
 	log.Printf("Server starting on port %s", port)
+	log.Printf("WebSocket hub started, ready for connections")
 	log.Fatal(app.Listen(":" + port))
 }
 
@@ -88,8 +101,12 @@ func setupRoutes(app *fiber.App) {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
 			"message": "Form Builder API is running",
+			"wsClients": wsHub.GetConnectedClientsCount(),
 		})
 	})
+
+	// WebSocket endpoint
+	api.Get("/ws", ws.HandleWebSocket(wsHub))
 
 	// Forms routes
 	forms := api.Group("/forms")
@@ -114,6 +131,7 @@ func setupRoutes(app *fiber.App) {
 	// Analytics routes
 	analytics := api.Group("/analytics")
 	analytics.Get("/form/:formId", getFormAnalytics)
+	analytics.Get("/form/:formId/realtime", getRealTimeAnalytics)
 }
 
 func createForm(c *fiber.Ctx) error {
@@ -412,10 +430,59 @@ func createResponse(c *fiber.Ctx) error {
 
 	response.ID = result.InsertedID.(primitive.ObjectID)
 
+	// Broadcast new response via WebSocket
+	wsMessage := ws.Message{
+		Type:      ws.MessageTypeNewResponse,
+		Timestamp: time.Now(),
+		FormID:    req.FormID,
+		Data: fiber.Map{
+			"id":          response.ID.Hex(),
+			"formId":      req.FormID,
+			"submittedAt": response.CreatedAt,
+			"data":        req.Data,
+			"device":      getDeviceFromUserAgent(response.UserAgent),
+		},
+	}
+	wsHub.BroadcastToForm(req.FormID, wsMessage)
+
+	// Also broadcast analytics update
+	if analytics, err := analyticsService.GetFormAnalytics(req.FormID); err == nil {
+		analyticsMessage := ws.Message{
+			Type:      ws.MessageTypeAnalyticsUpdate,
+			Timestamp: time.Now(),
+			FormID:    req.FormID,
+			Data:      analytics,
+		}
+		wsHub.BroadcastToForm(req.FormID, analyticsMessage)
+	}
+
 	return c.Status(201).JSON(fiber.Map{
 		"message": "Response submitted successfully",
 		"id":      response.ID.Hex(),
 	})
+}
+
+func getDeviceFromUserAgent(userAgent string) string {
+	if containsAny(userAgent, []string{"Mobile", "Android", "iPhone"}) {
+		return "Mobile"
+	} else if containsAny(userAgent, []string{"Tablet", "iPad"}) {
+		return "Tablet"
+	}
+	return "Desktop"
+}
+
+func containsAny(str string, substrings []string) bool {
+	for _, substr := range substrings {
+		if contains(str, substr) {
+			return true
+		}
+	}
+	return false
+}
+
+func contains(str, substr string) bool {
+	return len(str) >= len(substr) && (str[:len(substr)] == substr || 
+		   (len(str) > len(substr) && contains(str[1:], substr)))
 }
 
 func validateFormData(data map[string]interface{}, fields []models.FormField) error {
@@ -624,7 +691,35 @@ func getResponse(c *fiber.Ctx) error {
 }
 
 func getFormAnalytics(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"message": "Get form analytics endpoint"})
+	formID := c.Params("formId")
+	
+	analytics, err := analyticsService.GetFormAnalytics(formID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to get analytics",
+		})
+	}
+
+	return c.JSON(analytics)
+}
+
+func getRealTimeAnalytics(c *fiber.Ctx) error {
+	formID := c.Params("formId")
+	
+	// Get current analytics
+	analytics, err := analyticsService.GetFormAnalytics(formID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to get analytics",
+		})
+	}
+
+	// Add WebSocket connection info
+	return c.JSON(fiber.Map{
+		"analytics":   analytics,
+		"subscribers": wsHub.GetFormSubscribersCount(formID),
+		"wsEndpoint":  "/api/v1/ws",
+	})
 }
 
 func saveDraft(c *fiber.Ctx) error {

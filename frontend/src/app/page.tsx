@@ -14,13 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface FormFieldData {
   id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
   label: string;
   placeholder?: string;
   required: boolean;

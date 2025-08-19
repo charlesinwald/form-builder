@@ -21,13 +21,7 @@ import {
 
 interface FormFieldData {
   id: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "checkbox"
-    | "rating";
+  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
   label: string;
   options?: string[];
 }
