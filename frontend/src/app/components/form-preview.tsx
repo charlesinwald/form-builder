@@ -54,7 +54,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
         return (
           <Input
             placeholder={field.placeholder}
-            value={responses[field.id] || ""}
+            value={(responses[field.id] as string) || ""}
             onChange={(e) => updateResponse(field.id, e.target.value)}
             required={field.required}
           />
@@ -63,7 +63,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
         return (
           <Textarea
             placeholder={field.placeholder}
-            value={responses[field.id] || ""}
+            value={(responses[field.id] as string) || ""}
             onChange={(e) => updateResponse(field.id, e.target.value)}
             required={field.required}
             rows={4}
@@ -72,8 +72,8 @@ export function FormPreview({ formData }: FormPreviewProps) {
       case "select":
         return (
           <Select
-            value={responses[field.id] || ""}
-            onValueChange={(value) => updateResponse(field.id, value)}
+            value={(responses[field.id] as string) || ""}
+            onValueChange={(value: string) => updateResponse(field.id, value)}
             required={field.required}
           >
             <SelectTrigger>
@@ -98,7 +98,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
                   id={`${field.id}-${index}`}
                   name={field.id}
                   value={option}
-                  checked={responses[field.id] === option}
+                  checked={(responses[field.id] as string) === option}
                   onChange={(e) => updateResponse(field.id, e.target.value)}
                   required={field.required}
                   className="text-primary"
@@ -122,9 +122,9 @@ export function FormPreview({ formData }: FormPreviewProps) {
                   type="checkbox"
                   id={`${field.id}-${index}`}
                   value={option}
-                  checked={(responses[field.id] || []).includes(option)}
+                  checked={((responses[field.id] as string[]) || []).includes(option)}
                   onChange={(e) => {
-                    const currentValues = responses[field.id] || [];
+                    const currentValues = (responses[field.id] as string[]) || [];
                     const newValues = e.target.checked
                       ? [...currentValues, option]
                       : currentValues.filter((v: string) => v !== option);
@@ -151,7 +151,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
                 type="button"
                 onClick={() => updateResponse(field.id, star)}
                 className={`text-2xl ${
-                  (responses[field.id] || 0) >= star
+                  ((responses[field.id] as number) || 0) >= star
                     ? "text-secondary"
                     : "text-muted-foreground"
                 } hover:text-secondary transition-colors`}

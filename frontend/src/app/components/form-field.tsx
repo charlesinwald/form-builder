@@ -158,7 +158,7 @@ export function FormField({ field, isSelected, onSelect, onUpdate, onDelete }: F
               <Switch
                 id={`required-${field.id}`}
                 checked={field.required}
-                onCheckedChange={(checked) => onUpdate({ required: checked })}
+                onCheckedChange={(checked: boolean) => onUpdate({ required: checked })}
               />
             </div>
 

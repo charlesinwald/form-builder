@@ -57,9 +57,9 @@ export function RealTimeNotification({ newResponses, onDismiss, onViewResponse }
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {latestResponse.responses.name || "Anonymous"} just submitted a response
+                {(latestResponse.responses.name as string) || "Anonymous"} just submitted a response
               </p>
-              {latestResponse.responses.rating && (
+              {(latestResponse.responses.rating as number) && (
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-xs text-muted-foreground">Rating:</span>
                   <div className="flex">
@@ -67,7 +67,7 @@ export function RealTimeNotification({ newResponses, onDismiss, onViewResponse }
                       <span
                         key={star}
                         className={`text-xs ${
-                          star <= latestResponse.responses.rating ? "text-secondary" : "text-muted-foreground"
+                          star <= (latestResponse.responses.rating as number) ? "text-secondary" : "text-muted-foreground"
                         }`}
                       >
                         ⭐

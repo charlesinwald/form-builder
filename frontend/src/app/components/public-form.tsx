@@ -9,10 +9,7 @@ import { Label } from "@/app/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/app/components/ui/radio-group"
 import { Checkbox } from "@/app/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import { Calendar } from "@/app/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover"
-import { CalendarIcon, Send } from "lucide-react"
-import { format } from "date-fns"
+import { Send } from "lucide-react"
 import { Form, FormField } from "@/lib/api"
 
 interface PublicFormProps {
@@ -30,38 +27,6 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
       return `${field.label} is required`
     }
 
-    if (field.validation) {
-      const { min, max, pattern, message } = field.validation
-      
-      if (typeof value === 'string') {
-        if (min && value.length < min) {
-          return message || `${field.label} must be at least ${min} characters`
-        }
-        if (max && value.length > max) {
-          return message || `${field.label} must be no more than ${max} characters`
-        }
-        if (pattern && !new RegExp(pattern).test(value)) {
-          return message || `${field.label} format is invalid`
-        }
-      }
-
-      if (typeof value === 'number') {
-        if (min && value < min) {
-          return message || `${field.label} must be at least ${min}`
-        }
-        if (max && value > max) {
-          return message || `${field.label} must be no more than ${max}`
-        }
-      }
-    }
-
-    // Email validation
-    if (field.type === 'email' && value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(value)) {
-        return 'Please enter a valid email address'
-      }
-    }
 
     return null
   }
@@ -104,7 +69,6 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
 
     switch (field.type) {
       case 'text':
-      case 'email':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id} className="text-sm font-medium">
@@ -114,7 +78,7 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
               id={field.id}
               type={field.type}
               placeholder={field.placeholder}
-              value={value}
+              value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className={error ? "border-destructive" : ""}
             />
@@ -122,23 +86,6 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
           </div>
         )
 
-      case 'number':
-        return (
-          <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
-            </Label>
-            <Input
-              id={field.id}
-              type="number"
-              placeholder={field.placeholder}
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, parseFloat(e.target.value) || '')}
-              className={error ? "border-destructive" : ""}
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </div>
-        )
 
       case 'textarea':
         return (
@@ -149,7 +96,7 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
             <Textarea
               id={field.id}
               placeholder={field.placeholder}
-              value={value}
+              value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className={error ? "border-destructive" : ""}
               rows={4}
@@ -164,7 +111,7 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
             <Label htmlFor={field.id} className="text-sm font-medium">
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <Select value={value} onValueChange={(val) => handleFieldChange(field.id, val)}>
+            <Select value={value as string} onValueChange={(val: string) => handleFieldChange(field.id, val)}>
               <SelectTrigger className={error ? "border-destructive" : ""}>
                 <SelectValue placeholder={field.placeholder || "Select an option"} />
               </SelectTrigger>
@@ -187,8 +134,8 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
               {field.label} {field.required && <span className="text-destructive">*</span>}
             </Label>
             <RadioGroup
-              value={value}
-              onValueChange={(val) => handleFieldChange(field.id, val)}
+              value={value as string}
+              onValueChange={(val: string) => handleFieldChange(field.id, val)}
               className={error ? "border border-destructive rounded-md p-3" : ""}
             >
               {field.options?.map((option) => (
@@ -216,7 +163,7 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
                   <Checkbox
                     id={`${field.id}-${option}`}
                     checked={(value as string[])?.includes(option) || false}
-                    onCheckedChange={(checked) => {
+                    onCheckedChange={(checked: boolean) => {
                       const currentValues = (value as string[]) || []
                       if (checked) {
                         handleFieldChange(field.id, [...currentValues, option])
@@ -235,34 +182,6 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
           </div>
         )
 
-      case 'date':
-        return (
-          <div key={field.id} className="space-y-2">
-            <Label className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-full justify-start text-left font-normal ${error ? "border-destructive" : ""} ${!value ? "text-muted-foreground" : ""}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {value ? format(new Date(value), "PPP") : field.placeholder || "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={value ? new Date(value) : undefined}
-                  onSelect={(date) => handleFieldChange(field.id, date?.toISOString())}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </div>
-        )
 
       default:
         return null

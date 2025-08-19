@@ -6,7 +6,7 @@ import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { FieldToolbox } from "@/app/components/field-toolbox";
 import { FormField } from "@/app/components/form-field";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 import { Plus } from "lucide-react";
 
 interface FormData {
@@ -115,7 +115,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
           {/* Form Fields */}
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="form-fields">
-              {(provided: { droppableProps: Record<string, unknown>; innerRef: React.Ref<HTMLDivElement> }) => (
+              {(provided: DroppableProvided) => (
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
@@ -127,7 +127,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
                       draggableId={field.id}
                       index={index}
                     >
-                      {(provided: { innerRef: React.Ref<HTMLDivElement>; draggableProps: Record<string, unknown>; dragHandleProps: Record<string, unknown> }, snapshot: { isDragging: boolean }) => (
+                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}

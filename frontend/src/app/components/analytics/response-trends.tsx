@@ -25,7 +25,7 @@ interface ResponseTrendsProps {
   trends: TrendData[];
 }
 
-export function ResponseTrends({ trends: _trends }: ResponseTrendsProps) {
+export function ResponseTrends({ }: ResponseTrendsProps) {
   return (
     <Card>
       <CardHeader>

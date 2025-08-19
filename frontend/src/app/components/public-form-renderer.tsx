@@ -143,7 +143,7 @@ export function PublicFormRenderer({
           <div className="space-y-2">
             <Input
               placeholder={field.placeholder}
-              value={responses[field.id] || ""}
+              value={(responses[field.id] as string) || ""}
               onChange={(e) => updateResponse(field.id, e.target.value)}
               className={
                 hasError
@@ -162,7 +162,7 @@ export function PublicFormRenderer({
           <div className="space-y-2">
             <Textarea
               placeholder={field.placeholder}
-              value={responses[field.id] || ""}
+              value={(responses[field.id] as string) || ""}
               onChange={(e) => updateResponse(field.id, e.target.value)}
               rows={4}
               className={
@@ -181,8 +181,8 @@ export function PublicFormRenderer({
         return (
           <div className="space-y-2">
             <Select
-              value={responses[field.id] || ""}
-              onValueChange={(value) => updateResponse(field.id, value)}
+              value={(responses[field.id] as string) || ""}
+              onValueChange={(value: string) => updateResponse(field.id, value)}
             >
               <SelectTrigger
                 className={
@@ -216,7 +216,7 @@ export function PublicFormRenderer({
                     id={`${field.id}-${index}`}
                     name={field.id}
                     value={option}
-                    checked={responses[field.id] === option}
+                    checked={(responses[field.id] as string) === option}
                     onChange={(e) => updateResponse(field.id, e.target.value)}
                     className="w-4 h-4 text-primary border-border focus:ring-primary focus:ring-2"
                   />
@@ -245,9 +245,9 @@ export function PublicFormRenderer({
                     type="checkbox"
                     id={`${field.id}-${index}`}
                     value={option}
-                    checked={(responses[field.id] || []).includes(option)}
+                    checked={((responses[field.id] as string[]) || []).includes(option)}
                     onChange={(e) => {
-                      const currentValues = responses[field.id] || [];
+                      const currentValues = (responses[field.id] as string[]) || [];
                       const newValues = e.target.checked
                         ? [...currentValues, option]
                         : currentValues.filter((v: string) => v !== option);
@@ -280,7 +280,7 @@ export function PublicFormRenderer({
                   type="button"
                   onClick={() => updateResponse(field.id, star)}
                   className={`text-3xl transition-colors hover:scale-110 transform ${
-                    (responses[field.id] || 0) >= star
+                    ((responses[field.id] as number) || 0) >= star
                       ? "text-secondary"
                       : "text-muted-foreground hover:text-secondary"
                   }`}
@@ -288,9 +288,9 @@ export function PublicFormRenderer({
                   ⭐
                 </button>
               ))}
-              {responses[field.id] && (
+              {(responses[field.id] as number) > 0 && (
                 <span className="ml-3 text-sm text-muted-foreground self-center">
-                  {responses[field.id]} out of 5
+                  {responses[field.id] as number} out of 5
                 </span>
               )}
             </div>

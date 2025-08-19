@@ -193,7 +193,7 @@ export function ResponsesView({ form, onBack }: ResponsesViewProps) {
                       {field.required && <span className="text-destructive ml-1">*</span>}
                     </div>
                     <div className="text-sm">
-                      {Array.isArray(value) ? value.join(', ') : (value || 'No response')}
+                      {Array.isArray(value) ? (value as string[]).join(', ') : (String(value || 'No response'))}
                     </div>
                   </div>
                 )
