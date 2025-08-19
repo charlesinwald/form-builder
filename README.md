@@ -138,7 +138,7 @@ cd form-builder-monorepo
 This script will:
 
 - Check all prerequisites
-- Install all dependencies (root, frontend, and Go)
+- Install all dependencies (root, frontend, and backend dependencies)
 - Create necessary environment files
 - Set up the development environment
 
