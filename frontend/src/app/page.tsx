@@ -7,6 +7,7 @@ import { FormsDashboard } from "@/app/components/forms-dashboard";
 import { Sidebar } from "@/app/components/sidebar";
 import { Header } from "@/app/components/header";
 import { ShareFormModal } from "@/app/components/share-form-modal";
+import { ResponsesView } from "@/app/components/responses-view";
 import { Form } from "@/lib/api";
 import { useForms } from "@/hooks/use-forms";
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +20,7 @@ interface FormData {
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<
-    "dashboard" | "builder" | "preview" | "analytics"
+    "dashboard" | "builder" | "preview" | "analytics" | "responses"
   >("dashboard");
   const [currentForm, setCurrentForm] = useState<Form | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -145,6 +146,11 @@ export default function HomePage() {
     }
   };
 
+  const handleViewResponses = (form: Form) => {
+    setCurrentForm(form);
+    setActiveView("responses");
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar 
@@ -171,6 +177,7 @@ export default function HomePage() {
             <FormsDashboard 
               onFormSelect={handleFormSelect}
               onNewForm={handleNewForm}
+              onViewResponses={handleViewResponses}
             />
           )}
           {activeView === "builder" && (
@@ -186,6 +193,12 @@ export default function HomePage() {
                 Analytics dashboard coming soon...
               </p>
             </div>
+          )}
+          {activeView === "responses" && currentForm && (
+            <ResponsesView 
+              form={currentForm}
+              onBack={() => setActiveView("dashboard")}
+            />
           )}
         </main>
       </div>

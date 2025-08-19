@@ -17,9 +17,10 @@ import { useToast } from "@/hooks/use-toast"
 interface FormsDashboardProps {
   onFormSelect: (form: Form) => void
   onNewForm: () => void
+  onViewResponses: (form: Form) => void
 }
 
-export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps) {
+export function FormsDashboard({ onFormSelect, onNewForm, onViewResponses }: FormsDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published" | "archived">("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -316,6 +317,7 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
               onDelete={() => setFormToDelete(form)}
               onStatusChange={(status) => handleStatusChange(form.id, status)}
               onShare={() => setFormToShare(form)}
+              onViewResponses={() => onViewResponses(form)}
             />
           ))}
         </div>

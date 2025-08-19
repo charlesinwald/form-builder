@@ -19,6 +19,7 @@ export interface Form {
   updatedAt: string;
   isActive: boolean;
   userId: string;
+  responseCount?: number;
 }
 
 export interface CreateFormRequest {
@@ -34,6 +35,15 @@ export interface UpdateFormRequest {
   fields?: FormField[];
   status?: string;
   isActive?: boolean;
+}
+
+export interface FormResponse {
+  id: string;
+  formId: string;
+  data: Record<string, any>;
+  createdAt: string;
+  ipAddress: string;
+  userAgent: string;
 }
 
 class ApiService {
@@ -123,6 +133,10 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ formId, data }),
     });
+  }
+
+  async getFormResponses(formId: string): Promise<FormResponse[]> {
+    return this.request<FormResponse[]>(`/responses/form/${formId}`);
   }
 }
 

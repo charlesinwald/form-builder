@@ -191,6 +191,21 @@ func getForms(c *fiber.Ctx) error {
 		forms = []models.Form{}
 	}
 
+	// Get response counts for each form
+	responsesCollection := database.Collection("responses")
+	for i := range forms {
+		count, err := responsesCollection.CountDocuments(
+			context.Background(),
+			bson.M{"formId": forms[i].ID},
+		)
+		if err != nil {
+			log.Printf("Error counting responses for form %s: %v", forms[i].ID.Hex(), err)
+			// Continue without response count rather than failing
+		}
+		// Add response count to form (we'll need to modify the model)
+		forms[i].ResponseCount = int(count)
+	}
+
 	return c.JSON(forms)
 }
 
@@ -546,7 +561,62 @@ func getPublicForm(c *fiber.Ctx) error {
 }
 
 func getResponsesByForm(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"message": "Get responses by form endpoint"})
+	formID := c.Params("formId")
+	
+	// Convert form ID to ObjectID
+	formObjID, err := primitive.ObjectIDFromHex(formID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid form ID",
+		})
+	}
+
+	// Verify the form exists and user has access
+	formsCollection := database.Collection("forms")
+	var form models.Form
+	err = formsCollection.FindOne(context.Background(), bson.M{
+		"_id":    formObjID,
+		"userId": "default", // TODO: get from auth
+	}).Decode(&form)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(404).JSON(fiber.Map{
+				"error": "Form not found",
+			})
+		}
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to verify form",
+		})
+	}
+
+	// Get responses
+	responsesCollection := database.Collection("responses")
+	cursor, err := responsesCollection.Find(
+		context.Background(), 
+		bson.M{"formId": formObjID},
+		options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}}),
+	)
+	if err != nil {
+		log.Printf("Error fetching responses: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to fetch responses",
+		})
+	}
+	defer cursor.Close(context.Background())
+
+	var responses []models.FormResponse
+	if err := cursor.All(context.Background(), &responses); err != nil {
+		log.Printf("Error decoding responses: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to decode responses",
+		})
+	}
+
+	if responses == nil {
+		responses = []models.FormResponse{}
+	}
+
+	return c.JSON(responses)
 }
 
 func getResponse(c *fiber.Ctx) error {

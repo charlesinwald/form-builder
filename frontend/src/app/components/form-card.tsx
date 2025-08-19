@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Copy, Trash2, BarChart3, Share, Archive, FileText } from "lucide-react"
+import { MoreHorizontal, Eye, Copy, Trash2, BarChart3, Share, Archive, FileText, MessageSquare } from "lucide-react"
 
 interface FormData {
   id: string
@@ -32,9 +32,10 @@ interface FormCardProps {
   onDelete: () => void
   onStatusChange: (status: "draft" | "published" | "archived") => void
   onShare?: () => void
+  onViewResponses?: () => void
 }
 
-export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, onDuplicate, onDelete, onStatusChange, onShare }: FormCardProps) {
+export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, onDuplicate, onDelete, onStatusChange, onShare, onViewResponses }: FormCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "published":
@@ -111,6 +112,17 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                     <Copy className="h-4 w-4 mr-2" />
                     Duplicate
                   </DropdownMenuItem>
+                  {onViewResponses && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onViewResponses()
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      View Responses
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   {form.status !== "published" && (
                     <DropdownMenuItem
@@ -205,6 +217,17 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                 <Copy className="h-4 w-4 mr-2" />
                 Duplicate
               </DropdownMenuItem>
+              {onViewResponses && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onViewResponses()
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  View Responses
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               {form.status !== "published" && (
                 <DropdownMenuItem
