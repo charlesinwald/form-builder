@@ -27,8 +27,7 @@ interface FormFieldData {
     | "select"
     | "radio"
     | "checkbox"
-    | "rating"
-    | "date";
+    | "rating";
   label: string;
   options?: string[];
 }

@@ -9,8 +9,7 @@ export interface FormField {
     | "select"
     | "radio"
     | "checkbox"
-    | "rating"
-    | "date";
+    | "rating";
   label: string;
   placeholder?: string;
   required: boolean;
