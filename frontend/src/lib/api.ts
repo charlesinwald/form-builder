@@ -114,6 +114,7 @@ class ApiService {
   }
 
   async getPublicForm(id: string): Promise<Form> {
+    console.log('API: Fetching public form with ID:', id)
     return this.request<Form>(`/public/forms/${id}`);
   }
 

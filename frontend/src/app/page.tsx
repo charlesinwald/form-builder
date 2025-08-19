@@ -6,6 +6,7 @@ import { FormPreview } from "@/app/components/form-preview";
 import { FormsDashboard } from "@/app/components/forms-dashboard";
 import { Sidebar } from "@/app/components/sidebar";
 import { Header } from "@/app/components/header";
+import { ShareFormModal } from "@/app/components/share-form-modal";
 import { Form } from "@/lib/api";
 import { useForms } from "@/hooks/use-forms";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +28,7 @@ export default function HomePage() {
     fields: [],
   });
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   const { saveDraft, updateForm, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
@@ -158,10 +160,7 @@ export default function HomePage() {
           activeView={activeView}
           onPreview={() => setActiveView("preview")}
           onPublish={handlePublishForm}
-          onShare={() => {
-            // Share functionality to be implemented
-            console.log("Share clicked");
-          }}
+          onShare={() => setShowShareModal(true)}
           isFormDraft={currentForm?.status === 'draft'}
           isFormPublished={currentForm?.status === 'published'}
           isPublishing={isPublishing}
@@ -190,6 +189,16 @@ export default function HomePage() {
           )}
         </main>
       </div>
+
+      {/* Modals */}
+      {currentForm && (
+        <ShareFormModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          formId={currentForm.id}
+          formTitle={formData.title}
+        />
+      )}
     </div>
   );
 }

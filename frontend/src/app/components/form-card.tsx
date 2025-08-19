@@ -31,9 +31,10 @@ interface FormCardProps {
   onDuplicate: () => void
   onDelete: () => void
   onStatusChange: (status: "draft" | "published" | "archived") => void
+  onShare?: () => void
 }
 
-export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, onDuplicate, onDelete, onStatusChange }: FormCardProps) {
+export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, onDuplicate, onDelete, onStatusChange, onShare }: FormCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "published":
@@ -135,6 +136,17 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                       {isStatusChanging ? "Archiving..." : "Archive"}
                     </DropdownMenuItem>
                   )}
+                  {form.status === "published" && onShare && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onShare()
+                      }}
+                    >
+                      <Share className="h-4 w-4 mr-2" />
+                      Share
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={(e) => {
@@ -216,6 +228,17 @@ export function FormCard({ form, viewMode, isStatusChanging = false, onSelect, o
                 >
                   <Archive className="h-4 w-4 mr-2" />
                   {isStatusChanging ? "Archiving..." : "Archive"}
+                </DropdownMenuItem>
+              )}
+              {form.status === "published" && onShare && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onShare()
+                  }}
+                >
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

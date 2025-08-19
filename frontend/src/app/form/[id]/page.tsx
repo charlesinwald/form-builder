@@ -23,9 +23,11 @@ export default function PublicFormPage() {
   useEffect(() => {
     const loadForm = async () => {
       try {
+        console.log('Loading form with ID:', formId)
         setLoading(true)
         setError(null)
         const formData = await apiService.getPublicForm(formId)
+        console.log('Form data received:', formData)
         setForm(formData)
       } catch (err) {
         console.error('Error loading form:', err)

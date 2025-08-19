@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormCard } from "@/app/components/form-card"
 import { CreateFormModal } from "@/app/components/create-form-modal"
 import { DeleteFormModal } from "@/app/components/delete-form-modal"
+import { ShareFormModal } from "@/app/components/share-form-modal"
 import { Plus, Search, Filter, Grid, List } from "lucide-react"
 import { useForms } from "@/hooks/use-forms"
 import { Form } from "@/lib/api"
@@ -24,6 +25,7 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [formToDelete, setFormToDelete] = useState<Form | null>(null)
+  const [formToShare, setFormToShare] = useState<Form | null>(null)
   const [statusChanging, setStatusChanging] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
@@ -313,6 +315,7 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
               onDuplicate={() => handleDuplicateForm(form)}
               onDelete={() => setFormToDelete(form)}
               onStatusChange={(status) => handleStatusChange(form.id, status)}
+              onShare={() => setFormToShare(form)}
             />
           ))}
         </div>
@@ -330,6 +333,13 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
         onClose={() => setFormToDelete(null)}
         onConfirm={() => formToDelete && handleDeleteForm(formToDelete.id)}
         formTitle={formToDelete?.title || ""}
+      />
+
+      <ShareFormModal
+        isOpen={!!formToShare}
+        onClose={() => setFormToShare(null)}
+        formId={formToShare?.id || ""}
+        formTitle={formToShare?.title || ""}
       />
     </div>
   )
