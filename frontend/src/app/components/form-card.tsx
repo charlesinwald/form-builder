@@ -43,6 +43,7 @@ interface FormCardProps {
   onStatusChange: (status: "draft" | "published" | "archived") => void;
   onShare?: () => void;
   onViewResponses?: () => void;
+  context?: "dashboard" | "analytics";
 }
 
 export function FormCard({
@@ -55,6 +56,7 @@ export function FormCard({
   onStatusChange,
   onShare,
   onViewResponses,
+  context = "dashboard",
 }: FormCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -76,11 +78,17 @@ export function FormCard({
   };
 
   const handleCardClick = () => {
-    // If there are responses, go to responses view, otherwise go to form builder
-    if (form.responseCount && form.responseCount > 0 && onViewResponses) {
-      onViewResponses();
-    } else {
+    // Context-aware behavior
+    if (context === "analytics") {
+      // On analytics page, always show analytics for the selected form
       onSelect();
+    } else {
+      // On dashboard, if there are responses, go to responses view, otherwise go to form builder
+      if (form.responseCount && form.responseCount > 0 && onViewResponses) {
+        onViewResponses();
+      } else {
+        onSelect();
+      }
     }
   };
 

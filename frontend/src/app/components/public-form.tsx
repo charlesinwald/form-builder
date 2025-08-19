@@ -229,6 +229,38 @@ export function PublicForm({
           </div>
         );
 
+      case "rating":
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label className="text-sm font-medium">
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
+            </Label>
+            <div className="flex space-x-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => handleFieldChange(field.id, star)}
+                  className={`text-3xl transition-colors hover:scale-110 transform ${
+                    ((value as number) || 0) >= star
+                      ? "text-secondary"
+                      : "text-muted-foreground hover:text-secondary"
+                  }`}
+                >
+                  ⭐
+                </button>
+              ))}
+              {(value as number) > 0 && (
+                <span className="ml-3 text-sm text-muted-foreground self-center">
+                  {value as number} out of 5
+                </span>
+              )}
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        );
+
       default:
         return null;
     }

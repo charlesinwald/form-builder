@@ -226,6 +226,7 @@ export default function HomePage() {
                       onStatusChange={() => {}} // Not needed for analytics view
                       onShare={() => {}} // Not needed for analytics view
                       onViewResponses={() => handleViewResponses(form)}
+                      context="analytics"
                     />
                   ))}
                 </div>
