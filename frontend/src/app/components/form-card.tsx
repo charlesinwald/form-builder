@@ -234,15 +234,6 @@ export function FormCard({
     );
   }
 
-  const handleCardClick = () => {
-    // If there are responses, go to responses view, otherwise go to form builder
-    if (form.responseCount && form.responseCount > 0 && onViewResponses) {
-      onViewResponses();
-    } else {
-      onSelect();
-    }
-  };
-
   return (
     <Card
       className="hover:shadow-md transition-shadow cursor-pointer"
