@@ -43,6 +43,7 @@ interface FormCardProps {
   onStatusChange: (status: "draft" | "published" | "archived") => void;
   onShare?: () => void;
   onViewResponses?: () => void;
+  onEdit?: () => void;
   context?: "dashboard" | "analytics";
 }
 
@@ -56,6 +57,7 @@ export function FormCard({
   onStatusChange,
   onShare,
   onViewResponses,
+  onEdit,
   context = "dashboard",
 }: FormCardProps) {
   const getStatusColor = (status: string) => {
@@ -78,7 +80,7 @@ export function FormCard({
   };
 
   const handleCardClick = () => {
-    // Context-aware behavior
+    // Context-aware behavior for card clicks (not edit button)
     if (context === "analytics") {
       // On analytics page, always show analytics for the selected form
       onSelect();
@@ -89,6 +91,15 @@ export function FormCard({
       } else {
         onSelect();
       }
+    }
+  };
+
+  const handleEdit = () => {
+    // Edit button should always go to form builder
+    if (onEdit) {
+      onEdit();
+    } else {
+      onSelect(); // Fallback
     }
   };
 
@@ -160,7 +171,7 @@ export function FormCard({
                   <DropdownMenuItem
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
-                      onSelect();
+                      handleEdit();
                     }}
                   >
                     <Eye className="h-4 w-4 mr-2" />
@@ -279,7 +290,7 @@ export function FormCard({
               <DropdownMenuItem
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
-                  onSelect();
+                  handleEdit();
                 }}
               >
                 <Eye className="h-4 w-4 mr-2" />

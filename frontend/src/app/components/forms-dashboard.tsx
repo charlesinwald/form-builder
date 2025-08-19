@@ -29,12 +29,14 @@ interface FormsDashboardProps {
   onFormSelect: (form: Form) => void;
   onViewResponses: (form: Form) => void;
   onNewForm: () => void;
+  onEditForm?: (form: Form) => void;
 }
 
 export function FormsDashboard({
   onFormSelect,
   onViewResponses,
   onNewForm,
+  onEditForm,
 }: FormsDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -370,6 +372,9 @@ export function FormsDashboard({
               onStatusChange={(status) => handleStatusChange(form.id, status)}
               onShare={() => setFormToShare(form)}
               onViewResponses={() => onViewResponses(form)}
+              onEdit={() =>
+                onEditForm ? onEditForm(form) : onFormSelect(form)
+              }
             />
           ))}
         </div>

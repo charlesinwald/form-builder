@@ -190,6 +190,15 @@ export default function HomePage() {
               onFormSelect={handleFormSelect}
               onNewForm={handleNewForm}
               onViewResponses={handleViewResponses}
+              onEditForm={(form) => {
+                setCurrentForm(form);
+                setFormData({
+                  title: form.title,
+                  description: form.description,
+                  fields: form.fields,
+                });
+                setActiveView("builder");
+              }}
             />
           )}
           {activeView === "builder" && (
@@ -226,6 +235,15 @@ export default function HomePage() {
                       onStatusChange={() => {}} // Not needed for analytics view
                       onShare={() => {}} // Not needed for analytics view
                       onViewResponses={() => handleViewResponses(form)}
+                      onEdit={() => {
+                        setCurrentForm(form);
+                        setFormData({
+                          title: form.title,
+                          description: form.description,
+                          fields: form.fields,
+                        });
+                        setActiveView("builder");
+                      }}
                       context="analytics"
                     />
                   ))}
