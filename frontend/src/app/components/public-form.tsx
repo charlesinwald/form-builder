@@ -1,78 +1,97 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Textarea } from "@/app/components/ui/textarea"
-import { Label } from "@/app/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/app/components/ui/radio-group"
-import { Checkbox } from "@/app/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import { Send } from "lucide-react"
-import { Form, FormField } from "@/lib/api"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Label } from "@/app/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/app/components/ui/radio-group";
+import { Checkbox } from "@/app/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { Send } from "lucide-react";
+import { Form, FormField } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface PublicFormProps {
-  form: Form
-  onSubmit: (data: Record<string, unknown>) => Promise<void>
-  isSubmitting?: boolean
+  form: Form;
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormProps) {
-  const [formData, setFormData] = useState<Record<string, unknown>>({})
-  const [errors, setErrors] = useState<Record<string, string>>({})
+export function PublicForm({
+  form,
+  onSubmit,
+  isSubmitting = false,
+}: PublicFormProps) {
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateField = (field: FormField, value: unknown): string | null => {
-    if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
-      return `${field.label} is required`
+    if (
+      field.required &&
+      (!value || (typeof value === "string" && value.trim() === ""))
+    ) {
+      return `${field.label} is required`;
     }
 
-
-    return null
-  }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate all fields
-    const newErrors: Record<string, string> = {}
-    form.fields.forEach(field => {
-      const error = validateField(field, formData[field.id])
+    const newErrors: Record<string, string> = {};
+    form.fields.forEach((field) => {
+      const error = validateField(field, formData[field.id]);
       if (error) {
-        newErrors[field.id] = error
+        newErrors[field.id] = error;
       }
-    })
+    });
 
-    setErrors(newErrors)
+    setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        await onSubmit(formData)
+        await onSubmit(formData);
       } catch (error) {
-        console.error('Form submission error:', error)
+        console.error("Form submission error:", error);
       }
     }
-  }
+  };
 
   const handleFieldChange = (fieldId: string, value: unknown) => {
-    setFormData(prev => ({ ...prev, [fieldId]: value }))
-    
+    setFormData((prev) => ({ ...prev, [fieldId]: value }));
+
     // Clear error when user starts typing
     if (errors[fieldId]) {
-      setErrors(prev => ({ ...prev, [fieldId]: '' }))
+      setErrors((prev) => ({ ...prev, [fieldId]: "" }));
     }
-  }
+  };
 
   const renderField = (field: FormField) => {
-    const value = formData[field.id] || ''
-    const error = errors[field.id]
+    const value = formData[field.id] || "";
+    const error = errors[field.id];
 
     switch (field.type) {
-      case 'text':
+      case "text":
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
             <Input
               id={field.id}
@@ -80,40 +99,57 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
               placeholder={field.placeholder}
               value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              className={error ? "border-destructive" : ""}
+              className={cn(
+                "bg-background border-2 hover:border-border transition-colors",
+                error ? "border-destructive" : "border-border"
+              )}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-        )
+        );
 
-
-      case 'textarea':
+      case "textarea":
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
             <Textarea
               id={field.id}
               placeholder={field.placeholder}
               value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              className={error ? "border-destructive" : ""}
+              className={cn(
+                "!bg-background !border-2 hover:!border-border transition-colors",
+                error ? "!border-destructive" : "!border-white"
+              )}
               rows={4}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-        )
+        );
 
-      case 'select':
+      case "select":
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <Select value={value as string} onValueChange={(val: string) => handleFieldChange(field.id, val)}>
-              <SelectTrigger className={error ? "border-destructive" : ""}>
-                <SelectValue placeholder={field.placeholder || "Select an option"} />
+            <Select
+              value={value as string}
+              onValueChange={(val: string) => handleFieldChange(field.id, val)}
+            >
+              <SelectTrigger
+                className={cn(
+                  "!bg-background !border-2 hover:!border-border transition-colors",
+                  error ? "!border-destructive" : "!border-white"
+                )}
+              >
+                <SelectValue
+                  placeholder={field.placeholder || "Select an option"}
+                />
               </SelectTrigger>
               <SelectContent>
                 {field.options?.map((option) => (
@@ -125,18 +161,21 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
             </Select>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-        )
+        );
 
-      case 'radio':
+      case "radio":
         return (
           <div key={field.id} className="space-y-3">
             <Label className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
             <RadioGroup
               value={value as string}
               onValueChange={(val: string) => handleFieldChange(field.id, val)}
-              className={error ? "border border-destructive rounded-md p-3" : ""}
+              className={
+                error ? "border border-destructive rounded-md p-3" : ""
+              }
             >
               {field.options?.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
@@ -149,26 +188,34 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
             </RadioGroup>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-        )
+        );
 
-      case 'checkbox':
+      case "checkbox":
         return (
           <div key={field.id} className="space-y-3">
             <Label className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-destructive">*</span>}
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
             </Label>
-            <div className={`space-y-2 ${error ? "border border-destructive rounded-md p-3" : ""}`}>
+            <div
+              className={`space-y-2 ${
+                error ? "border border-destructive rounded-md p-3" : ""
+              }`}
+            >
               {field.options?.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
                   <Checkbox
                     id={`${field.id}-${option}`}
                     checked={(value as string[])?.includes(option) || false}
                     onCheckedChange={(checked: boolean) => {
-                      const currentValues = (value as string[]) || []
+                      const currentValues = (value as string[]) || [];
                       if (checked) {
-                        handleFieldChange(field.id, [...currentValues, option])
+                        handleFieldChange(field.id, [...currentValues, option]);
                       } else {
-                        handleFieldChange(field.id, currentValues.filter(v => v !== option))
+                        handleFieldChange(
+                          field.id,
+                          currentValues.filter((v) => v !== option)
+                        );
                       }
                     }}
                   />
@@ -180,13 +227,12 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-        )
-
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -201,7 +247,7 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {form.fields.map(renderField)}
-              
+
               <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={isSubmitting} className="gap-2">
                   <Send className="h-4 w-4" />
@@ -213,5 +259,5 @@ export function PublicForm({ form, onSubmit, isSubmitting = false }: PublicFormP
         </Card>
       </div>
     </div>
-  )
+  );
 }

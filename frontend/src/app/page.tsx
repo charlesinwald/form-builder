@@ -293,6 +293,11 @@ export default function HomePage() {
           formTitle={formData.title}
         />
       )}
+
+      {/* Developer Credit */}
+      <div className="fixed bottom-4 right-4 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+        Developed by Charles Inwald
+      </div>
     </div>
   );
 }

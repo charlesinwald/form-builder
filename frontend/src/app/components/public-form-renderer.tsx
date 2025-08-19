@@ -17,6 +17,7 @@ import {
 } from "@/app/components/ui/select";
 import { Loader2, Send, Wifi } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface FormData {
   id: string;
@@ -145,11 +146,12 @@ export function PublicFormRenderer({
               placeholder={field.placeholder}
               value={(responses[field.id] as string) || ""}
               onChange={(e) => updateResponse(field.id, e.target.value)}
-              className={
+              className={cn(
+                "!bg-background !border-2 hover:!border-border transition-colors",
                 hasError
-                  ? "border-destructive focus-visible:ring-destructive"
-                  : ""
-              }
+                  ? "!border-destructive focus-visible:ring-destructive"
+                  : "!border-white"
+              )}
             />
             {hasError && (
               <p className="text-sm text-destructive">{errors[field.id]}</p>
@@ -165,11 +167,12 @@ export function PublicFormRenderer({
               value={(responses[field.id] as string) || ""}
               onChange={(e) => updateResponse(field.id, e.target.value)}
               rows={4}
-              className={
+              className={cn(
+                "!bg-background !border-2 hover:!border-border transition-colors",
                 hasError
-                  ? "border-destructive focus-visible:ring-destructive"
-                  : ""
-              }
+                  ? "!border-destructive focus-visible:ring-destructive"
+                  : "!border-white"
+              )}
             />
             {hasError && (
               <p className="text-sm text-destructive">{errors[field.id]}</p>
@@ -185,9 +188,12 @@ export function PublicFormRenderer({
               onValueChange={(value: string) => updateResponse(field.id, value)}
             >
               <SelectTrigger
-                className={
-                  hasError ? "border-destructive focus:ring-destructive" : ""
-                }
+                className={cn(
+                  "!bg-background !border-2 hover:!border-border transition-colors",
+                  hasError
+                    ? "!border-destructive focus:ring-destructive"
+                    : "!border-white"
+                )}
               >
                 <SelectValue placeholder="Select an option..." />
               </SelectTrigger>
@@ -245,9 +251,12 @@ export function PublicFormRenderer({
                     type="checkbox"
                     id={`${field.id}-${index}`}
                     value={option}
-                    checked={((responses[field.id] as string[]) || []).includes(option)}
+                    checked={((responses[field.id] as string[]) || []).includes(
+                      option
+                    )}
                     onChange={(e) => {
-                      const currentValues = (responses[field.id] as string[]) || [];
+                      const currentValues =
+                        (responses[field.id] as string[]) || [];
                       const newValues = e.target.checked
                         ? [...currentValues, option]
                         : currentValues.filter((v: string) => v !== option);

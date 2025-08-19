@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface FormData {
   title: string;
@@ -57,6 +58,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
             value={(responses[field.id] as string) || ""}
             onChange={(e) => updateResponse(field.id, e.target.value)}
             required={field.required}
+            className="!bg-background !border-2 !border-white hover:!border-border transition-colors"
           />
         );
       case "textarea":
@@ -67,6 +69,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
             onChange={(e) => updateResponse(field.id, e.target.value)}
             required={field.required}
             rows={4}
+            className="!bg-background !border-2 !border-white hover:!border-border transition-colors"
           />
         );
       case "select":
@@ -76,7 +79,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
             onValueChange={(value: string) => updateResponse(field.id, value)}
             required={field.required}
           >
-            <SelectTrigger>
+            <SelectTrigger className="!bg-background !border-2 !border-white hover:!border-border transition-colors">
               <SelectValue placeholder="Select an option..." />
             </SelectTrigger>
             <SelectContent>
@@ -122,9 +125,12 @@ export function FormPreview({ formData }: FormPreviewProps) {
                   type="checkbox"
                   id={`${field.id}-${index}`}
                   value={option}
-                  checked={((responses[field.id] as string[]) || []).includes(option)}
+                  checked={((responses[field.id] as string[]) || []).includes(
+                    option
+                  )}
                   onChange={(e) => {
-                    const currentValues = (responses[field.id] as string[]) || [];
+                    const currentValues =
+                      (responses[field.id] as string[]) || [];
                     const newValues = e.target.checked
                       ? [...currentValues, option]
                       : currentValues.filter((v: string) => v !== option);
