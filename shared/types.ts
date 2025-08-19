@@ -20,6 +20,7 @@ export interface Form {
   title: string;
   description: string;
   fields: FormField[];
+  status: 'draft' | 'published' | 'archived';
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -56,10 +57,12 @@ export interface CreateFormRequest {
   title: string;
   description: string;
   fields: Omit<FormField, 'id'>[];
+  status?: 'draft' | 'published' | 'archived';
 }
 
 export interface UpdateFormRequest extends Partial<CreateFormRequest> {
   isActive?: boolean;
+  status?: 'draft' | 'published' | 'archived';
 }
 
 export interface CreateResponseRequest {

@@ -20,7 +20,7 @@ interface FormData {
   status: "draft" | "published" | "archived"
   createdAt: string
   updatedAt: string
-  responseCount: number
+  responseCount?: number
 }
 
 interface FormCardProps {
@@ -71,7 +71,7 @@ export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onSt
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="text-center">
-                <div className="font-medium text-foreground">{form.responseCount}</div>
+                <div className="font-medium text-foreground">{form.responseCount || 0}</div>
                 <div>Responses</div>
               </div>
               <div className="text-center">
@@ -229,7 +229,7 @@ export function FormCard({ form, viewMode, onSelect, onDuplicate, onDelete, onSt
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <BarChart3 className="h-4 w-4" />
-              <span>{form.responseCount} responses</span>
+              <span>{form.responseCount || 0} responses</span>
             </div>
             <div className="flex items-center gap-1">
               <FileText className="h-4 w-4" />

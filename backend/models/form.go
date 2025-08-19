@@ -21,8 +21,24 @@ type Form struct {
 	Title       string             `json:"title" bson:"title"`
 	Description string             `json:"description" bson:"description"`
 	Fields      []FormField        `json:"fields" bson:"fields"`
+	Status      string             `json:"status" bson:"status"` // "draft", "published", "archived"
 	CreatedAt   time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt   time.Time          `json:"updatedAt" bson:"updatedAt"`
 	IsActive    bool               `json:"isActive" bson:"isActive"`
 	UserID      string             `json:"userId" bson:"userId"`
+}
+
+type CreateFormRequest struct {
+	Title       string      `json:"title" validate:"required"`
+	Description string      `json:"description"`
+	Fields      []FormField `json:"fields"`
+	Status      string      `json:"status"`
+}
+
+type UpdateFormRequest struct {
+	Title       *string      `json:"title,omitempty"`
+	Description *string      `json:"description,omitempty"`
+	Fields      *[]FormField `json:"fields,omitempty"`
+	Status      *string      `json:"status,omitempty"`
+	IsActive    *bool        `json:"isActive,omitempty"`
 }

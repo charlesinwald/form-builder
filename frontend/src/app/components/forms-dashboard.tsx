@@ -9,124 +9,44 @@ import { FormCard } from "@/app/components/form-card"
 import { CreateFormModal } from "@/app/components/create-form-modal"
 import { DeleteFormModal } from "@/app/components/delete-form-modal"
 import { Plus, Search, Filter, Grid, List } from "lucide-react"
-
-interface FormData {
-  id: string
-  title: string
-  description: string
-  fields: FormFieldData[]
-  status: "draft" | "published" | "archived"
-  createdAt: string
-  updatedAt: string
-  responseCount: number
-}
-
-interface FormFieldData {
-  id: string
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating"
-  label: string
-  placeholder?: string
-  required: boolean
-  options?: string[]
-}
+import { useForms } from "@/hooks/use-forms"
+import { Form } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 interface FormsDashboardProps {
-  onFormSelect: (form: FormData) => void
+  onFormSelect: (form: Form) => void
   onNewForm: () => void
 }
 
 export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps) {
-  const [forms, setForms] = useState<FormData[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published" | "archived">("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [formToDelete, setFormToDelete] = useState<FormData | null>(null)
+  const [formToDelete, setFormToDelete] = useState<Form | null>(null)
+  const { toast } = useToast()
 
-  // Mock forms data
-  const generateMockForms = (): FormData[] => [
-    {
-      id: "1",
-      title: "Customer Feedback Survey",
-      description: "Collect feedback from customers about our services",
-      fields: [
-        { id: "name", type: "text", label: "Name", required: true },
-        { id: "rating", type: "rating", label: "Rating", required: true },
-        { id: "feedback", type: "textarea", label: "Feedback", required: false },
-      ],
-      status: "published",
-      createdAt: "2024-01-15T10:00:00Z",
-      updatedAt: "2024-01-16T14:30:00Z",
-      responseCount: 47,
-    },
-    {
-      id: "2",
-      title: "Employee Satisfaction Survey",
-      description: "Annual employee satisfaction and engagement survey",
-      fields: [
-        {
-          id: "department",
-          type: "select",
-          label: "Department",
-          required: true,
-          options: ["HR", "Engineering", "Sales"],
-        },
-        { id: "satisfaction", type: "rating", label: "Job Satisfaction", required: true },
-        { id: "comments", type: "textarea", label: "Comments", required: false },
-      ],
-      status: "draft",
-      createdAt: "2024-01-14T09:00:00Z",
-      updatedAt: "2024-01-17T11:15:00Z",
-      responseCount: 0,
-    },
-    {
-      id: "3",
-      title: "Product Feature Request",
-      description: "Gather feature requests and suggestions from users",
-      fields: [
-        { id: "feature", type: "text", label: "Feature Request", required: true },
-        { id: "priority", type: "radio", label: "Priority", required: true, options: ["Low", "Medium", "High"] },
-        { id: "description", type: "textarea", label: "Description", required: true },
-      ],
-      status: "published",
-      createdAt: "2024-01-12T16:00:00Z",
-      updatedAt: "2024-01-15T10:45:00Z",
-      responseCount: 23,
-    },
-    {
-      id: "4",
-      title: "Event Registration Form",
-      description: "Registration form for upcoming company events",
-      fields: [
-        { id: "name", type: "text", label: "Full Name", required: true },
-        { id: "email", type: "text", label: "Email", required: true },
-        {
-          id: "dietary",
-          type: "checkbox",
-          label: "Dietary Restrictions",
-          required: false,
-          options: ["Vegetarian", "Vegan", "Gluten-free"],
-        },
-      ],
-      status: "archived",
-      createdAt: "2024-01-10T12:00:00Z",
-      updatedAt: "2024-01-13T08:20:00Z",
-      responseCount: 156,
-    },
-  ]
+  const { 
+    forms, 
+    loading, 
+    error,
+    createForm,
+    deleteForm,
+    duplicateForm,
+    publishForm,
+    unpublishForm,
+    archiveForm
+  } = useForms()
 
   useEffect(() => {
-    const fetchForms = async () => {
-      setLoading(true)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setForms(generateMockForms())
-      setLoading(false)
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error,
+      })
     }
-
-    fetchForms()
-  }, [])
+  }, [error, toast])
 
   const filteredForms = forms.filter((form) => {
     const matchesSearch =
@@ -136,45 +56,85 @@ export function FormsDashboard({ onFormSelect, onNewForm }: FormsDashboardProps)
     return matchesSearch && matchesStatus
   })
 
-  const handleCreateForm = (formData: Partial<FormData>) => {
-    const newForm: FormData = {
-      id: Date.now().toString(),
-      title: formData.title || "Untitled Form",
-      description: formData.description || "",
-      fields: [],
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      responseCount: 0,
+  const handleCreateForm = async (formData: Partial<Form>) => {
+    try {
+      const newForm = await createForm({
+        title: formData.title || "Untitled Form",
+        description: formData.description || "",
+        fields: [],
+        status: "draft"
+      })
+      onFormSelect(newForm)
+      toast({
+        title: "Success",
+        description: "Form created successfully",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create form",
+      })
     }
-    setForms((prev) => [newForm, ...prev])
-    onFormSelect(newForm)
   }
 
-  const handleDuplicateForm = (form: FormData) => {
-    const duplicatedForm: FormData = {
-      ...form,
-      id: Date.now().toString(),
-      title: `${form.title} (Copy)`,
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      responseCount: 0,
+  const handleDuplicateForm = async (form: Form) => {
+    try {
+      await duplicateForm(form)
+      toast({
+        title: "Success",
+        description: "Form duplicated successfully",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to duplicate form",
+      })
     }
-    setForms((prev) => [duplicatedForm, ...prev])
   }
 
-  const handleDeleteForm = (formId: string) => {
-    setForms((prev) => prev.filter((form) => form.id !== formId))
-    setFormToDelete(null)
+  const handleDeleteForm = async (formId: string) => {
+    try {
+      await deleteForm(formId)
+      setFormToDelete(null)
+      toast({
+        title: "Success",
+        description: "Form deleted successfully",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete form",
+      })
+    }
   }
 
-  const handleStatusChange = (formId: string, newStatus: "draft" | "published" | "archived") => {
-    setForms((prev) =>
-      prev.map((form) =>
-        form.id === formId ? { ...form, status: newStatus, updatedAt: new Date().toISOString() } : form,
-      ),
-    )
+  const handleStatusChange = async (formId: string, newStatus: "draft" | "published" | "archived") => {
+    try {
+      switch (newStatus) {
+        case 'published':
+          await publishForm(formId)
+          break
+        case 'draft':
+          await unpublishForm(formId)
+          break
+        case 'archived':
+          await archiveForm(formId)
+          break
+      }
+      toast({
+        title: "Success",
+        description: `Form ${newStatus} successfully`,
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to ${newStatus === 'published' ? 'publish' : newStatus === 'archived' ? 'archive' : 'unpublish'} form`,
+      })
+    }
   }
 
   const getStatusStats = () => {

@@ -3,7 +3,7 @@
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Badge } from "@/app/components/ui/badge";
-import { Save, Share, Eye } from "lucide-react";
+import { Save, Share, Eye, Globe } from "lucide-react";
 
 interface HeaderProps {
   formTitle: string;
@@ -11,8 +11,11 @@ interface HeaderProps {
   activeView: "dashboard" | "builder" | "preview" | "analytics";
   onShare: () => void;
   onPreview?: () => void;
+  onPublish?: () => void;
   formStatus?: "draft" | "published" | "archived";
   showFormControls?: boolean;
+  isFormDraft?: boolean;
+  isFormPublished?: boolean;
 }
 
 export function Header({
@@ -21,8 +24,11 @@ export function Header({
   activeView,
   onShare,
   onPreview,
+  onPublish,
   formStatus = "draft",
   showFormControls = true,
+  isFormDraft = true,
+  isFormPublished = false,
 }: HeaderProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,10 +71,6 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-          <Save className="h-4 w-4" />
-          Save Draft
-        </Button>
         <Button 
           variant="outline" 
           size="sm" 
@@ -78,10 +80,27 @@ export function Header({
           <Eye className="h-4 w-4" />
           Preview
         </Button>
-        <Button size="sm" className="gap-2" onClick={onShare}>
-          <Share className="h-4 w-4" />
-          Share
-        </Button>
+        
+        {isFormDraft && onPublish && (
+          <Button size="sm" className="gap-2" onClick={onPublish}>
+            <Globe className="h-4 w-4" />
+            Publish
+          </Button>
+        )}
+        
+        {isFormPublished && (
+          <Button size="sm" className="gap-2" onClick={onShare}>
+            <Share className="h-4 w-4" />
+            Share
+          </Button>
+        )}
+        
+        {!isFormPublished && !isFormDraft && (
+          <Button size="sm" className="gap-2" onClick={onShare}>
+            <Share className="h-4 w-4" />
+            Share
+          </Button>
+        )}
       </div>
     </header>
   );
