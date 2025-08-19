@@ -4,12 +4,83 @@ A dynamic, customizable form builder application with real-time analytics, built
 
 ## Features
 
-- **Dynamic Form Builder**: Create custom forms with various field types
-- **Real-time Analytics**: Live dashboard showing form response analytics
-- **Form Management**: CRUD operations for forms and responses
-- **Responsive Design**: Modern UI built with Next.js and TailwindCSS
-- **High Performance API**: Go Fiber backend for fast response times
-- **Flexible Data Storage**: MongoDB for scalable form and response data
+### 🎨 **Form Builder & Design**
+
+- **Visual Form Builder**: Drag-and-drop interface for creating custom forms
+- **Multiple Field Types**: Text, textarea, select dropdowns, radio buttons, checkboxes, and star ratings
+- **Field Configuration**: Set required fields, placeholders, and validation rules
+- **Real-time Preview**: See form changes instantly as you build
+- **Form Templates**: Start with predefined form structures
+- **Auto-save**: Automatic saving of form drafts every 2 seconds
+
+### 📊 **Real-time Analytics Dashboard**
+
+- **Live Response Tracking**: WebSocket-powered real-time updates
+- **Interactive Charts**: Visualize response trends with animated charts
+- **Response Analytics**: Track completion rates, average response times, and field performance
+- **Device Analytics**: See which devices users are submitting from
+- **Peak Hour Analysis**: Identify when forms receive the most responses
+- **Export Data**: Download analytics data as JSON for further analysis
+- **Real-time Notifications**: Get instant alerts when new responses arrive
+
+### 🔄 **Form Management**
+
+- **Form Lifecycle**: Draft → Published → Archived status management
+- **Duplicate Forms**: Create copies of existing forms for quick iteration
+- **Form Sharing**: Generate shareable links for published forms
+- **Response Management**: View, filter, and manage form responses
+- **Smart Navigation**: Context-aware routing (responses if they exist, builder if not)
+
+### 📱 **User Experience**
+
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Modern UI**: Clean, intuitive interface built with TailwindCSS
+- **Dark/Light Mode**: Theme support for user preferences
+- **Accessibility**: WCAG compliant design with keyboard navigation
+- **Loading States**: Smooth loading animations and skeleton screens
+- **Error Handling**: User-friendly error messages and validation
+
+### 🚀 **Performance & Scalability**
+
+- **High Performance API**: Go Fiber backend for sub-millisecond response times
+- **WebSocket Integration**: Real-time updates without polling
+- **MongoDB Storage**: Scalable NoSQL database for forms and responses
+- **Optimized Queries**: Efficient database queries with proper indexing
+- **Caching**: Smart caching strategies for improved performance
+
+### 🔧 **Developer Experience**
+
+- **TypeScript**: Full type safety across frontend and backend
+- **Monorepo Structure**: Organized codebase with shared types
+- **Hot Reloading**: Instant feedback during development
+- **ESLint Integration**: Code quality and consistency
+- **Docker Support**: Containerized development environment
+- **Comprehensive API**: RESTful endpoints with proper error handling
+
+### 📈 **Analytics & Insights**
+
+- **Response Trends**: Time-based analysis of form submissions
+- **Field Performance**: Track which fields are most/least completed
+- **User Behavior**: Analyze how users interact with forms
+- **Completion Rates**: Monitor form abandonment and success rates
+- **Real-time Metrics**: Live counters and statistics
+- **Data Visualization**: Charts, graphs, and visual representations
+
+### 🔐 **Security & Validation**
+
+- **Form Validation**: Client and server-side validation
+- **Data Sanitization**: Protect against malicious input
+- **CORS Configuration**: Secure cross-origin requests
+- **Input Validation**: Type checking and format validation
+- **Error Boundaries**: Graceful error handling throughout the app
+
+### 🌐 **Deployment & DevOps**
+
+- **Docker Support**: Containerized deployment
+- **Environment Configuration**: Flexible environment variable management
+- **Build Scripts**: Automated build and deployment processes
+- **Development Scripts**: Convenient setup and development tools
+- **Production Ready**: Optimized for production deployment
 
 ## Tech Stack
 
