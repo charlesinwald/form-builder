@@ -135,7 +135,7 @@ export function useWebSocketAnalytics({
         todayResponses: prev.todayResponses + 1,
         weekResponses: prev.weekResponses + 1,
         monthResponses: prev.monthResponses + 1,
-        recentResponses: [newResponse, ...prev.recentResponses.slice(0, 9)],
+        recentResponses: [newResponse, ...(prev.recentResponses?.slice(0, 9) || [])],
         lastUpdated: new Date().toISOString()
       };
     });
