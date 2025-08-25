@@ -33,7 +33,7 @@ export class WebSocketClient {
   constructor(options: WSClientOptions = {}) {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = process.env.NEXT_PUBLIC_WS_URL || 
-                   `${wsProtocol}//${window.location.hostname}:8080/api/v1/ws`;
+                   `${wsProtocol}//${window.location.hostname}/api/v1/ws`;
     
     this.url = options.url || wsHost;
     this.reconnectInterval = options.reconnectInterval || 5000;
