@@ -6,7 +6,8 @@ import { PublicForm } from "@/app/components/public-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
 import { CheckCircle, AlertCircle, Home } from "lucide-react"
-import { apiService, Form } from "@/lib/api"
+import { Form } from "../../../../../shared/types";
+import { apiService } from "@/lib/api"
 import Link from "next/link"
 
 export default function PublicFormPage() {

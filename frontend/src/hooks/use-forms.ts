@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService, Form, CreateFormRequest, UpdateFormRequest } from '@/lib/api';
+import { Form, CreateFormRequest, UpdateFormRequest } from '../../../shared/types';
+import { apiService } from '@/lib/api';
 
 export function useForms(initialStatus?: string) {
   const [forms, setForms] = useState<Form[]>([]);

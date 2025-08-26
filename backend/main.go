@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"form-builder-backend/middleware"
 	"form-builder-backend/models"
 	"form-builder-backend/services"
 	ws "form-builder-backend/websocket"
@@ -26,6 +27,8 @@ var client *mongo.Client
 var database *mongo.Database
 var wsHub *ws.Hub
 var analyticsService *services.AnalyticsService
+var authService *services.AuthService
+var authMiddleware *middleware.AuthMiddleware
 var useMemoryStore bool = false
 var allowedOrigins string
 
@@ -40,9 +43,11 @@ func main() {
 
 	// Initialize services
 	analyticsService = services.NewAnalyticsService(database)
+	authService = services.NewAuthService(database)
+	authMiddleware = middleware.NewAuthMiddleware(authService)
 
 	// Initialize WebSocket hub
-	wsHub = ws.NewHub()
+	wsHub = ws.NewHub(database)
 	go wsHub.Run()
 
 	// Create Fiber app
@@ -133,11 +138,34 @@ func setupRoutes(app *fiber.App) {
 		return c.SendStatus(200)
 	})
 
-	// WebSocket endpoint
-	api.Get("/ws", ws.HandleWebSocket(wsHub))
+	// Authentication routes (no auth required)
+	auth := api.Group("/auth")
+	auth.Post("/register", registerHandler)
+	auth.Post("/login", loginHandler)
+	auth.Post("/refresh", refreshTokenHandler)
 
-	// Forms routes
-	forms := api.Group("/forms")
+	// Public routes (no authentication required)
+	public := api.Group("/public")
+	public.Get("/forms/:id", getPublicForm)
+
+	// Responses routes (mixed - form submission is public, viewing is protected)
+	responses := api.Group("/responses")
+	responses.Post("/", createResponse) // Public - form submissions
+
+	// Protected routes
+	protected := api.Group("/", authMiddleware.RequireAuth())
+
+	// User routes (protected)
+	user := protected.Group("/user")
+	user.Get("/me", getUserHandler)
+	user.Put("/me", updateUserHandler)
+	user.Post("/change-password", changePasswordHandler)
+
+	// WebSocket endpoint (protected)
+	protected.Get("/ws", ws.HandleWebSocket(wsHub, authService))
+
+	// Forms routes (protected)
+	forms := protected.Group("/forms")
 	forms.Post("/", createForm)
 	forms.Get("/", getForms)
 	forms.Get("/:id", getForm)
@@ -145,19 +173,14 @@ func setupRoutes(app *fiber.App) {
 	forms.Delete("/:id", deleteForm)
 	forms.Post("/:id/save-draft", saveDraft)
 	forms.Post("/:id/unpublish", unpublishForm)
-	
-	// Public routes (no authentication required)
-	public := api.Group("/public")
-	public.Get("/forms/:id", getPublicForm)
 
-	// Responses routes
-	responses := api.Group("/responses")
-	responses.Post("/", createResponse)
-	responses.Get("/form/:formId", getResponsesByForm)
-	responses.Get("/:id", getResponse)
+	// Protected response routes
+	protectedResponses := protected.Group("/responses")
+	protectedResponses.Get("/form/:formId", getResponsesByForm)
+	protectedResponses.Get("/:id", getResponse)
 
-	// Analytics routes
-	analytics := api.Group("/analytics")
+	// Analytics routes (protected)
+	analytics := protected.Group("/analytics")
 	analytics.Get("/form/:formId", getFormAnalytics)
 	analytics.Get("/form/:formId/realtime", getRealTimeAnalytics)
 }
@@ -188,7 +211,7 @@ func createForm(c *fiber.Ctx) error {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 		IsActive:    req.Status == "published",
-		UserID:      "default", // TODO: implement user authentication
+		UserID:      middleware.GetUserID(c),
 	}
 
 	collection := database.Collection("forms")
@@ -209,7 +232,7 @@ func getForms(c *fiber.Ctx) error {
 	
 	// Get query parameters
 	status := c.Query("status")
-	userID := c.Query("userId", "default") // TODO: get from auth
+	userID := middleware.GetUserID(c)
 	
 	filter := bson.M{"userId": userID}
 	if status != "" {
@@ -671,7 +694,7 @@ func getResponsesByForm(c *fiber.Ctx) error {
 	var form models.Form
 	err = formsCollection.FindOne(context.Background(), bson.M{
 		"_id":    formObjID,
-		"userId": "default", // TODO: get from auth
+		"userId": middleware.GetUserID(c),
 	}).Decode(&form)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -872,4 +895,193 @@ func unpublishForm(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(updatedForm)
+}
+
+// Authentication handlers
+func registerHandler(c *fiber.Ctx) error {
+	var req models.RegisterRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	authResp, err := authService.Register(req)
+	if err != nil {
+		switch err {
+		case services.ErrEmailExists:
+			return c.Status(409).JSON(fiber.Map{
+				"error": "User with this email already exists",
+			})
+		default:
+			log.Printf("Registration error: %v", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Failed to create user",
+			})
+		}
+	}
+
+	return c.Status(201).JSON(authResp)
+}
+
+func loginHandler(c *fiber.Ctx) error {
+	var req models.LoginRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	authResp, err := authService.Login(req)
+	if err != nil {
+		switch err {
+		case services.ErrInvalidCredentials:
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Invalid email or password",
+			})
+		default:
+			log.Printf("Login error: %v", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Login failed",
+			})
+		}
+	}
+
+	return c.JSON(authResp)
+}
+
+func refreshTokenHandler(c *fiber.Ctx) error {
+	var req models.RefreshTokenRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	authResp, err := authService.RefreshToken(req.RefreshToken)
+	if err != nil {
+		switch err {
+		case services.ErrTokenExpired:
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Refresh token has expired",
+			})
+		case services.ErrInvalidToken:
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Invalid refresh token",
+			})
+		case services.ErrUserNotFound:
+			return c.Status(401).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		default:
+			log.Printf("Token refresh error: %v", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Failed to refresh token",
+			})
+		}
+	}
+
+	return c.JSON(authResp)
+}
+
+func getUserHandler(c *fiber.Ctx) error {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "User not authenticated",
+		})
+	}
+
+	user, err := authService.GetUser(userID)
+	if err != nil {
+		switch err {
+		case services.ErrUserNotFound:
+			return c.Status(404).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		default:
+			log.Printf("Get user error: %v", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Failed to fetch user",
+			})
+		}
+	}
+
+	return c.JSON(user)
+}
+
+func updateUserHandler(c *fiber.Ctx) error {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "User not authenticated",
+		})
+	}
+
+	var req models.UpdateUserRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	user, err := authService.UpdateUser(userID, req)
+	if err != nil {
+		switch err {
+		case services.ErrUserNotFound:
+			return c.Status(404).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		case services.ErrEmailExists:
+			return c.Status(409).JSON(fiber.Map{
+				"error": "Email already in use",
+			})
+		default:
+			log.Printf("Update user error: %v", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Failed to update user",
+			})
+		}
+	}
+
+	return c.JSON(user)
+}
+
+func changePasswordHandler(c *fiber.Ctx) error {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		return c.Status(401).JSON(fiber.Map{
+			"error": "User not authenticated",
+		})
+	}
+
+	var req models.ChangePasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	err := authService.ChangePassword(userID, req)
+	if err != nil {
+		switch err {
+		case services.ErrUserNotFound:
+			return c.Status(404).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		case services.ErrInvalidCredentials:
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Current password is incorrect",
+			})
+		default:
+			log.Printf("Change password error: %v", err)
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Failed to change password",
+			})
+		}
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Password changed successfully",
+	})
 }

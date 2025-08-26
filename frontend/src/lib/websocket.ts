@@ -9,6 +9,7 @@ export interface WSMessage {
 
 export interface WSClientOptions {
   url?: string;
+  token?: string;
   reconnectInterval?: number;
   maxReconnectAttempts?: number;
   onOpen?: () => void;
@@ -20,6 +21,7 @@ export interface WSClientOptions {
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private url: string;
+  private token: string | null = null;
   private reconnectInterval: number;
   private maxReconnectAttempts: number;
   private reconnectAttempts = 0;
@@ -33,9 +35,10 @@ export class WebSocketClient {
   constructor(options: WSClientOptions = {}) {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = process.env.NEXT_PUBLIC_WS_URL || 
-                   `${wsProtocol}//api.${window.location.hostname}/api/v1/ws`;
+                   `${wsProtocol}//${window.location.hostname}:8080/api/v1/ws`;
     
     this.url = options.url || wsHost;
+    this.token = options.token || null;
     this.reconnectInterval = options.reconnectInterval || 5000;
     this.maxReconnectAttempts = options.maxReconnectAttempts || 10;
     this.options = options;
@@ -48,10 +51,18 @@ export class WebSocketClient {
     }
 
     this.isIntentionallyClosed = false;
+    
+    // Build WebSocket URL with authentication token
+    let wsUrl = this.url;
+    if (this.token) {
+      const separator = wsUrl.includes('?') ? '&' : '?';
+      wsUrl = `${wsUrl}${separator}token=${encodeURIComponent(this.token)}`;
+    }
+    
     console.log('Connecting to WebSocket:', this.url);
 
     try {
-      this.ws = new WebSocket(this.url);
+      this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
@@ -262,6 +273,20 @@ export class WebSocketClient {
       default:
         return 'UNKNOWN';
     }
+  }
+
+  setToken(token: string | null): void {
+    this.token = token;
+    
+    // If currently connected, disconnect and reconnect with new token
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.disconnect();
+      this.connect();
+    }
+  }
+
+  updateToken(token: string | null): void {
+    this.setToken(token);
   }
 }
 

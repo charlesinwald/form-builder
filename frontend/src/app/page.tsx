@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import ProtectedRoute from "./components/auth/protected-route";
 import { FormBuilder } from "@/app/components/form-builder";
 import { FormPreview } from "@/app/components/form-preview";
 import { FormsDashboard } from "@/app/components/forms-dashboard";
@@ -9,26 +10,17 @@ import { Header } from "@/app/components/header";
 import { ShareFormModal } from "@/app/components/share-form-modal";
 import { ResponsesView } from "@/app/components/responses-view";
 import { Button } from "@/app/components/ui/button";
-import { Form } from "@/lib/api";
+import { Form, FormField } from "../../../shared/types";
 import { useForms } from "@/hooks/use-forms";
 import { useToast } from "@/hooks/use-toast";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-dashboard";
 import { FormCard } from "./components/form-card";
 
-interface FormFieldData {
-  id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  options?: string[];
-}
-
 interface FormData {
   title: string;
   description: string;
-  fields: FormFieldData[];
+  fields: FormField[];
 }
 
 export default function HomePage() {
@@ -165,7 +157,8 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <ProtectedRoute>
+      <div className="flex h-screen bg-background">
       <Sidebar
         activeView={activeView}
         onViewChange={setActiveView}
@@ -317,6 +310,7 @@ export default function HomePage() {
       <div className="fixed bottom-4 right-4 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
         Developed by Charles Inwald
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

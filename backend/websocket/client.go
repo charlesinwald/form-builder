@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"form-builder-backend/services"
+
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -32,24 +34,52 @@ type ClientMessage struct {
 }
 
 // HandleWebSocket handles WebSocket upgrade and creates a new client
-func HandleWebSocket(hub *Hub) fiber.Handler {
-	return websocket.New(func(c *websocket.Conn) {
-		clientID := uuid.New().String()
-		client := &Client{
-			ID:      clientID,
-			Hub:     hub,
-			Conn:    c,
-			Send:    make(chan []byte, 256),
-			FormIDs: make(map[string]bool),
+func HandleWebSocket(hub *Hub, authService *services.AuthService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Extract and validate auth token from query parameter
+		token := c.Query("token")
+		if token == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Authentication token required",
+			})
 		}
 
-		client.Hub.register <- client
+		// Validate the token
+		claims, err := authService.ValidateToken(token)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid token: " + err.Error(),
+			})
+		}
 
-		// Start goroutines for reading and writing
-		go client.writePump()
-		client.readPump()
-	})
+		// Check if request is a WebSocket upgrade
+		if websocket.IsWebSocketUpgrade(c) {
+			return websocket.New(func(conn *websocket.Conn) {
+				clientID := uuid.New().String()
+				client := &Client{
+					ID:        clientID,
+					UserID:    claims.UserID,
+					UserEmail: claims.Email,
+					Hub:       hub,
+					Conn:      conn,
+					Send:      make(chan []byte, 256),
+					FormIDs:   make(map[string]bool),
+				}
+
+				client.Hub.register <- client
+
+				// Start goroutines for reading and writing
+				go client.writePump()
+				client.readPump()
+			})(c)
+		}
+
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "WebSocket upgrade required",
+		})
+	}
 }
+
 
 // readPump pumps messages from the websocket connection to the hub
 func (c *Client) readPump() {
@@ -86,17 +116,34 @@ func (c *Client) readPump() {
 			switch msg.Type {
 			case "subscribe":
 				if msg.FormID != "" {
-					c.Hub.SubscribeToForm(c, msg.FormID)
-					// Send confirmation
-					response := Message{
-						Type:      "subscribed",
-						FormID:    msg.FormID,
-						Timestamp: time.Now(),
-					}
-					if data, err := json.Marshal(response); err == nil {
-						select {
-						case c.Send <- data:
-						default:
+					// Validate that the user owns this form before allowing subscription
+					if c.Hub.ValidateFormAccess(c.UserID, msg.FormID) {
+						c.Hub.SubscribeToForm(c, msg.FormID)
+						// Send confirmation
+						response := Message{
+							Type:      "subscribed",
+							FormID:    msg.FormID,
+							Timestamp: time.Now(),
+						}
+						if data, err := json.Marshal(response); err == nil {
+							select {
+							case c.Send <- data:
+							default:
+							}
+						}
+					} else {
+						// Send error response
+						response := Message{
+							Type:      "error",
+							FormID:    msg.FormID,
+							Timestamp: time.Now(),
+							Data:      "Access denied: You don't have permission to access this form",
+						}
+						if data, err := json.Marshal(response); err == nil {
+							select {
+							case c.Send <- data:
+							default:
+							}
 						}
 					}
 				}

@@ -8,20 +8,12 @@ import { FieldToolbox } from "@/app/components/field-toolbox";
 import { FormField } from "@/app/components/form-field";
 import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 import { Plus } from "lucide-react";
+import { FormField as SharedFormField } from "../../../../shared/types";
 
 interface FormData {
   title: string;
   description: string;
-  fields: FormFieldData[];
-}
-
-interface FormFieldData {
-  id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  options?: string[];
+  fields: SharedFormField[];
 }
 
 interface FormBuilderProps {
@@ -32,8 +24,8 @@ interface FormBuilderProps {
 export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
 
-  const addField = (type: FormFieldData["type"]) => {
-    const newField: FormFieldData = {
+  const addField = (type: SharedFormField["type"]) => {
+    const newField: SharedFormField = {
       id: `field-${Date.now()}`,
       type,
       label: `New ${type} field`,
@@ -49,7 +41,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
     });
   };
 
-  const updateField = (fieldId: string, updates: Partial<FormFieldData>) => {
+  const updateField = (fieldId: string, updates: Partial<SharedFormField>) => {
     onFormDataChange({
       ...formData,
       fields: formData.fields.map((field) =>

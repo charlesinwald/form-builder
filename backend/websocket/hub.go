@@ -1,12 +1,16 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/gofiber/contrib/websocket"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Message types for WebSocket communication
@@ -27,10 +31,12 @@ type Message struct {
 // Client represents a WebSocket client
 type Client struct {
 	ID       string
+	UserID   string              // Authenticated user ID
+	UserEmail string             // Authenticated user email
 	Conn     *websocket.Conn
 	Send     chan []byte
 	Hub      *Hub
-	FormIDs  map[string]bool // Forms this client is subscribed to
+	FormIDs  map[string]bool     // Forms this client is subscribed to
 	mu       sync.RWMutex
 }
 
@@ -51,16 +57,20 @@ type Hub struct {
 	// Form-specific subscriptions
 	formClients map[string]map[*Client]bool
 	mu          sync.RWMutex
+	
+	// Database connection for form validation
+	database *mongo.Database
 }
 
 // NewHub creates a new Hub
-func NewHub() *Hub {
+func NewHub(database *mongo.Database) *Hub {
 	return &Hub{
 		broadcast:   make(chan []byte),
 		register:    make(chan *Client),
 		unregister:  make(chan *Client),
 		clients:     make(map[*Client]bool),
 		formClients: make(map[string]map[*Client]bool),
+		database:    database,
 	}
 }
 
@@ -213,5 +223,33 @@ func (h *Hub) GetFormSubscribersCount(formID string) int {
 		return len(clients)
 	}
 	return 0
+}
+
+// ValidateFormAccess checks if a user has access to a specific form
+func (h *Hub) ValidateFormAccess(userID, formID string) bool {
+	if h.database == nil {
+		log.Printf("Database connection not available for form validation")
+		return false
+	}
+
+	// Convert form ID to ObjectID
+	objID, err := primitive.ObjectIDFromHex(formID)
+	if err != nil {
+		log.Printf("Invalid form ID format: %s", formID)
+		return false
+	}
+
+	// Check if the form exists and belongs to the user
+	collection := h.database.Collection("forms")
+	count, err := collection.CountDocuments(context.Background(), bson.M{
+		"_id":    objID,
+		"userId": userID,
+	})
+	if err != nil {
+		log.Printf("Error validating form access: %v", err)
+		return false
+	}
+
+	return count > 0
 }
 

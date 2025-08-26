@@ -16,21 +16,14 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FormField as SharedFormField } from "../../../../shared/types";
 
 interface FormData {
   title: string;
   description: string;
-  fields: FormFieldData[];
+  fields: SharedFormField[];
 }
 
-interface FormFieldData {
-  id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  options?: string[];
-}
 
 interface FormPreviewProps {
   formData: FormData;
@@ -49,7 +42,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
     setResponses((prev) => ({ ...prev, [fieldId]: value }));
   };
 
-  const renderField = (field: FormFieldData) => {
+  const renderField = (field: SharedFormField) => {
     switch (field.type) {
       case "text":
         return (

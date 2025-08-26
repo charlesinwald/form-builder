@@ -10,21 +10,13 @@ import { Label } from "@/app/components/ui/label";
 import { Select, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface FormFieldData {
-  id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  options?: string[];
-}
+import { FormField as SharedFormField } from "../../../../shared/types";
 
 interface FormFieldProps {
-  field: FormFieldData;
+  field: SharedFormField;
   isSelected: boolean;
   onSelect: () => void;
-  onUpdate: (updates: Partial<FormFieldData>) => void;
+  onUpdate: (updates: Partial<SharedFormField>) => void;
   onDelete: () => void;
 }
 

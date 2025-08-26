@@ -19,7 +19,8 @@ import {
 } from "@/app/components/ui/table";
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { Download, Eye, Calendar, User, Globe } from "lucide-react";
-import { Form, FormResponse, apiService } from "@/lib/api";
+import { Form, FormResponse } from "../../../../shared/types";
+import { apiService } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 

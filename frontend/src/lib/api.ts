@@ -1,3 +1,18 @@
+import {
+  FormField,
+  Form,
+  CreateFormRequest,
+  UpdateFormRequest,
+  FormResponse,
+  User,
+  RegisterRequest,
+  LoginRequest,
+  AuthResponse,
+  RefreshTokenRequest,
+  ChangePasswordRequest,
+  UpdateUserRequest,
+} from "../../../shared/types";
+
 // Ensure the API URL has a protocol
 const API_BASE_URL = (() => {
   const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
@@ -8,67 +23,54 @@ const API_BASE_URL = (() => {
   return url;
 })();
 
-export interface FormField {
-  id: string;
-  type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating";
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  options?: string[];
-}
+// Token management
+let authToken: string | null = null;
+let refreshToken: string | null = null;
 
-export interface Form {
-  id: string;
-  title: string;
-  description: string;
-  fields: FormField[];
-  status: "draft" | "published" | "archived";
-  createdAt: string;
-  updatedAt: string;
-  isActive: boolean;
-  userId: string;
-  responseCount?: number;
-}
-
-export interface CreateFormRequest {
-  title: string;
-  description: string;
-  fields: FormField[];
-  status?: string;
-}
-
-export interface UpdateFormRequest {
-  title?: string;
-  description?: string;
-  fields?: FormField[];
-  status?: string;
-  isActive?: boolean;
-}
-
-export interface FormResponse {
-  id: string;
-  formId: string;
-  data: Record<string, unknown>;
-  createdAt: string;
-  ipAddress: string;
-  userAgent: string;
+if (typeof window !== "undefined") {
+  authToken = localStorage.getItem("authToken");
+  refreshToken = localStorage.getItem("refreshToken");
 }
 
 class ApiService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    useAuth: boolean = true
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string>),
+    };
+
+    // Add authorization header if available and needed
+    if (useAuth && authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
     const config = {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers,
       ...options,
     };
 
-    const response = await fetch(url, config);
+    let response = await fetch(url, config);
+
+    // If unauthorized and we have a refresh token, try to refresh
+    if (response.status === 401 && refreshToken && useAuth) {
+      try {
+        const refreshed = await this.refreshAuthToken();
+        if (refreshed) {
+          // Retry the original request with new token
+          headers.Authorization = `Bearer ${authToken}`;
+          response = await fetch(url, { ...config, headers });
+        }
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        this.clearAuthTokens();
+        throw new Error("Authentication expired. Please log in again.");
+      }
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -78,6 +80,98 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  private setAuthTokens(token: string, refresh: string): void {
+    authToken = token;
+    refreshToken = refresh;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("refreshToken", refresh);
+    }
+  }
+
+  private clearAuthTokens(): void {
+    authToken = null;
+    refreshToken = null;
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+    }
+  }
+
+  private async refreshAuthToken(): Promise<boolean> {
+    if (!refreshToken) return false;
+
+    try {
+      const response = await this.request<AuthResponse>(
+        "/auth/refresh",
+        {
+          method: "POST",
+          body: JSON.stringify({ refreshToken }),
+        },
+        false
+      );
+
+      this.setAuthTokens(response.token, response.refreshToken);
+      return true;
+    } catch (error) {
+      console.error("Refresh token failed:", error);
+      return false;
+    }
+  }
+
+  // Authentication methods
+  async register(data: RegisterRequest): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>(
+      "/auth/register",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+      false
+    );
+    this.setAuthTokens(response.token, response.refreshToken);
+    return response;
+  }
+
+  async login(data: LoginRequest): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+      false
+    );
+    this.setAuthTokens(response.token, response.refreshToken);
+    return response;
+  }
+
+  async logout(): Promise<void> {
+    this.clearAuthTokens();
+  }
+
+  async getCurrentUser(): Promise<User> {
+    return this.request<User>("/user/me");
+  }
+
+  async updateUser(data: UpdateUserRequest): Promise<User> {
+    return this.request<User>("/user/me", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async changePassword(data: ChangePasswordRequest): Promise<{ message: string }> {
+    return this.request<{ message: string }>("/user/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  isAuthenticated(): boolean {
+    return !!authToken;
   }
 
   async createForm(formData: CreateFormRequest): Promise<Form> {
@@ -143,17 +237,21 @@ class ApiService {
 
   async getPublicForm(id: string): Promise<Form> {
     console.log("API: Fetching public form with ID:", id);
-    return this.request<Form>(`/public/forms/${id}`);
+    return this.request<Form>(`/public/forms/${id}`, {}, false);
   }
 
   async submitFormResponse(
     formId: string,
     data: Record<string, unknown>
   ): Promise<{ message: string; id: string }> {
-    return this.request<{ message: string; id: string }>("/responses", {
-      method: "POST",
-      body: JSON.stringify({ formId, data }),
-    });
+    return this.request<{ message: string; id: string }>(
+      "/responses",
+      {
+        method: "POST",
+        body: JSON.stringify({ formId, data }),
+      },
+      false
+    );
   }
 
   async getFormResponses(formId: string): Promise<FormResponse[]> {

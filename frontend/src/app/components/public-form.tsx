@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { Send } from "lucide-react";
-import { Form, FormField } from "@/lib/api";
+import { Form, FormField } from "../../../../shared/types";
 import { cn } from "@/lib/utils";
 
 interface PublicFormProps {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getWebSocketClient, WebSocketClient, WSMessage } from '@/lib/websocket';
+import { useAuth } from '../contexts/auth-context';
 
 export interface AnalyticsData {
   formId: string;
@@ -79,6 +80,7 @@ export function useWebSocketAnalytics({
   onAnalyticsUpdate,
   autoConnect = true
 }: UseWebSocketAnalyticsOptions): UseWebSocketAnalyticsReturn {
+  const { isAuthenticated } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +153,11 @@ export function useWebSocketAnalytics({
 
   // Connect to WebSocket
   const connect = useCallback(() => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, skipping WebSocket connection');
+      return;
+    }
+
     if (wsClientRef.current?.isConnected()) {
       console.log('Already connected to WebSocket');
       return;
@@ -158,7 +165,16 @@ export function useWebSocketAnalytics({
 
     console.log('Connecting to WebSocket for form:', formId);
     
+    // Get auth token from localStorage
+    const authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    if (!authToken) {
+      console.error('No auth token found');
+      setError('Authentication required for WebSocket connection');
+      return;
+    }
+    
     const client = getWebSocketClient({
+      token: authToken,
       onOpen: () => {
         console.log('WebSocket connected');
         setIsConnected(true);
@@ -274,7 +290,7 @@ export function useWebSocketAnalytics({
         disconnect();
       }
     };
-  }, [autoConnect]); // Only run on mount/unmount
+  }, [autoConnect, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     analytics,

@@ -22,7 +22,7 @@ import { DeleteFormModal } from "@/app/components/delete-form-modal";
 import { ShareFormModal } from "@/app/components/share-form-modal";
 import { Plus, Search, Filter, Grid, List } from "lucide-react";
 import { useForms } from "@/hooks/use-forms";
-import { Form } from "@/lib/api";
+import { Form } from "../../../../shared/types";
 import { useToast } from "@/hooks/use-toast";
 
 interface FormsDashboardProps {
