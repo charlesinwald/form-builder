@@ -8,6 +8,7 @@ import RegisterForm from "../components/auth/register-form";
 import { useAuth } from "../../contexts/auth-context";
 import ShaderBackground from "../components/ui/shader-background";
 import { GradualSpacing } from "../components/ui/gradual-spacing";
+import { Loader as Loader } from "../components/ui/loader-9";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -37,16 +38,7 @@ export default function AuthPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center gap-4"
         >
-          <motion.div
-            className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 1,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "linear",
-            }}
-          />
-          <p className="text-slate-600 dark:text-slate-400">Loading...</p>
+          <Loader />
         </motion.div>
       </div>
     );
