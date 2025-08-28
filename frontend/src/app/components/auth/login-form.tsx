@@ -1,107 +1,122 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Label } from "../ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import { Alert, AlertDescription } from "../ui/alert"
-import { useAuth } from "../../../contexts/auth-context"
-import { useToast } from "../../../hooks/use-toast"
-import { Mail, Lock, ArrowRight, CheckCircle } from "lucide-react"
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Alert, AlertDescription } from "../ui/alert";
+import { useAuth } from "../../../contexts/auth-context";
+import { useToast } from "../../../hooks/use-toast";
+import { Mail, Lock, ArrowRight, CheckCircle } from "lucide-react";
 
 interface LoginFormProps {
-  onToggleForm?: () => void
+  onToggleForm?: () => void;
 }
 
 export default function LoginForm({ onToggleForm }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { login, isLoading } = useAuth()
-  const { toast } = useToast()
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, isLoading } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
 
   // Persist form data during login attempts to prevent loss on re-renders
   useEffect(() => {
-    const savedEmail = localStorage.getItem('tempLoginEmail')
-    const savedPassword = localStorage.getItem('tempLoginPassword')
-    if (savedEmail) setEmail(savedEmail)
-    if (savedPassword) setPassword(savedPassword)
-    
+    const savedEmail = localStorage.getItem("tempLoginEmail");
+    const savedPassword = localStorage.getItem("tempLoginPassword");
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPassword) setPassword(savedPassword);
+
     // Clean up on successful auth or page unload
     return () => {
-      localStorage.removeItem('tempLoginEmail')
-      localStorage.removeItem('tempLoginPassword')
-    }
-  }, [])
+      localStorage.removeItem("tempLoginEmail");
+      localStorage.removeItem("tempLoginPassword");
+    };
+  }, []);
 
   const updateEmail = (newEmail: string) => {
-    setEmail(newEmail)
-    localStorage.setItem('tempLoginEmail', newEmail)
-  }
+    setEmail(newEmail);
+    localStorage.setItem("tempLoginEmail", newEmail);
+  };
 
   const updatePassword = (newPassword: string) => {
-    setPassword(newPassword)
-    localStorage.setItem('tempLoginPassword', newPassword)
-  }
+    setPassword(newPassword);
+    localStorage.setItem("tempLoginPassword", newPassword);
+  };
 
   const handleSubmit = async () => {
-    
     // Prevent multiple submissions
-    if (isSubmitting || isLoading) return
-    
-    setError("")
-    setIsSubmitting(true)
+    if (isSubmitting || isLoading) return;
+
+    setError("");
+    setIsSubmitting(true);
 
     try {
       if (!email || !password) {
-        const errorMessage = "Please fill in all fields"
-        setError(errorMessage)
+        const errorMessage = "Please fill in all fields";
+        setError(errorMessage);
         toast({
           variant: "destructive",
           title: "Validation Error",
           description: errorMessage,
-        })
-        return
+        });
+        return;
       }
 
-      await login({ email, password })
+      await login({ email, password });
       toast({
         variant: "success",
         title: "Welcome back!",
         description: "You have successfully signed in to your account.",
-      })
+      });
       // Clear form and temporary storage on successful login
-      localStorage.removeItem('tempLoginEmail')
-      localStorage.removeItem('tempLoginPassword')
-      setEmail("")
-      setPassword("")
-      router.push("/")
+      localStorage.removeItem("tempLoginEmail");
+      localStorage.removeItem("tempLoginPassword");
+      setEmail("");
+      setPassword("");
+      router.push("/");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Login failed"
-      setError(errorMessage)
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
+      setError(errorMessage);
       toast({
         variant: "destructive",
         title: "Sign In Failed",
         description: errorMessage,
-      })
+      });
       // Form data (email, password) should remain intact for user convenience
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+      style={{ fontFamily: "var(--font-inter)" }}
+    >
       <Card className="w-full max-w-md backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-white/20 shadow-2xl">
         <CardHeader className="text-center pb-8">
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Welcome Back
             </CardTitle>
@@ -118,7 +133,10 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
               >
-                <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-950/50">
+                <Alert
+                  variant="destructive"
+                  className="border-red-200 bg-red-50 dark:bg-red-950/50"
+                >
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               </motion.div>
@@ -130,7 +148,10 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
               transition={{ delay: 0.2 }}
               className="space-y-2"
             >
-              <Label htmlFor="email" className="text-slate-700 dark:text-slate-300 font-medium">
+              <Label
+                htmlFor="email"
+                className="text-slate-700 dark:text-slate-300 font-medium"
+              >
                 Email Address
               </Label>
               <div className="relative">
@@ -142,9 +163,9 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                   value={email}
                   onChange={(e) => updateEmail(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleSubmit()
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSubmit();
                     }
                   }}
                   required
@@ -161,7 +182,10 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
               transition={{ delay: 0.3 }}
               className="space-y-2"
             >
-              <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 font-medium">
+              <Label
+                htmlFor="password"
+                className="text-slate-700 dark:text-slate-300 font-medium"
+              >
                 Password
               </Label>
               <div className="relative">
@@ -173,9 +197,9 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                   value={password}
                   onChange={(e) => updatePassword(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleSubmit()
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSubmit();
                     }
                   }}
                   required
@@ -186,7 +210,11 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
               <Button
                 type="button"
                 onClick={handleSubmit}
@@ -194,11 +222,19 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                 disabled={isLoading || isSubmitting}
               >
                 {isLoading || isSubmitting ? (
-                  <motion.div className="flex items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
                     <motion.div
                       className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "linear",
+                      }}
                     />
                     Signing In...
                   </motion.div>
@@ -218,7 +254,9 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                 transition={{ delay: 0.5 }}
                 className="text-center pt-4"
               >
-                <span className="text-slate-600 dark:text-slate-400">Don&apos;t have an account? </span>
+                <span className="text-slate-600 dark:text-slate-400">
+                  Don&apos;t have an account?{" "}
+                </span>
                 <Button
                   type="button"
                   variant="link"
@@ -233,5 +271,5 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
