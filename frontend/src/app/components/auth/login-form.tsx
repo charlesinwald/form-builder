@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "../ui/button"
@@ -11,7 +11,8 @@ import { Label } from "../ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Alert, AlertDescription } from "../ui/alert"
 import { useAuth } from "../../../contexts/auth-context"
-import { Mail, Lock, ArrowRight } from "lucide-react"
+import { useToast } from "../../../hooks/use-toast"
+import { Mail, Lock, ArrowRight, CheckCircle } from "lucide-react"
 
 interface LoginFormProps {
   onToggleForm?: () => void
@@ -21,23 +22,78 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { login, isLoading } = useAuth()
+  const { toast } = useToast()
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    if (!email || !password) {
-      setError("Please fill in all fields")
-      return
+  // Persist form data during login attempts to prevent loss on re-renders
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('tempLoginEmail')
+    const savedPassword = localStorage.getItem('tempLoginPassword')
+    if (savedEmail) setEmail(savedEmail)
+    if (savedPassword) setPassword(savedPassword)
+    
+    // Clean up on successful auth or page unload
+    return () => {
+      localStorage.removeItem('tempLoginEmail')
+      localStorage.removeItem('tempLoginPassword')
     }
+  }, [])
+
+  const updateEmail = (newEmail: string) => {
+    setEmail(newEmail)
+    localStorage.setItem('tempLoginEmail', newEmail)
+  }
+
+  const updatePassword = (newPassword: string) => {
+    setPassword(newPassword)
+    localStorage.setItem('tempLoginPassword', newPassword)
+  }
+
+  const handleSubmit = async () => {
+    
+    // Prevent multiple submissions
+    if (isSubmitting || isLoading) return
+    
+    setError("")
+    setIsSubmitting(true)
 
     try {
+      if (!email || !password) {
+        const errorMessage = "Please fill in all fields"
+        setError(errorMessage)
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: errorMessage,
+        })
+        return
+      }
+
       await login({ email, password })
+      toast({
+        variant: "success",
+        title: "Welcome back!",
+        description: "You have successfully signed in to your account.",
+      })
+      // Clear form and temporary storage on successful login
+      localStorage.removeItem('tempLoginEmail')
+      localStorage.removeItem('tempLoginPassword')
+      setEmail("")
+      setPassword("")
       router.push("/")
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Login failed")
+      const errorMessage = error instanceof Error ? error.message : "Login failed"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "Sign In Failed",
+        description: errorMessage,
+      })
+      // Form data (email, password) should remain intact for user convenience
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -55,7 +111,7 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
           </motion.div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
             {error && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -84,9 +140,16 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                   type="email"
                   placeholder="Enter your email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => updateEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSubmit()
+                    }
+                  }}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
+                  autoComplete="email"
                   className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 />
               </div>
@@ -108,9 +171,16 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => updatePassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSubmit()
+                    }
+                  }}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
+                  autoComplete="current-password"
                   className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 />
               </div>
@@ -118,11 +188,12 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
               <Button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 group"
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
-                {isLoading ? (
+                {isLoading || isSubmitting ? (
                   <motion.div className="flex items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <motion.div
                       className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
@@ -158,7 +229,7 @@ export default function LoginForm({ onToggleForm }: LoginFormProps) {
                 </Button>
               </motion.div>
             )}
-          </form>
+          </div>
         </CardContent>
       </Card>
     </motion.div>

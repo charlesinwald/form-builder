@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "../contexts/auth-context"
+import { Toaster } from "./components/ui/toaster"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({
@@ -25,7 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(inter.variable, "bg-background")}>
       <body className="font-inter antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )

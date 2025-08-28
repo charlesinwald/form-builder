@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
+  const [hasInitialized, setHasInitialized] = useState(false)
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -18,7 +19,15 @@ export default function AuthPage() {
     }
   }, [isAuthenticated, isLoading, router])
 
-  if (isLoading) {
+  // Track initial load to prevent flash during subsequent loading states
+  useEffect(() => {
+    if (!isLoading) {
+      setHasInitialized(true)
+    }
+  }, [isLoading])
+
+  // Only show loading spinner during initial page load
+  if (isLoading && !hasInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <motion.div
@@ -79,7 +88,7 @@ export default function AuthPage() {
         <AnimatePresence mode="wait">
           {isLogin ? (
             <motion.div
-              key="login"
+              key={`login-${hasInitialized}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
@@ -89,7 +98,7 @@ export default function AuthPage() {
             </motion.div>
           ) : (
             <motion.div
-              key="register"
+              key={`register-${hasInitialized}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}

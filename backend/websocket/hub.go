@@ -227,8 +227,6 @@ func (h *Hub) GetFormSubscribersCount(formID string) int {
 
 // ValidateFormAccess checks if a user has access to a specific form
 func (h *Hub) ValidateFormAccess(userID, formID string) bool {
-	log.Printf("Validating form access: UserID=%s, FormID=%s", userID, formID)
-	
 	if h.database == nil {
 		log.Printf("Database connection not available for form validation")
 		return false
@@ -237,25 +235,21 @@ func (h *Hub) ValidateFormAccess(userID, formID string) bool {
 	// Convert form ID to ObjectID
 	objID, err := primitive.ObjectIDFromHex(formID)
 	if err != nil {
-		log.Printf("Invalid form ID format: %s, error: %v", formID, err)
+		log.Printf("Invalid form ID format: %s", formID)
 		return false
 	}
 
 	// Check if the form exists and belongs to the user
 	collection := h.database.Collection("forms")
-	filter := bson.M{
+	count, err := collection.CountDocuments(context.Background(), bson.M{
 		"_id":    objID,
 		"userId": userID,
-	}
-	log.Printf("Checking form access with filter: %+v", filter)
-	
-	count, err := collection.CountDocuments(context.Background(), filter)
+	})
 	if err != nil {
 		log.Printf("Error validating form access: %v", err)
 		return false
 	}
 
-	log.Printf("Form access validation result: count=%d, hasAccess=%v", count, count > 0)
 	return count > 0
 }
 

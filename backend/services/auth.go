@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -293,14 +292,7 @@ func (s *AuthService) ChangePassword(userID string, req models.ChangePasswordReq
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (*JWTClaims, error) {
-	log.Printf("Validating token (length: %d)", len(tokenString))
-	claims, err := s.validateToken(tokenString, false)
-	if err != nil {
-		log.Printf("Token validation failed: %v", err)
-		return nil, err
-	}
-	log.Printf("Token validation successful for user: %s (%s)", claims.UserID, claims.Email)
-	return claims, nil
+	return s.validateToken(tokenString, false)
 }
 
 func (s *AuthService) generateTokens(userID, email string) (string, string, error) {
@@ -346,37 +338,22 @@ func (s *AuthService) generateTokens(userID, email string) (string, string, erro
 }
 
 func (s *AuthService) validateToken(tokenString string, isRefreshToken bool) (*JWTClaims, error) {
-	log.Printf("Starting token validation, isRefreshToken: %v", isRefreshToken)
-	
 	jwtSecret := s.getJWTSecret()
-	log.Printf("Using JWT secret (length: %d)", len(jwtSecret))
-
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		log.Printf("Token signing method: %v", token.Header["alg"])
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			log.Printf("Unexpected signing method: %v", token.Header["alg"])
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(jwtSecret), nil
 	})
-
 	if err != nil {
-		log.Printf("JWT parsing error: %v", err)
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			log.Printf("Token has expired")
 			return nil, ErrTokenExpired
 		}
-		log.Printf("Token is invalid: %v", err)
 		return nil, ErrInvalidToken
 	}
-
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		log.Printf("Token claims extracted successfully: UserID=%s, Email=%s, Exp=%v", 
-			claims.UserID, claims.Email, claims.ExpiresAt)
 		return claims, nil
 	}
-
-	log.Printf("Token claims are invalid or token is not valid")
 	return nil, ErrInvalidToken
 }
 

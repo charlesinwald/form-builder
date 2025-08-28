@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const isAuthenticated = !!user && apiService.isAuthenticated();
 
@@ -28,6 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadUser = async () => {
+    // Don't interfere with active login attempts
+    if (isLoggingIn) return;
+    
     try {
       if (apiService.isAuthenticated()) {
         const userData = await apiService.getCurrentUser();
@@ -35,13 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Failed to load user:", error);
-      await logout();
+      // Only logout if not currently logging in
+      if (!isLoggingIn) {
+        await logout();
+      }
     } finally {
-      setIsLoading(false);
+      if (!isLoggingIn) {
+        setIsLoading(false);
+      }
     }
   };
 
   const login = async (data: LoginRequest) => {
+    setIsLoggingIn(true);
     setIsLoading(true);
     try {
       const response = await apiService.login(data);
@@ -50,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Login failed:", error);
       throw error;
     } finally {
+      setIsLoggingIn(false);
       setIsLoading(false);
     }
   };

@@ -11,7 +11,8 @@ import { Label } from "../ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Alert, AlertDescription } from "../ui/alert"
 import { useAuth } from "../../../contexts/auth-context"
-import { User, Mail, Lock, ArrowRight } from "lucide-react"
+import { useToast } from "../../../hooks/use-toast"
+import { User, Mail, Lock, ArrowRight, CheckCircle } from "lucide-react"
 
 interface RegisterFormProps {
   onToggleForm?: () => void
@@ -26,7 +27,9 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
     confirmPassword: "",
   })
   const [error, setError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { register, isLoading } = useAuth()
+  const { toast } = useToast()
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,20 +39,64 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent multiple submissions
+    if (isSubmitting || isLoading) return
+    
     setError("")
+    setIsSubmitting(true)
 
+    // Validation checks
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError("Please fill in all fields")
+      const errorMessage = "Please fill in all fields"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: errorMessage,
+      })
+      setIsSubmitting(false)
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
+      const errorMessage = "Passwords do not match"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "Password Mismatch",
+        description: errorMessage,
+      })
+      setIsSubmitting(false)
       return
     }
 
     if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long")
+      const errorMessage = "Password must be at least 8 characters long"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "Password Too Short",
+        description: errorMessage,
+      })
+      setIsSubmitting(false)
+      return
+    }
+
+    // Check for password strength
+    const hasUpperCase = /[A-Z]/.test(formData.password)
+    const hasLowerCase = /[a-z]/.test(formData.password)
+    const hasNumbers = /\d/.test(formData.password)
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+      const errorMessage = "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "Weak Password",
+        description: errorMessage,
+      })
+      setIsSubmitting(false)
       return
     }
 
@@ -60,9 +107,31 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
         email: formData.email,
         password: formData.password,
       })
+      toast({
+        variant: "success",
+        title: "Account Created Successfully!",
+        description: "Welcome to FormCraft! You can now start creating amazing forms.",
+      })
+      // Only clear form on successful registration
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      })
       router.push("/")
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Registration failed")
+      const errorMessage = error instanceof Error ? error.message : "Registration failed"
+      setError(errorMessage)
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: errorMessage,
+      })
+      // Form data should remain intact for user convenience
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -113,7 +182,8 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
                     value={formData.firstName}
                     onChange={handleChange}
                     required
-                    disabled={isLoading}
+                    disabled={isLoading || isSubmitting}
+                    autoComplete="given-name"
                     className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                   />
                 </div>
@@ -132,7 +202,8 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
                     value={formData.lastName}
                     onChange={handleChange}
                     required
-                    disabled={isLoading}
+                    disabled={isLoading || isSubmitting}
+                    autoComplete="family-name"
                     className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                   />
                 </div>
@@ -158,7 +229,8 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
+                  autoComplete="email"
                   className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 />
               </div>
@@ -179,11 +251,12 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="Create a password (min. 8 characters)"
+                  placeholder="Create a strong password (min. 8 characters, include A-Z, a-z, 0-9)"
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
+                  autoComplete="new-password"
                   className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 />
               </div>
@@ -208,7 +281,8 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
+                  autoComplete="new-password"
                   className="pl-10 h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 />
               </div>
@@ -218,9 +292,9 @@ export default function RegisterForm({ onToggleForm }: RegisterFormProps) {
               <Button
                 type="submit"
                 className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 group"
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
-                {isLoading ? (
+                {isLoading || isSubmitting ? (
                   <motion.div className="flex items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <motion.div
                       className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
