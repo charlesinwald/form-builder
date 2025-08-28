@@ -152,6 +152,9 @@ func setupRoutes(app *fiber.App) {
 	responses := api.Group("/responses")
 	responses.Post("/", createResponse) // Public - form submissions
 
+	// WebSocket endpoint (authentication handled within the handler via token query param)
+	api.Get("/ws", ws.HandleWebSocket(wsHub, authService))
+
 	// Protected routes
 	protected := api.Group("/", authMiddleware.RequireAuth())
 
@@ -160,9 +163,6 @@ func setupRoutes(app *fiber.App) {
 	user.Get("/me", getUserHandler)
 	user.Put("/me", updateUserHandler)
 	user.Post("/change-password", changePasswordHandler)
-
-	// WebSocket endpoint (protected)
-	protected.Get("/ws", ws.HandleWebSocket(wsHub, authService))
 
 	// Forms routes (protected)
 	forms := protected.Group("/forms")

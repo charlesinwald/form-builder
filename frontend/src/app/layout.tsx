@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "../contexts/auth-context"
+import { cn } from "@/lib/utils"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,7 +15,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FormCraft - Professional Form Builder",
   description: "Create, manage, and analyze feedback forms with real-time analytics",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={cn(inter.variable, "bg-background")}>
       <body className="font-inter antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>

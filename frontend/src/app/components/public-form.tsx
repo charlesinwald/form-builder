@@ -101,7 +101,7 @@ export function PublicForm({
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className={cn(
                 "bg-background border-2 hover:border-border transition-colors",
-                error ? "border-destructive" : "border-border"
+                error ? "border-destructive" : "!border-muted-foreground"
               )}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -122,7 +122,7 @@ export function PublicForm({
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className={cn(
                 "!bg-background !border-2 hover:!border-border transition-colors",
-                error ? "!border-destructive" : "!border-white"
+                error ? "!border-destructive" : "!border-muted-foreground"
               )}
               rows={4}
             />
@@ -144,7 +144,7 @@ export function PublicForm({
               <SelectTrigger
                 className={cn(
                   "!bg-background !border-2 hover:!border-border transition-colors",
-                  error ? "!border-destructive" : "!border-white"
+                  error ? "!border-destructive" : "!border-muted-foreground"
                 )}
               >
                 <SelectValue

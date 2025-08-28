@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getWebSocketClient, WebSocketClient, WSMessage } from '@/lib/websocket';
 import { useAuth } from '../contexts/auth-context';
+import { apiService } from '../lib/api';
 
 export interface AnalyticsData {
   formId: string;
@@ -94,15 +95,15 @@ export function useWebSocketAnalytics({
 
   // Fetch initial analytics data
   const fetchAnalytics = useCallback(async () => {
+    if (!isAuthenticated) {
+      setError('Authentication required');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'}/analytics/form/${formId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch analytics');
-      }
-
-      const data = await response.json();
+      const data = await apiService.getFormAnalytics(formId);
       setAnalytics(data);
       setError(null);
     } catch (err) {
@@ -111,7 +112,7 @@ export function useWebSocketAnalytics({
     } finally {
       setLoading(false);
     }
-  }, [formId]);
+  }, [formId, isAuthenticated]);
 
   // Handle WebSocket messages
   const handleNewResponse = useCallback((data: NewResponseData) => {
@@ -152,7 +153,7 @@ export function useWebSocketAnalytics({
   }, [onAnalyticsUpdate]);
 
   // Connect to WebSocket
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!isAuthenticated) {
       console.log('User not authenticated, skipping WebSocket connection');
       return;
@@ -165,12 +166,51 @@ export function useWebSocketAnalytics({
 
     console.log('Connecting to WebSocket for form:', formId);
     
-    // Get auth token from localStorage
-    const authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    // Get fresh auth token - ensure it's not expired
+    let authToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     if (!authToken) {
       console.error('No auth token found');
       setError('Authentication required for WebSocket connection');
       return;
+    }
+
+    // Check if token is close to expiry and refresh if needed
+    try {
+      const tokenPayload = JSON.parse(atob(authToken.split('.')[1]));
+      const expirationTime = tokenPayload.exp * 1000;
+      const currentTime = Date.now();
+      const timeUntilExpiry = expirationTime - currentTime;
+      
+      // If token expires in less than 5 minutes, try to refresh it
+      if (timeUntilExpiry < 5 * 60 * 1000) {
+        console.log('Token expires soon, attempting to refresh');
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'}/auth/refresh`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refreshToken }),
+            });
+
+            if (response.ok) {
+              const authData = await response.json();
+              localStorage.setItem('authToken', authData.token);
+              localStorage.setItem('refreshToken', authData.refreshToken);
+              authToken = authData.token;
+              console.log('Token refreshed successfully');
+            } else {
+              console.warn('Failed to refresh token, using existing token');
+            }
+          } catch (refreshError) {
+            console.warn('Token refresh error, using existing token:', refreshError);
+          }
+        }
+      }
+    } catch (tokenParseError) {
+      console.warn('Failed to parse token for expiry check:', tokenParseError);
     }
     
     const client = getWebSocketClient({

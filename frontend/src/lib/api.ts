@@ -12,6 +12,7 @@ import {
   ChangePasswordRequest,
   UpdateUserRequest,
 } from "../../../shared/types";
+import { AnalyticsData } from "../hooks/use-websocket-analytics";
 
 // Ensure the API URL has a protocol
 const API_BASE_URL = (() => {
@@ -256,6 +257,10 @@ class ApiService {
 
   async getFormResponses(formId: string): Promise<FormResponse[]> {
     return this.request<FormResponse[]>(`/responses/form/${formId}`);
+  }
+
+  async getFormAnalytics(formId: string): Promise<AnalyticsData> {
+    return this.request<AnalyticsData>(`/analytics/form/${formId}`);
   }
 }
 
