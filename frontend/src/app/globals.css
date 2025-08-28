@@ -63,3 +63,45 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+/* Fix autocomplete styles with transition delay trick */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--color-input) inset !important;
+  -webkit-text-fill-color: var(--color-foreground) !important;
+  background-color: var(--color-input) !important;
+  color: var(--color-foreground) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* More specific targeting for form inputs */
+input[type="email"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill,
+input[type="text"]:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px var(--color-input) inset !important;
+  -webkit-text-fill-color: var(--color-foreground) !important;
+  background-color: var(--color-input) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* For dark mode */
+@media (prefers-color-scheme: dark) {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  input[type="email"]:-webkit-autofill,
+  input[type="password"]:-webkit-autofill,
+  input[type="text"]:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px var(--color-input) inset !important;
+    -webkit-text-fill-color: var(--color-foreground) !important;
+    background-color: var(--color-input) !important;
+    color: var(--color-foreground) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    -webkit-transition: background-color 5000s ease-in-out 0s !important;
+  }
+}
