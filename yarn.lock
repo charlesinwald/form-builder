@@ -603,6 +603,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@paper-design/shaders-react@npm:^0.0.46":
+  version: 0.0.46
+  resolution: "@paper-design/shaders-react@npm:0.0.46"
+  dependencies:
+    "@paper-design/shaders": 0.0.46
+  peerDependencies:
+    "@types/react": ^18 || ^19
+    react: ^18 || ^19
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 23b261b3e88e34d29eb4d4478a930fdaf9764beb3b4dc22c0ae97fb862ab8eef12c1952a85cfa5208d01fef329681bbae5e6418e86bd895a83d842a302b4c884
+  languageName: node
+  linkType: hard
+
+"@paper-design/shaders@npm:0.0.46":
+  version: 0.0.46
+  resolution: "@paper-design/shaders@npm:0.0.46"
+  checksum: 22ea5602aac737f18ec13678f77a800d4eed9a933ca972861d1e9f2f1db5a7f12ed82f52fe6614c47e104940d69e319ec22da4933de5026194440f4e58358282
+  languageName: node
+  linkType: hard
+
 "@radix-ui/number@npm:1.1.1":
   version: 1.1.1
   resolution: "@radix-ui/number@npm:1.1.1"
@@ -3811,6 +3833,7 @@ __metadata:
     "@date-fns/tz": ^1.4.1
     "@eslint/eslintrc": ^3
     "@hello-pangea/dnd": ^18.0.1
+    "@paper-design/shaders-react": ^0.0.46
     "@radix-ui/react-accordion": ^1.2.12
     "@radix-ui/react-alert-dialog": ^1.1.15
     "@radix-ui/react-aspect-ratio": ^1.1.7
