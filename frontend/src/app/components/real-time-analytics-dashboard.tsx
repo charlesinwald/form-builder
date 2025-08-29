@@ -39,6 +39,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 import {
   LineChart as RechartsLineChart,
@@ -69,6 +70,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface RealTimeAnalyticsDashboardProps {
   formId: string;
   formTitle?: string;
+  onBack?: () => void;
 }
 
 const COLORS = [
@@ -83,6 +85,7 @@ const COLORS = [
 export function RealTimeAnalyticsDashboard({
   formId,
   formTitle = "Form",
+  onBack,
 }: RealTimeAnalyticsDashboardProps) {
   const { toast } = useToast();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -236,13 +239,25 @@ export function RealTimeAnalyticsDashboard({
     <div className="p-6 space-y-6 overflow-y-auto h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Real-Time Analytics
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            {formTitle} • Live Dashboard
-          </p>
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={onBack}
+              className="gap-2 hover:bg-muted h-16 w-16 flex items-center justify-center"
+            >
+              <ArrowLeft className="!h-8 !w-8" />
+            </Button>
+          )}
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Real-Time Analytics
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              {formTitle} • Live Dashboard
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

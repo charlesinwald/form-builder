@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import ProtectedRoute from "./components/auth/protected-route";
+import { LandingPage } from "@/app/components/landing-page";
 import { FormBuilder } from "@/app/components/form-builder";
 import { FormPreview } from "@/app/components/form-preview";
 import { FormsDashboard } from "@/app/components/forms-dashboard";
@@ -13,6 +15,7 @@ import { Button } from "@/app/components/ui/button";
 import { Form, FormField } from "../../../shared/types";
 import { useForms } from "@/hooks/use-forms";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-dashboard";
 import { FormCard } from "./components/form-card";
@@ -24,6 +27,9 @@ interface FormData {
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+  
   const [activeView, setActiveView] = useState<
     "dashboard" | "builder" | "preview" | "analytics" | "responses"
   >("dashboard");
@@ -39,6 +45,24 @@ export default function HomePage() {
   const { forms, saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleGetStarted = () => {
+    router.push("/auth");
+  };
+
+  // Show loading state while auth is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show landing page for non-authenticated users
+  if (!isAuthenticated) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
 
   // Auto-save functionality
   const performAutoSave = useCallback(async () => {
@@ -81,8 +105,9 @@ export default function HomePage() {
       description: form.description,
       fields: form.fields,
     });
-    console.log("handleFormSelect", form);
-    setActiveView("builder");
+    if (activeView !== "analytics") {
+      setActiveView("builder");
+    } 
     setCurrentForm(form);
   };
 
@@ -205,6 +230,10 @@ export default function HomePage() {
               <RealTimeAnalyticsDashboard
                 formId={currentForm.id}
                 formTitle={currentForm.title}
+                onBack={() => {
+                  setCurrentForm(null);
+                  setActiveView("analytics");
+                }}
               />
             ) : (
               <div className="p-6 space-y-6">
