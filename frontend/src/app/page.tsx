@@ -81,7 +81,9 @@ export default function HomePage() {
       description: form.description,
       fields: form.fields,
     });
-    // Don't change the active view - stay on current view
+    console.log("handleFormSelect", form);
+    setActiveView("builder");
+    setCurrentForm(form);
   };
 
   const handleNewForm = async () => {
