@@ -15,6 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
+import { Calendar } from "@/app/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover";
+import { format, addDays } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { SignaturePad } from "@/app/components/ui/signature-pad";
 import { cn } from "@/lib/utils";
 import { FormField as SharedFormField } from "../../../../shared/types";
 
@@ -159,6 +164,69 @@ export function FormPreview({ formData }: FormPreviewProps) {
               </button>
             ))}
           </div>
+        );
+      case "date":
+        return (
+          <div className="space-y-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal !bg-background !border-2 !border-white hover:!border-border transition-colors",
+                    !responses[field.id] && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {responses[field.id] ? (
+                    format(responses[field.id] as Date, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="max-w-[350px]">
+                  <Calendar
+                    mode="single"
+                    selected={responses[field.id] as Date}
+                    onSelect={(date) => updateResponse(field.id, date)}
+                    className="rounded-md border-0"
+                  />
+                  <div className="flex flex-wrap gap-2 border-t p-3">
+                    {[
+                      { label: "Today", value: 0 },
+                      { label: "Tomorrow", value: 1 },
+                      { label: "In 3 days", value: 3 },
+                      { label: "In a week", value: 7 },
+                      { label: "In 2 weeks", value: 14 },
+                    ].map((preset) => (
+                      <Button
+                        key={preset.value}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          const newDate = addDays(new Date(), preset.value)
+                          updateResponse(field.id, newDate)
+                        }}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        );
+      case "signature":
+        return (
+          <SignaturePad 
+            label=""
+            required={field.required}
+            onSignatureChange={(hasSignature) => updateResponse(field.id, hasSignature)}
+          />
         );
       default:
         return null;

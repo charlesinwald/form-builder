@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
-import { Send } from "lucide-react";
+import { Calendar } from "@/app/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover";
+import { format, addDays } from "date-fns";
+import { Send, CalendarIcon } from "lucide-react";
+import { SignaturePad } from "@/app/components/ui/signature-pad";
 import { Form, FormField } from "../../../../shared/types";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +43,14 @@ export function PublicForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateField = (field: FormField, value: unknown): string | null => {
-    if (
-      field.required &&
-      (!value || (typeof value === "string" && value.trim() === ""))
-    ) {
-      return `${field.label} is required`;
+    if (field.required) {
+      if (field.type === "signature") {
+        if (!value || value === false) {
+          return `${field.label} is required`;
+        }
+      } else if (!value || (typeof value === "string" && value.trim() === "")) {
+        return `${field.label} is required`;
+      }
     }
 
     return null;
@@ -257,6 +264,81 @@ export function PublicForm({
                 </span>
               )}
             </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        );
+
+      case "date":
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label className="text-sm font-medium">
+              {field.label}{" "}
+              {field.required && <span className="text-destructive">*</span>}
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal !bg-background !border-2 hover:!border-border transition-colors",
+                    !value && "text-muted-foreground",
+                    error ? "!border-destructive" : "!border-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {value ? (
+                    format(value as Date, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="max-w-[350px]">
+                  <Calendar
+                    mode="single"
+                    selected={value as Date}
+                    onSelect={(date) => handleFieldChange(field.id, date)}
+                    initialFocus
+                    className="rounded-md border-0"
+                  />
+                  <div className="flex flex-wrap gap-2 border-t p-3">
+                    {[
+                      { label: "Today", value: 0 },
+                      { label: "Tomorrow", value: 1 },
+                      { label: "In 3 days", value: 3 },
+                      { label: "In a week", value: 7 },
+                      { label: "In 2 weeks", value: 14 },
+                    ].map((preset) => (
+                      <Button
+                        key={preset.value}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          const newDate = addDays(new Date(), preset.value)
+                          handleFieldChange(field.id, newDate)
+                        }}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        );
+
+      case "signature":
+        return (
+          <div key={field.id} className="space-y-2">
+            <SignaturePad 
+              label=""
+              required={field.required}
+              onSignatureChange={(hasSignature) => handleFieldChange(field.id, hasSignature)}
+            />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         );

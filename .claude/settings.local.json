@@ -5,7 +5,10 @@
       "Bash(npm run dev:*)",
       "Bash(go run:*)",
       "Bash(yarn build)",
-      "Bash(npm run build:frontend:*)"
+      "Bash(npm run build:frontend:*)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

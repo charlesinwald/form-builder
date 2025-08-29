@@ -51,11 +51,13 @@ export default function HomePage() {
     if (!currentForm) return;
 
     try {
-      await saveDraft(currentForm.id, {
+      const updatedForm = await saveDraft(currentForm.id, {
         title: formData.title,
         description: formData.description,
         fields: formData.fields,
       });
+      // Update currentForm with the saved form data to keep UI in sync
+      setCurrentForm(updatedForm);
     } catch (error) {
       console.error("Auto-save failed:", error);
     }
@@ -337,10 +339,6 @@ export default function HomePage() {
         />
       )}
 
-      {/* Developer Credit */}
-      <div className="fixed bottom-4 right-4 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
-        Developed by Charles Inwald
-      </div>
       </div>
     </ProtectedRoute>
   );

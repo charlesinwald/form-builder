@@ -8,6 +8,7 @@ import {
   Circle,
   Star,
   Calendar,
+  PenTool,
 } from "lucide-react";
 
 interface FieldToolboxProps {
@@ -20,6 +21,7 @@ interface FieldToolboxProps {
       | "checkbox"
       | "rating"
       | "date"
+      | "signature"
   ) => void;
 }
 
@@ -32,6 +34,7 @@ export function FieldToolbox({ onAddField }: FieldToolboxProps) {
     { type: "checkbox" as const, label: "Checkboxes", icon: CheckSquare },
     { type: "rating" as const, label: "Rating", icon: Star },
     { type: "date" as const, label: "Date Picker", icon: Calendar },
+    { type: "signature" as const, label: "Signature Pad", icon: PenTool },
   ];
 
   return (

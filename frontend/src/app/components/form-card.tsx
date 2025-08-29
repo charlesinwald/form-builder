@@ -198,7 +198,7 @@ export function FormCard({
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  {form.status !== "published" && (
+                  {form.status !== "published" && form.fields.length > 0 && (
                     <DropdownMenuItem
                       disabled={isStatusChanging}
                       onClick={(e: React.MouseEvent) => {
@@ -222,7 +222,7 @@ export function FormCard({
                       {isStatusChanging ? "Archiving..." : "Archive"}
                     </DropdownMenuItem>
                   )}
-                  {form.status === "published" && onShare && (
+                  {form.status === "published" && form.fields.length > 0 && onShare && (
                     <DropdownMenuItem
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
@@ -317,7 +317,7 @@ export function FormCard({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              {form.status !== "published" && (
+              {form.status !== "published" && form.fields.length > 0 && (
                 <DropdownMenuItem
                   disabled={isStatusChanging}
                   onClick={(e: React.MouseEvent) => {
@@ -341,7 +341,7 @@ export function FormCard({
                   {isStatusChanging ? "Archiving..." : "Archive"}
                 </DropdownMenuItem>
               )}
-              {form.status === "published" && onShare && (
+              {form.status === "published" && form.fields.length > 0 && onShare && (
                 <DropdownMenuItem
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();

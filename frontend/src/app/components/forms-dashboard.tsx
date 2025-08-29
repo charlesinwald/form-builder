@@ -122,17 +122,20 @@ export function FormsDashboard({
   const handleDeleteForm = async (formId: string) => {
     try {
       await deleteForm(formId);
-      setFormToDelete(null);
       toast({
         title: "Success",
         description: "Form deleted successfully",
       });
-    } catch {
+    } catch (error) {
+      console.error("Failed to delete form:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to delete form",
       });
+    } finally {
+      // Always close the modal, even if deletion fails
+      setFormToDelete(null);
     }
   };
 
@@ -158,18 +161,12 @@ export function FormsDashboard({
           break;
       }
 
-      // Refresh the forms list to ensure UI is in sync with backend
-      await refetch();
-
       toast({
         title: "Success",
         description: `Form ${newStatus} successfully`,
       });
     } catch (error) {
       console.error(`Failed to ${newStatus} form:`, error);
-
-      // Refresh forms even on error to ensure we show correct state
-      await refetch();
 
       toast({
         variant: "destructive",

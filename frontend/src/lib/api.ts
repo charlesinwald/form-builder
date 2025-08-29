@@ -227,9 +227,7 @@ class ApiService {
   }
 
   async unpublishForm(id: string): Promise<Form> {
-    return this.request<Form>(`/forms/${id}/unpublish`, {
-      method: "POST",
-    });
+    return this.updateForm(id, { status: "draft", isActive: false });
   }
 
   async archiveForm(id: string): Promise<Form> {

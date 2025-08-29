@@ -50,15 +50,23 @@ export function useForms(initialStatus?: string) {
   }, []);
 
   const deleteForm = useCallback(async (id: string) => {
+    // Store original form for rollback if needed
+    const originalForm = forms.find(f => f.id === id);
+    const originalForms = forms;
+    
+    // Optimistic update - immediately remove form from UI
+    setForms(prev => prev.filter(form => form.id !== id));
+
     try {
       await apiService.deleteForm(id);
-      setForms(prev => prev.filter(form => form.id !== id));
     } catch (err) {
+      // Rollback optimistic update on error
+      setForms(originalForms);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete form';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, []);
+  }, [forms]);
 
   const saveDraft = useCallback(async (id: string, formData: Omit<CreateFormRequest, 'status'>) => {
     try {
@@ -73,40 +81,76 @@ export function useForms(initialStatus?: string) {
   }, []);
 
   const publishForm = useCallback(async (id: string) => {
+    // Optimistic update
+    const originalForm = forms.find(f => f.id === id);
+    setForms(prev => prev.map(form => 
+      form.id === id 
+        ? { ...form, status: 'published' as const, isActive: true }
+        : form
+    ));
+
     try {
       const updatedForm = await apiService.publishForm(id);
       setForms(prev => prev.map(form => form.id === id ? updatedForm : form));
       return updatedForm;
     } catch (err) {
+      // Rollback optimistic update on error
+      if (originalForm) {
+        setForms(prev => prev.map(form => form.id === id ? originalForm : form));
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to publish form';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, []);
+  }, [forms]);
 
   const unpublishForm = useCallback(async (id: string) => {
+    // Optimistic update
+    const originalForm = forms.find(f => f.id === id);
+    setForms(prev => prev.map(form => 
+      form.id === id 
+        ? { ...form, status: 'draft' as const, isActive: false }
+        : form
+    ));
+
     try {
       const updatedForm = await apiService.unpublishForm(id);
       setForms(prev => prev.map(form => form.id === id ? updatedForm : form));
       return updatedForm;
     } catch (err) {
+      // Rollback optimistic update on error
+      if (originalForm) {
+        setForms(prev => prev.map(form => form.id === id ? originalForm : form));
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to unpublish form';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, []);
+  }, [forms]);
 
   const archiveForm = useCallback(async (id: string) => {
+    // Optimistic update
+    const originalForm = forms.find(f => f.id === id);
+    setForms(prev => prev.map(form => 
+      form.id === id 
+        ? { ...form, status: 'archived' as const, isActive: false }
+        : form
+    ));
+
     try {
       const updatedForm = await apiService.archiveForm(id);
       setForms(prev => prev.map(form => form.id === id ? updatedForm : form));
       return updatedForm;
     } catch (err) {
+      // Rollback optimistic update on error
+      if (originalForm) {
+        setForms(prev => prev.map(form => form.id === id ? originalForm : form));
+      }
       const errorMessage = err instanceof Error ? err.message : 'Failed to archive form';
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, []);
+  }, [forms]);
 
   const duplicateForm = useCallback(async (form: Form) => {
     try {

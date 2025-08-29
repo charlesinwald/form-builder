@@ -8,6 +8,8 @@ import { Button } from "@/app/components/ui/button";
 import { Switch } from "@/app/components/ui/switch";
 import { Label } from "@/app/components/ui/label";
 import { Select, SelectTrigger, SelectValue } from "@/app/components/ui/select";
+import { CalendarWithPresets } from "@/app/components/ui/calendar-with-presets";
+import { SignaturePad } from "@/app/components/ui/signature-pad";
 import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormField as SharedFormField } from "../../../../shared/types";
@@ -105,6 +107,22 @@ export function FormField({
                 ⭐
               </button>
             ))}
+          </div>
+        );
+      case "date":
+        return (
+          <div className="pointer-events-none">
+            <CalendarWithPresets />
+          </div>
+        );
+      case "signature":
+        return (
+          <div className="pointer-events-none">
+            <SignaturePad 
+              label={field.label}
+              required={field.required}
+              disabled={true}
+            />
           </div>
         );
       default:
