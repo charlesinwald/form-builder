@@ -275,7 +275,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               </span>
             </h2>
             <p className="text-xl text-white/90 max-w-3xl mx-auto drop-shadow-md">
-              No matter what industry you're in, FormCraft helps you collect information,
+              No matter what industry you&apos;re in, FormCraft helps you collect information,
               connect with customers, and grow your business.
             </p>
           </motion.div>
@@ -332,7 +332,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             </span>
           </h2>
           <p className="text-xl text-white/90 max-w-3xl mx-auto drop-shadow-md">
-            We've built the most reliable and user-friendly form platform so you
+            We&apos;ve built the most reliable and user-friendly form platform so you
             can focus on what matters most - your business.
           </p>
         </motion.div>

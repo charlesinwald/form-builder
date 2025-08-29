@@ -262,7 +262,7 @@ export function useWebSocketAnalytics({
 
     client.connect();
     wsClientRef.current = client;
-  }, [formId, handleNewResponse, handleAnalyticsUpdate]);
+  }, [formId, handleNewResponse, handleAnalyticsUpdate, isAuthenticated]);
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {

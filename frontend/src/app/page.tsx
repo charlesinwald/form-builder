@@ -46,24 +46,6 @@ export default function HomePage() {
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleGetStarted = () => {
-    router.push("/auth");
-  };
-
-  // Show loading state while auth is being determined
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Show landing page for non-authenticated users
-  if (!isAuthenticated) {
-    return <LandingPage onGetStarted={handleGetStarted} />;
-  }
-
   // Auto-save functionality
   const performAutoSave = useCallback(async () => {
     if (!currentForm) return;
@@ -97,6 +79,24 @@ export default function HomePage() {
       }
     };
   }, [formData, currentForm, performAutoSave]);
+
+  const handleGetStarted = () => {
+    router.push("/auth");
+  };
+
+  // Show loading state while auth is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show landing page for non-authenticated users
+  if (!isAuthenticated) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
 
   const handleFormSelect = (form: Form) => {
     setCurrentForm(form);

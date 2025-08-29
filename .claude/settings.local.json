@@ -3,7 +3,9 @@
     "allow": [
       "Bash(curl:*)",
       "Bash(npm run dev:*)",
-      "Bash(go run:*)"
+      "Bash(go run:*)",
+      "Bash(yarn build)",
+      "Bash(npm run build:frontend:*)"
     ],
     "deny": [],
     "ask": []

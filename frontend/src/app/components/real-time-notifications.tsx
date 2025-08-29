@@ -57,7 +57,7 @@ export function RealTimeNotifications({
         if (timer) clearTimeout(timer);
       });
     };
-  }, [notifications, autoHideDuration]);
+  }, [notifications, autoHideDuration, dismissedIds]);
 
   const handleDismiss = (id: string) => {
     setDismissedIds(prev => new Set(prev).add(id));
