@@ -1,16 +1,20 @@
 "use client";
 
 import { SignaturePad } from "@ark-ui/react/signature-pad";
-import { useState } from "react";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { CheckCircle, AlertCircle, Upload, FileImage } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiService } from "@/lib/api";
 
 interface SignaturePadProps {
-  onSignatureChange?: (hasSignature: boolean, signatureData?: string) => void;
+  onSignatureChange?: (hasSignature: boolean, signatureData?: string, fileUrl?: string) => void;
   required?: boolean;
   label?: string;
   className?: string;
   disabled?: boolean;
+  formId?: string;
+  fieldId?: string;
+  allowUpload?: boolean;
 }
 
 export function BasicSignaturePad({ 
@@ -18,18 +22,107 @@ export function BasicSignaturePad({
   required = false, 
   label = "Signature", 
   className,
-  disabled = false 
+  disabled = false,
+  formId,
+  fieldId,
+  allowUpload = false
 }: SignaturePadProps) {
   const [hasSignature, setHasSignature] = useState(false);
+  const [signatureData, setSignatureData] = useState<string>("");
+  const [uploadedFile, setUploadedFile] = useState<{ url: string; filename: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>("");
+  const signaturePadRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDrawEnd = () => {
-    setHasSignature(true);
-    onSignatureChange?.(true);
+  const handleDrawEnd = async (details: any) => {
+    if (details && details.getDataUrl) {
+      const dataUrl = details.getDataUrl('image/png');
+      setSignatureData(dataUrl);
+      setHasSignature(true);
+      
+      // Auto-upload the signature if formId and fieldId are provided
+      if (formId && fieldId) {
+        try {
+          setIsUploading(true);
+          // Convert data URL to blob
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], `signature_${Date.now()}.png`, { type: 'image/png' });
+
+          // Upload the file
+          const uploadResult = await apiService.uploadFile(file, formId, fieldId);
+          setUploadedFile({ url: uploadResult.url, filename: uploadResult.filename });
+          onSignatureChange?.(true, dataUrl, uploadResult.url);
+        } catch (error) {
+          console.error('Error auto-uploading signature:', error);
+          // Fall back to just the signature data
+          onSignatureChange?.(true, dataUrl, undefined);
+        } finally {
+          setIsUploading(false);
+        }
+      } else {
+        onSignatureChange?.(true, dataUrl, undefined);
+      }
+    }
   };
 
   const handleClear = () => {
     setHasSignature(false);
-    onSignatureChange?.(false);
+    setSignatureData("");
+    setUploadedFile(null);
+    setUploadError("");
+    onSignatureChange?.(false, undefined, undefined);
+  };
+
+  const saveSignatureAsFile = async () => {
+    if (!signatureData) return;
+
+    try {
+      setIsUploading(true);
+      setUploadError("");
+
+      // Convert data URL to blob
+      const response = await fetch(signatureData);
+      const blob = await response.blob();
+      const file = new File([blob], `signature_${Date.now()}.png`, { type: 'image/png' });
+
+      // Upload the file
+      const uploadResult = await apiService.uploadFile(file, formId, fieldId);
+      setUploadedFile({ url: uploadResult.url, filename: uploadResult.filename });
+      onSignatureChange?.(true, signatureData, uploadResult.url);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      setUploadError('Failed to save signature');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadError("");
+
+      const uploadResult = await apiService.uploadFile(file, formId, fieldId);
+      setUploadedFile({ url: uploadResult.url, filename: uploadResult.filename });
+      setHasSignature(true);
+      onSignatureChange?.(true, undefined, uploadResult.url);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setUploadError('Failed to upload file');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -56,8 +149,66 @@ export function BasicSignaturePad({
           <SignaturePad.Guide className="absolute bottom-4 left-3 right-3 border-b-2 border-dashed border-muted-foreground/30" />
         </SignaturePad.Control>
       </SignaturePad.Root>
+
+      {/* Action buttons */}
+      {!disabled && allowUpload && (
+        <div className="flex gap-2 mt-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {isUploading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" />
+                Upload Image
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Loading indicator when auto-uploading signature */}
+      {isUploading && !allowUpload && (
+        <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          Saving signature...
+        </div>
+      )}
+
+      {/* Upload error */}
+      {uploadError && (
+        <div className="mt-2 text-sm text-destructive">
+          {uploadError}
+        </div>
+      )}
+
+      {/* Uploaded file info */}
+      {uploadedFile && (
+        <div className="mt-2 p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2 text-sm">
+            <FileImage className="w-4 h-4 text-green-600" />
+            <span className="text-muted-foreground">File saved:</span>
+            <span className="font-medium">{uploadedFile.filename}</span>
+          </div>
+        </div>
+      )}
       
-      {required && (
+      {/* Status indicator */}
+      {(required || hasSignature) && (
         <div className="flex items-center space-x-2 mt-2">
           {hasSignature ? (
             <CheckCircle className="w-4 h-4 text-green-600" />

@@ -28,6 +28,7 @@ var database *mongo.Database
 var wsHub *ws.Hub
 var analyticsService *services.AnalyticsService
 var authService *services.AuthService
+var fileService *services.FileService
 var authMiddleware *middleware.AuthMiddleware
 var useMemoryStore bool = false
 var allowedOrigins string
@@ -44,6 +45,7 @@ func main() {
 	// Initialize services
 	analyticsService = services.NewAnalyticsService(database)
 	authService = services.NewAuthService(database)
+	fileService = services.NewFileService(database)
 	authMiddleware = middleware.NewAuthMiddleware(authService)
 
 	// Initialize WebSocket hub
@@ -183,6 +185,15 @@ func setupRoutes(app *fiber.App) {
 	analytics := protected.Group("/analytics")
 	analytics.Get("/form/:formId", getFormAnalytics)
 	analytics.Get("/form/:formId/realtime", getRealTimeAnalytics)
+
+	// File upload routes (protected)
+	files := protected.Group("/files")
+	files.Post("/upload", uploadFile)
+	files.Get("/user", getUserFiles)
+	files.Delete("/:id", deleteFile)
+
+	// Public file serving route
+	api.Get("/files/:filename", serveFile)
 }
 
 func createForm(c *fiber.Ctx) error {
@@ -1084,4 +1095,83 @@ func changePasswordHandler(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "Password changed successfully",
 	})
+}
+
+// File upload handlers
+func uploadFile(c *fiber.Ctx) error {
+	// Get file from form data
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "No file provided",
+		})
+	}
+
+	// Get optional form and field IDs
+	formID := c.FormValue("formId")
+	fieldID := c.FormValue("fieldId")
+
+	// Get user ID from middleware
+	userID := middleware.GetUserID(c)
+
+	// Upload file using service
+	uploadedFile, err := fileService.UploadFile(file, userID, formID, fieldID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return file response
+	response := models.FileUploadResponse{
+		ID:       uploadedFile.ID.Hex(),
+		Filename: uploadedFile.Filename,
+		URL:      uploadedFile.URL,
+		Size:     uploadedFile.Size,
+		MimeType: uploadedFile.MimeType,
+	}
+
+	return c.Status(201).JSON(response)
+}
+
+func serveFile(c *fiber.Ctx) error {
+	filename := c.Params("filename")
+	
+	filePath, err := fileService.GetFile(filename)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "File not found",
+		})
+	}
+
+	return c.SendFile(filePath)
+}
+
+func deleteFile(c *fiber.Ctx) error {
+	fileID := c.Params("id")
+	userID := middleware.GetUserID(c)
+
+	err := fileService.DeleteFile(fileID, userID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "File deleted successfully",
+	})
+}
+
+func getUserFiles(c *fiber.Ctx) error {
+	userID := middleware.GetUserID(c)
+
+	files, err := fileService.GetUserFiles(userID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(files)
 }

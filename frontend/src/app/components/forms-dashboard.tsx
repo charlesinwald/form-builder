@@ -81,20 +81,25 @@ export function FormsDashboard({
     return matchesSearch && matchesStatus;
   });
 
+  console.log('FormsDashboard: Total forms:', forms.length, 'Filtered forms:', filteredForms.length);
+
   const handleCreateForm = async (formData: Partial<Form>) => {
     try {
+      console.log('FormsDashboard: Creating form with data:', formData);
       const newForm = await createForm({
         title: formData.title || "Untitled Form",
         description: formData.description || "",
         fields: [],
         status: "draft",
       });
+      console.log('FormsDashboard: Form created:', newForm);
       onFormSelect(newForm);
       toast({
         title: "Success",
         description: "Form created successfully",
       });
-    } catch {
+    } catch (error) {
+      console.error('FormsDashboard: Failed to create form:', error);
       toast({
         variant: "destructive",
         title: "Error",

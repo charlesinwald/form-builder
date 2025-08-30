@@ -9,13 +9,15 @@ export function useForms(initialStatus?: string) {
 
   const fetchForms = useCallback(async (status?: string) => {
     try {
+      console.log('useForms: Fetching forms with status:', status);
       setLoading(true);
       setError(null);
       const data = await apiService.getForms(status);
+      console.log('useForms: Fetched forms:', data.length, 'forms');
       setForms(data);
     } catch (err) {
+      console.error('useForms: Error fetching forms:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch forms');
-      console.error('Error fetching forms:', err);
     } finally {
       setLoading(false);
     }
@@ -27,10 +29,17 @@ export function useForms(initialStatus?: string) {
 
   const createForm = useCallback(async (formData: CreateFormRequest) => {
     try {
+      console.log('useForms: Creating form with data:', formData);
       const newForm = await apiService.createForm(formData);
-      setForms(prev => [newForm, ...prev]);
+      console.log('useForms: Form created successfully:', newForm);
+      setForms(prev => {
+        const updatedForms = [newForm, ...prev];
+        console.log('useForms: Updated forms list:', updatedForms.length, 'forms');
+        return updatedForms;
+      });
       return newForm;
     } catch (err) {
+      console.error('useForms: Failed to create form:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to create form';
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -70,10 +79,17 @@ export function useForms(initialStatus?: string) {
 
   const saveDraft = useCallback(async (id: string, formData: Omit<CreateFormRequest, 'status'>) => {
     try {
+      console.log('useForms: Saving draft for form ID:', id, 'with data:', formData);
       const response = await apiService.saveDraft(id, formData);
-      setForms(prev => prev.map(form => form.id === id ? response.form : form));
+      console.log('useForms: Draft saved successfully:', response);
+      setForms(prev => {
+        const updatedForms = prev.map(form => form.id === id ? response.form : form);
+        console.log('useForms: Updated forms after save:', updatedForms.length, 'forms');
+        return updatedForms;
+      });
       return response.form;
     } catch (err) {
+      console.error('useForms: Failed to save draft:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to save draft';
       setError(errorMessage);
       throw new Error(errorMessage);

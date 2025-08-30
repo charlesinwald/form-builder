@@ -35,10 +35,16 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
         : {}),
     };
 
-    onFormDataChange({
+    console.log("FormBuilder: Adding new field:", newField);
+    console.log("FormBuilder: Current fields before add:", formData.fields);
+    
+    const updatedFormData = {
       ...formData,
       fields: [...formData.fields, newField],
-    });
+    };
+    
+    console.log("FormBuilder: Updated fields after add:", updatedFormData.fields);
+    onFormDataChange(updatedFormData);
   };
 
   const updateField = (fieldId: string, updates: Partial<SharedFormField>) => {

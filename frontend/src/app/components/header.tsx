@@ -4,8 +4,9 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu";
-import { Share, Eye, Globe, LogOut, User } from "lucide-react";
+import { Share, Eye, Globe, LogOut, User, File } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   formTitle: string;
@@ -32,6 +33,7 @@ export function Header({
   isPublishing = false,
 }: HeaderProps) {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
@@ -71,6 +73,10 @@ export function Header({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/files')}>
+                <File className="mr-2 h-4 w-4" />
+                <span>My Files</span>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
@@ -123,12 +129,6 @@ export function Header({
           </Button>
         )}
         
-        {!isFormPublished && !isFormDraft && (
-          <Button size="sm" className="gap-2" onClick={onShare}>
-            <Share className="h-4 w-4" />
-            Share
-          </Button>
-        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -150,6 +150,10 @@ export function Header({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push('/files')}>
+              <File className="mr-2 h-4 w-4" />
+              <span>My Files</span>
+            </DropdownMenuItem>
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>

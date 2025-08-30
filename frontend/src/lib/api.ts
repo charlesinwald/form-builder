@@ -40,6 +40,7 @@ class ApiService {
     useAuth: boolean = true
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('API: Making request to:', url, 'with options:', options);
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
@@ -48,6 +49,7 @@ class ApiService {
     // Add authorization header if available and needed
     if (useAuth && authToken) {
       headers.Authorization = `Bearer ${authToken}`;
+      console.log('API: Using auth token:', authToken ? 'present' : 'missing');
     }
 
     const config = {
@@ -56,6 +58,7 @@ class ApiService {
     };
 
     let response = await fetch(url, config);
+    console.log('API: Response status:', response.status, 'for', endpoint);
 
     // If unauthorized and we have a refresh token, try to refresh
     if (response.status === 401 && refreshToken && useAuth) {
@@ -75,12 +78,15 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.log('API: Error response:', errorData);
       throw new Error(
         errorData.error || `HTTP error! status: ${response.status}`
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('API: Success response data:', data);
+    return data;
   }
 
   private setAuthTokens(token: string, refresh: string): void {
@@ -176,10 +182,13 @@ class ApiService {
   }
 
   async createForm(formData: CreateFormRequest): Promise<Form> {
-    return this.request<Form>("/forms", {
+    console.log('API: Creating form with data:', formData);
+    const result = this.request<Form>("/forms", {
       method: "POST",
       body: JSON.stringify(formData),
     });
+    console.log('API: Create form response:', result);
+    return result;
   }
 
   async getForms(status?: string): Promise<Form[]> {
@@ -189,7 +198,10 @@ class ApiService {
     const endpoint = `/forms${
       params.toString() ? `?${params.toString()}` : ""
     }`;
-    return this.request<Form[]>(endpoint);
+    console.log('API: Fetching forms from endpoint:', endpoint);
+    const result = this.request<Form[]>(endpoint);
+    console.log('API: Forms response:', result);
+    return result;
   }
 
   async getForm(id: string): Promise<Form> {
@@ -259,6 +271,48 @@ class ApiService {
 
   async getFormAnalytics(formId: string): Promise<AnalyticsData> {
     return this.request<AnalyticsData>(`/analytics/form/${formId}`);
+  }
+
+  // File upload methods
+  async uploadFile(
+    file: File,
+    formId?: string,
+    fieldId?: string
+  ): Promise<{ id: string; filename: string; url: string; size: number; mimeType: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (formId) formData.append('formId', formId);
+    if (fieldId) formData.append('fieldId', fieldId);
+
+    const url = `${API_BASE_URL}/files/upload`;
+    const headers: Record<string, string> = {};
+
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async getUserFiles(): Promise<any[]> {
+    return this.request<any[]>('/files/user');
+  }
+
+  async deleteFile(fileId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/files/${fileId}`, {
+      method: 'DELETE',
+    });
   }
 }
 

@@ -23,6 +23,7 @@ import { Form, FormResponse } from "../../../../shared/types";
 import { apiService } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { FormFieldViewer } from "./form-field-viewer";
 
 interface ResponsesViewProps {
   form: Form;
@@ -37,6 +38,7 @@ export function ResponsesView({ form, onBack }: ResponsesViewProps) {
     null
   );
   const { toast } = useToast();
+
 
   useEffect(() => {
     const loadResponses = async () => {
@@ -90,9 +92,34 @@ export function ResponsesView({ form, onBack }: ResponsesViewProps) {
             .filter((field) => allFieldIds.has(field.id))
             .map((field) => {
               const value = response.data[field.id];
+              
+              // Handle signature fields
+              if (field.type === 'signature') {
+                if (value && typeof value === 'string') {
+                  if (value.startsWith('data:image/')) {
+                    return `"[Digital Signature - Base64 Data]"`;
+                  } else if (value.startsWith('http')) {
+                    return `"[Signature File: ${value}]"`;
+                  }
+                }
+                return `"No signature"`;
+              }
+              
+              // Handle file fields
+              if (field.type === 'file') {
+                if (value && typeof value === 'string' && value.startsWith('http')) {
+                  return `"[File: ${value}]"`;
+                } else if (Array.isArray(value)) {
+                  return `"[Files: ${value.join(', ')}]"`;
+                }
+                return `"No file"`;
+              }
+              
+              // Handle arrays
               if (Array.isArray(value)) {
                 return `"${value.join(", ")}"`;
               }
+              
               return `"${value || ""}"`;
             }),
         ];
@@ -214,17 +241,15 @@ export function ResponsesView({ form, onBack }: ResponsesViewProps) {
               {form.fields.map((field) => {
                 const value = selectedResponse.data[field.id];
                 return (
-                  <div key={field.id} className="border-b pb-3">
-                    <div className="font-medium text-sm text-muted-foreground mb-1">
+                  <div key={field.id} className="border-b pb-3 last:border-b-0">
+                    <div className="font-medium text-sm text-muted-foreground mb-2">
                       {field.label}
                       {field.required && (
                         <span className="text-destructive ml-1">*</span>
                       )}
                     </div>
                     <div className="text-sm">
-                      {Array.isArray(value)
-                        ? (value as string[]).join(", ")
-                        : String(value || "No response")}
+                      <FormFieldViewer field={field} value={value} />
                     </div>
                   </div>
                 );
@@ -309,17 +334,30 @@ export function ResponsesView({ form, onBack }: ResponsesViewProps) {
                           {form.fields.slice(0, 2).map((field) => {
                             const value = response.data[field.id];
                             if (!value) return null;
+                            
+                            let displayValue = "";
+                            let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "secondary";
+                            
+                            if (field.type === 'signature') {
+                              displayValue = "📝 Signature";
+                              badgeVariant = "outline";
+                            } else if (field.type === 'file') {
+                              displayValue = "📎 File(s)";
+                              badgeVariant = "outline";
+                            } else if (Array.isArray(value)) {
+                              displayValue = value.join(", ");
+                            } else {
+                              displayValue = String(value).slice(0, 20);
+                              if (String(value).length > 20) displayValue += "...";
+                            }
+                            
                             return (
                               <Badge
                                 key={field.id}
-                                variant="secondary"
+                                variant={badgeVariant}
                                 className="text-xs"
                               >
-                                {field.label}:{" "}
-                                {Array.isArray(value)
-                                  ? value.join(", ")
-                                  : String(value).slice(0, 20)}
-                                {String(value).length > 20 ? "..." : ""}
+                                {field.label}: {displayValue}
                               </Badge>
                             );
                           })}

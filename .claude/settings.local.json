@@ -8,7 +8,11 @@
       "Bash(npm run build:frontend:*)",
       "Bash(npm run build:*)",
       "Bash(node:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(lsof:*)",
+      "Bash(go mod:*)",
+      "Bash(go build:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

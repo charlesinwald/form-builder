@@ -48,13 +48,30 @@ export default function HomePage() {
 
   // Auto-save functionality
   const performAutoSave = useCallback(async () => {
-    if (!currentForm) return;
+    if (!currentForm) {
+      console.log("Auto-save skipped: no current form");
+      return;
+    }
 
+    console.log("Performing auto-save for form:", currentForm.id);
+    console.log("Form data being saved:", { 
+      title: formData.title, 
+      description: formData.description, 
+      fieldsCount: formData.fields.length,
+      fields: formData.fields 
+    });
+    
     try {
       const updatedForm = await saveDraft(currentForm.id, {
         title: formData.title,
         description: formData.description,
         fields: formData.fields,
+      });
+      console.log("Auto-save successful - returned form:", { 
+        id: updatedForm.id, 
+        title: updatedForm.title, 
+        fieldsCount: updatedForm.fields.length, 
+        fields: updatedForm.fields 
       });
       // Update currentForm with the saved form data to keep UI in sync
       setCurrentForm(updatedForm);
@@ -62,6 +79,38 @@ export default function HomePage() {
       console.error("Auto-save failed:", error);
     }
   }, [currentForm, formData, saveDraft]);
+
+  // Auto-create form when accessing builder without current form
+  useEffect(() => {
+    if (activeView === "builder" && !currentForm) {
+      console.log("Auto-creating form for builder view");
+      // Create a form directly without changing the view (to prevent loops)
+      createForm({
+        title: "Untitled Form",
+        description: "",
+        fields: [],
+        status: "draft",
+      }).then((newForm) => {
+        setCurrentForm(newForm);
+        setFormData({
+          title: newForm.title,
+          description: newForm.description,
+          fields: newForm.fields,
+        });
+        toast({
+          title: "New form created",
+          description: "Your draft form has been created",
+        });
+      }).catch((error) => {
+        console.error("Failed to auto-create form:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create new form",
+        });
+      });
+    }
+  }, [activeView, currentForm, createForm, toast]);
 
   // Auto-save when form data changes (debounced)
   useEffect(() => {
@@ -101,6 +150,12 @@ export default function HomePage() {
   }
 
   const handleFormSelect = (form: Form) => {
+    console.log("Selecting form:", { 
+      id: form.id, 
+      title: form.title, 
+      fieldsCount: form.fields.length, 
+      fields: form.fields 
+    });
     setCurrentForm(form);
     setFormData({
       title: form.title,
@@ -109,18 +164,19 @@ export default function HomePage() {
     });
     if (activeView !== "analytics") {
       setActiveView("builder");
-    } 
-    setCurrentForm(form);
+    }
   };
 
   const handleNewForm = async () => {
     try {
+      console.log("Creating new form...");
       const newForm = await createForm({
         title: "Untitled Form",
         description: "",
         fields: [],
         status: "draft",
       });
+      console.log("New form created:", newForm);
       setCurrentForm(newForm);
       setFormData({
         title: newForm.title,
@@ -132,7 +188,8 @@ export default function HomePage() {
         title: "New form created",
         description: "Your draft form has been created",
       });
-    } catch {
+    } catch (error) {
+      console.error("Failed to create form:", error);
       toast({
         variant: "destructive",
         title: "Error",

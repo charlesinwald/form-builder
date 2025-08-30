@@ -455,7 +455,7 @@ export function RealTimeAnalyticsDashboard({
 
         <TabsContent value="overview" className="space-y-4">
           {/* Response Trends Chart */}
-          <Card>
+          <Card className="overflow-visible">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <LineChart className="h-5 w-5" />
@@ -464,7 +464,7 @@ export function RealTimeAnalyticsDashboard({
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={trendData}>
+                <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
                   <defs>
                     <linearGradient
                       id="colorResponse"
@@ -477,16 +477,37 @@ export function RealTimeAnalyticsDashboard({
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-muted"
-                  />
-                  <XAxis
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
                     dataKey="label"
-                    className="text-xs"
-                    tick={{ fill: "currentColor" }}
+                    tick={{ fontSize: 9 }}
+                    angle={-35}
+                    textAnchor="end"
+                    height={60}
+                    interval="preserveStartEnd"
+                    tickFormatter={(value) => {
+                      if (typeof value === 'string') {
+                        // For timestamps, show abbreviated format like "Aug 29 9:00"
+                        try {
+                          const date = new Date(value);
+                          if (!isNaN(date.getTime())) {
+                            const month = date.toLocaleDateString('en-US', { month: 'short' });
+                            const day = date.getDate();
+                            const time = date.toLocaleTimeString('en-US', { 
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: false 
+                            });
+                            return `${month} ${day} ${time}`;
+                          }
+                        } catch (e) {
+                          // Fallback to original value if parsing fails
+                        }
+                      }
+                      return value;
+                    }}
                   />
-                  <YAxis className="text-xs" tick={{ fill: "currentColor" }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--background))",
@@ -579,13 +600,20 @@ export function RealTimeAnalyticsDashboard({
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <RechartsLineChart data={trendData}>
+                <RechartsLineChart data={trendData} margin={{ top: 5, right: 60, left: 20, bottom: 60 }}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     className="stroke-muted"
                   />
-                  <XAxis dataKey="label" tick={{ fill: "currentColor" }} />
-                  <YAxis tick={{ fill: "currentColor" }} />
+                  <XAxis 
+                    dataKey="label" 
+                    tick={{ fill: "currentColor", fontSize: 10 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis tick={{ fill: "currentColor", fontSize: 12 }} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--background))",

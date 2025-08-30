@@ -25,6 +25,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/pop
 import { format, addDays } from "date-fns";
 import { Send, CalendarIcon } from "lucide-react";
 import { SignaturePad } from "@/app/components/ui/signature-pad";
+import { SimpleSignaturePad } from "@/app/components/ui/simple-signature-pad";
+import { FileUpload } from "@/app/components/ui/file-upload";
 import { Form, FormField } from "../../../../shared/types";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +47,17 @@ export function PublicForm({
   const validateField = (field: FormField, value: unknown): string | null => {
     if (field.required) {
       if (field.type === "signature") {
-        if (!value || value === false) {
+        // Check if signature data exists (either base64 data, file URL, or boolean true)
+        if (!value || 
+            value === false || 
+            (typeof value === "string" && value.trim() === "")) {
+          return `${field.label} is required`;
+        }
+      } else if (field.type === "file") {
+        // Check if file data exists (URL string or array of URLs)
+        if (!value || 
+            (typeof value === "string" && value.trim() === "") ||
+            (Array.isArray(value) && value.length === 0)) {
           return `${field.label} is required`;
         }
       } else if (!value || (typeof value === "string" && value.trim() === "")) {
@@ -72,6 +84,7 @@ export function PublicForm({
 
     if (Object.keys(newErrors).length === 0) {
       try {
+        console.log("Submitting form data:", formData);
         await onSubmit(formData);
       } catch (error) {
         console.error("Form submission error:", error);
@@ -91,6 +104,8 @@ export function PublicForm({
   const renderField = (field: FormField) => {
     const value = formData[field.id] || "";
     const error = errors[field.id];
+
+    console.log('PublicForm: Rendering field:', { id: field.id, type: field.type, label: field.label });
 
     switch (field.type) {
       case "text":
@@ -332,12 +347,57 @@ export function PublicForm({
         );
 
       case "signature":
+        console.log('PublicForm: Rendering signature field for:', field.label);
+        return (
+          <div key={field.id} className="space-y-2 border p-4 bg-blue-50">
+            <p className="text-sm text-blue-600">DEBUG: Signature field - {field.label}</p>
+            <SignaturePad 
+              label={field.label}
+              required={field.required}
+              formId={form.id}
+              fieldId={field.id}
+              allowUpload={true}
+              onSignatureChange={(hasSignature, signatureData, fileUrl) => {
+                console.log('Original SignaturePad changed:', { hasSignature, signatureData: signatureData?.length, fileUrl });
+                // Store either the signature data (base64) or file URL
+                const signatureValue = fileUrl || signatureData;
+                handleFieldChange(field.id, signatureValue);
+              }}
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        );
+
+      case "file":
         return (
           <div key={field.id} className="space-y-2">
-            <SignaturePad 
-              label=""
+            <FileUpload
+              label={field.label}
               required={field.required}
-              onSignatureChange={(hasSignature) => handleFieldChange(field.id, hasSignature)}
+              formId={form.id}
+              fieldId={field.id}
+              accept={field.fileOptions?.accept || "*/*"}
+              multiple={field.fileOptions?.multiple || false}
+              maxSize={field.fileOptions?.maxSize || 10}
+              onFileChange={(hasFile, fileUrl, filename) => {
+                // Store the file URL or an array of URLs for multiple files
+                if (hasFile && fileUrl) {
+                  const currentValue = formData[field.id];
+                  if (field.fileOptions?.multiple && Array.isArray(currentValue)) {
+                    // Add to existing array
+                    handleFieldChange(field.id, [...currentValue, fileUrl]);
+                  } else if (field.fileOptions?.multiple) {
+                    // Create new array
+                    handleFieldChange(field.id, [fileUrl]);
+                  } else {
+                    // Single file
+                    handleFieldChange(field.id, fileUrl);
+                  }
+                } else if (!hasFile) {
+                  // No file - clear the field
+                  handleFieldChange(field.id, field.fileOptions?.multiple ? [] : "");
+                }
+              }}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>

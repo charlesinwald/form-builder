@@ -2,7 +2,7 @@
 
 export interface FormField {
   id: string;
-  type: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'date' | 'rating' | 'signature';
+  type: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'date' | 'rating' | 'signature' | 'file';
   label: string;
   required: boolean;
   options?: string[];
@@ -13,6 +13,11 @@ export interface FormField {
     message?: string;
   };
   placeholder?: string;
+  fileOptions?: {
+    accept?: string;
+    multiple?: boolean;
+    maxSize?: number; // in MB
+  };
 }
 
 export interface Form {
@@ -112,4 +117,26 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
+}
+
+// File upload types
+export interface FileUpload {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  userId: string;
+  formId?: string;
+  fieldId?: string;
+  createdAt: string;
+}
+
+export interface FileUploadResponse {
+  id: string;
+  filename: string;
+  url: string;
+  size: number;
+  mimeType: string;
 }
