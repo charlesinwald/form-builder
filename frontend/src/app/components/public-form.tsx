@@ -378,7 +378,7 @@ export function PublicForm({
               fieldId={field.id}
               accept={field.fileOptions?.accept || "*/*"}
               multiple={field.fileOptions?.multiple || false}
-              maxSize={field.fileOptions?.maxSize || 10}
+              maxSize={field.fileOptions?.maxSize || 15}
               onFileChange={(hasFile, fileUrl, filename) => {
                 // Store the file URL or an array of URLs for multiple files
                 if (hasFile && fileUrl) {

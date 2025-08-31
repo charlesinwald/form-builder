@@ -33,6 +33,9 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
       ...(type === "select" || type === "radio" || type === "checkbox"
         ? { options: ["Option 1", "Option 2"] }
         : {}),
+      ...(type === "file"
+        ? { fileOptions: { accept: "*/*", multiple: false, maxSize: 15 } }
+        : {}),
     };
 
     console.log("FormBuilder: Adding new field:", newField);

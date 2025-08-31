@@ -9,6 +9,7 @@ import {
   Star,
   Calendar,
   PenTool,
+  Paperclip,
 } from "lucide-react";
 
 interface FieldToolboxProps {
@@ -22,6 +23,7 @@ interface FieldToolboxProps {
       | "rating"
       | "date"
       | "signature"
+      | "file"
   ) => void;
 }
 
@@ -35,6 +37,7 @@ export function FieldToolbox({ onAddField }: FieldToolboxProps) {
     { type: "rating" as const, label: "Rating", icon: Star },
     { type: "date" as const, label: "Date Picker", icon: Calendar },
     { type: "signature" as const, label: "Signature Pad", icon: PenTool },
+    { type: "file" as const, label: "File Upload", icon: Paperclip },
   ];
 
   return (

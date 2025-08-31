@@ -28,7 +28,7 @@ export function FileUpload({
   fieldId,
   accept = "*/*",
   multiple = false,
-  maxSize = 10
+  maxSize = 15
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ url: string; filename: string; id: string }>>([]);
   const [isUploading, setIsUploading] = useState(false);

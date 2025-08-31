@@ -52,8 +52,8 @@ func (fs *FileService) UploadFile(file *multipart.FileHeader, userID string, for
 		return nil, fmt.Errorf("invalid file type: %s", file.Header.Get("Content-Type"))
 	}
 
-	// Validate file size (10MB limit)
-	const maxFileSize = 10 << 20 // 10MB
+	// Validate file size (15MB limit)
+	const maxFileSize = 15 << 20 // 15MB
 	if file.Size > maxFileSize {
 		return nil, fmt.Errorf("file too large: %d bytes (max: %d bytes)", file.Size, maxFileSize)
 	}

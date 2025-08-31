@@ -1242,6 +1242,8 @@ func serveFile(c *fiber.Ctx) error {
 			c.Set("Content-Type", "image/svg+xml")
 		case ".webp":
 			c.Set("Content-Type", "image/webp")
+		case ".pdf":
+			c.Set("Content-Type", "application/pdf")
 		default:
 			c.Set("Content-Type", "application/octet-stream")
 		}

@@ -125,6 +125,14 @@ export function FormField({
             />
           </div>
         );
+      case "file":
+        return (
+          <div className="pointer-events-none">
+            <div className="border-2 border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground">
+              File upload area (preview)
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -239,6 +247,60 @@ export function FormField({
                     <Plus className="h-4 w-4 mr-2" />
                     Add Option
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {field.type === "file" && (
+              <div className="space-y-3">
+                <div>
+                  <Label>Accepted types (MIME or extensions)</Label>
+                  <Input
+                    value={field.fileOptions?.accept || "*/*"}
+                    onChange={(e) =>
+                      onUpdate({
+                        fileOptions: {
+                          accept: e.target.value,
+                          multiple: field.fileOptions?.multiple || false,
+                          maxSize: field.fileOptions?.maxSize || 15,
+                        },
+                      })
+                    }
+                    placeholder="e.g. image/*,application/pdf"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Allow multiple files</Label>
+                  <Switch
+                    checked={field.fileOptions?.multiple || false}
+                    onCheckedChange={(checked: boolean) =>
+                      onUpdate({
+                        fileOptions: {
+                          accept: field.fileOptions?.accept || "*/*",
+                          multiple: checked,
+                          maxSize: field.fileOptions?.maxSize || 15,
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Max size (MB)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={field.fileOptions?.maxSize ?? 15}
+                    onChange={(e) =>
+                      onUpdate({
+                        fileOptions: {
+                          accept: field.fileOptions?.accept || "*/*",
+                          multiple: field.fileOptions?.multiple || false,
+                          maxSize: Number(e.target.value) || 15,
+                        },
+                      })
+                    }
+                  />
                 </div>
               </div>
             )}
