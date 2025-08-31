@@ -312,6 +312,10 @@ class ApiService {
     return this.request<any[]>('/files/user');
   }
 
+  async getUserFormFiles(): Promise<any[]> {
+    return this.request<any[]>('/files/user-forms');
+  }
+
   async deleteFile(fileId: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/files/${fileId}`, {
       method: 'DELETE',

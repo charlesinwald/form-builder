@@ -42,16 +42,19 @@ export function FileManager({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFile, setSelectedFile] = useState<FileUpload | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [fileView, setFileView] = useState<"user" | "forms">("forms"); // Default to form files
 
   useEffect(() => {
     loadFiles();
-  }, []);
+  }, [fileView]); // Reload when file view changes
 
   const loadFiles = async () => {
     try {
       setLoading(true);
       setError("");
-      const userFiles = await apiService.getUserFiles();
+      const userFiles = fileView === "user" 
+        ? await apiService.getUserFiles()
+        : await apiService.getUserFormFiles();
 
       let filteredFiles = userFiles;
 
@@ -173,6 +176,30 @@ export function FileManager({
             )}
           </button>
         </div>
+      </div>
+
+      {/* File View Toggle */}
+      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+        <button
+          onClick={() => setFileView("forms")}
+          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+            fileView === "forms"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Form Files
+        </button>
+        <button
+          onClick={() => setFileView("user")}
+          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+            fileView === "user"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          My Files
+        </button>
       </div>
 
       {/* Filters */}

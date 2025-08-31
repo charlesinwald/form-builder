@@ -194,6 +194,7 @@ func setupRoutes(app *fiber.App) {
 	files := protected.Group("/files")
 	files.Post("/upload", uploadFile)
 	files.Get("/user", getUserFiles)
+	files.Get("/user-forms", getUserFormFiles) // Files from user's forms
 	files.Delete("/:id", deleteFile)
 
 	// Legacy file serving route for backward compatibility (no auth required)
@@ -1284,3 +1285,73 @@ func getUserFiles(c *fiber.Ctx) error {
 
 	return c.JSON(files)
 }
+
+func getUserFormFiles(c *fiber.Ctx) error {
+	userID := middleware.GetUserID(c)
+	log.Printf("getUserFormFiles: userID = '%s'", userID)
+
+	// First, get all forms owned by this user
+	formsCollection := database.Collection("forms")
+	formsCursor, err := formsCollection.Find(context.Background(), bson.M{"userId": userID})
+	if err != nil {
+		log.Printf("getUserFormFiles: error getting user forms: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to get user forms",
+		})
+	}
+	defer formsCursor.Close(context.Background())
+
+	var userForms []models.Form
+	if err := formsCursor.All(context.Background(), &userForms); err != nil {
+		log.Printf("getUserFormFiles: error decoding user forms: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to decode user forms",
+		})
+	}
+
+	// Extract form IDs
+	formIDs := make([]string, len(userForms))
+	for i, form := range userForms {
+		formIDs[i] = form.ID.Hex()
+	}
+	log.Printf("getUserFormFiles: user owns %d forms: %v", len(formIDs), formIDs)
+
+	// Get files that are either:
+	// 1. Uploaded by the user directly (userId = userID)
+	// 2. Uploaded for forms owned by the user (formId in user's form IDs)
+	filesCollection := database.Collection("files")
+	filter := bson.M{
+		"$or": []bson.M{
+			{"userId": userID},
+			{"formId": bson.M{"$in": formIDs}},
+		},
+	}
+	
+	log.Printf("getUserFormFiles: querying files with filter: %+v", filter)
+	
+	cursor, err := filesCollection.Find(context.Background(), filter)
+	if err != nil {
+		log.Printf("getUserFormFiles: error getting files: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to get files",
+		})
+	}
+	defer cursor.Close(context.Background())
+
+	var files []models.FileUpload
+	if err := cursor.All(context.Background(), &files); err != nil {
+		log.Printf("getUserFormFiles: error decoding files: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to decode files",
+		})
+	}
+
+	log.Printf("getUserFormFiles: found %d total files for user %s", len(files), userID)
+	for i, file := range files {
+		log.Printf("getUserFormFiles: file %d: id=%s, filename=%s, userId='%s', formId='%s'", 
+			i, file.ID.Hex(), file.Filename, file.UserID, file.FormID)
+	}
+
+	return c.JSON(files)
+}
+
