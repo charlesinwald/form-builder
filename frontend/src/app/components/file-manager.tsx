@@ -412,8 +412,14 @@ function FilePreviewModal({
   const isImage = file.mimeType.startsWith("image/");
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-popover rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-popover rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Enhanced modal header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="space-y-1">
