@@ -3,23 +3,21 @@
 import { useState, useEffect } from "react";
 import {
   File,
-  Image,
+  ImageIcon,
   Download,
   Trash2,
   Eye,
-  Calendar,
-  User,
   Search,
-  Filter,
   Grid,
   List,
   FileText,
-  FileImage,
+  ArrowLeft,
 } from "lucide-react";
 import NextImage from "next/image";
-import { cn, normalizeFileUrl } from "@/lib/utils";
+import { cn, normalizeFileUrl, formatFileSize } from "@/lib/utils";
 import { apiService } from "@/lib/api";
-import { FileUpload } from "../../../../shared/types";
+import type { FileUpload } from "../../../../shared/types";
+import Link from "next/link";
 
 interface FileManagerProps {
   formId?: string;
@@ -42,23 +40,23 @@ export function FileManager({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFile, setSelectedFile] = useState<FileUpload | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [fileView, setFileView] = useState<"user" | "forms">("forms"); // Default to form files
+  const [fileView, setFileView] = useState<"user" | "forms">("forms");
 
   useEffect(() => {
     loadFiles();
-  }, [fileView]); // Reload when file view changes
+  }, [fileView]);
 
   const loadFiles = async () => {
     try {
       setLoading(true);
       setError("");
-      const userFiles = fileView === "user" 
-        ? await apiService.getUserFiles()
-        : await apiService.getUserFormFiles();
+      const userFiles =
+        fileView === "user"
+          ? await apiService.getUserFiles()
+          : await apiService.getUserFormFiles();
 
       let filteredFiles = userFiles;
 
-      // Filter by form/field if specified
       if (formId) {
         filteredFiles = userFiles.filter((file) => file.formId === formId);
       }
@@ -68,10 +66,9 @@ export function FileManager({
         );
       }
 
-      // Fix any URLs that might be pointing to the wrong endpoint
-      filteredFiles = filteredFiles.map(file => ({
+      filteredFiles = filteredFiles.map((file) => ({
         ...file,
-        url: normalizeFileUrl(file.url)
+        url: normalizeFileUrl(file.url),
       }));
 
       setFiles(filteredFiles);
@@ -108,20 +105,12 @@ export function FileManager({
 
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith("image/")) {
-      return <FileImage className="w-8 h-8 text-blue-600" />;
+      return <ImageIcon className="w-6 h-6 text-primary" />;
     } else if (mimeType === "application/pdf") {
-      return <FileText className="w-8 h-8 text-red-600" />;
+      return <FileText className="w-6 h-6 text-destructive" />;
     } else {
-      return <File className="w-8 h-8 text-gray-600" />;
+      return <File className="w-6 h-6 text-muted-foreground" />;
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const filteredFiles = files.filter((file) => {
@@ -152,73 +141,104 @@ export function FileManager({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center p-12">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-border border-t-primary rounded-full animate-spin" />
+          <div
+            className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-primary/60 rounded-full animate-spin animate-reverse"
+            style={{ animationDelay: "0.15s" }}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h2 className="text-2xl font-bold">File Manager</h2>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-            className="p-2 border rounded-lg hover:bg-accent transition-colors"
-          >
-            {viewMode === "grid" ? (
-              <List className="w-4 h-4" />
-            ) : (
+    <div className="w-full space-y-8">
+      {/* Enhanced header with better typography and spacing */}
+      <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+        <Link href="/" className="hover:text-primary transition-colors">
+          <ArrowLeft className="w-8 h-8" />
+        </Link>{" "}
+        <div className="space-y-1 flex-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            File Manager
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Manage and organize your files with ease
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-2 rounded-md transition-all duration-200",
+                viewMode === "grid"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
               <Grid className="w-4 h-4" />
-            )}
-          </button>
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "p-2 rounded-md transition-all duration-200",
+                viewMode === "list"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* File View Toggle */}
-      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+      {/* Modern toggle with improved styling */}
+      <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
         <button
           onClick={() => setFileView("forms")}
-          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+          className={cn(
+            "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
             fileView === "forms"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
-          }`}
+          )}
         >
           Form Files
         </button>
         <button
           onClick={() => setFileView("user")}
-          className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+          className={cn(
+            "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
             fileView === "user"
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
-          }`}
+          )}
         >
           My Files
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Enhanced search and filter section */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+        <div className="flex-1 relative group">
+          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             placeholder="Search files..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-12 pr-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all duration-200 text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all duration-200 text-foreground min-w-[140px]"
         >
           <option value="all">All Files</option>
           <option value="images">Images</option>
@@ -227,23 +247,31 @@ export function FileManager({
       </div>
 
       {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive flex items-center gap-3">
+          <div className="w-2 h-2 bg-destructive rounded-full" />
           {error}
         </div>
       )}
 
-      {/* Files Grid/List */}
+      {/* Modern files display with enhanced cards */}
       {filteredFiles.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <File className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No files found</p>
+        <div className="text-center py-16">
+          <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-2xl flex items-center justify-center">
+            <File className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            No files found
+          </h3>
+          <p className="text-muted-foreground">
+            Upload some files to get started
+          </p>
         </div>
       ) : (
         <div
           className={cn(
             viewMode === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              : "space-y-2"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              : "space-y-3"
           )}
         >
           {filteredFiles.map((file) => (
@@ -251,22 +279,24 @@ export function FileManager({
               key={file.id}
               onClick={() => handleFileSelect(file)}
               className={cn(
-                "border rounded-lg p-4 transition-colors",
+                "group bg-card border border-border rounded-2xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-black/5 hover:border-border",
                 selectable
-                  ? "cursor-pointer hover:bg-accent hover:border-primary"
-                  : "cursor-pointer hover:bg-accent",
-                viewMode === "list" ? "flex items-center gap-4" : "space-y-3"
+                  ? "cursor-pointer hover:bg-primary/5 hover:border-primary/20"
+                  : "cursor-pointer",
+                viewMode === "list"
+                  ? "flex items-center gap-4 p-4"
+                  : "space-y-4"
               )}
             >
-              {/* File Icon/Preview */}
+              {/* Enhanced file preview with better styling */}
               <div
                 className={cn(
                   "flex items-center justify-center",
-                  viewMode === "grid" ? "mb-2" : "flex-shrink-0"
+                  viewMode === "grid" ? "mb-3" : "flex-shrink-0"
                 )}
               >
                 {file.mimeType.startsWith("image/") ? (
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                  <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted ring-1 ring-border">
                     <NextImage
                       src={file.url}
                       alt={file.originalName}
@@ -279,40 +309,40 @@ export function FileManager({
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-xl bg-muted/50 border border-border flex items-center justify-center group-hover:bg-muted transition-colors">
                     {getFileIcon(file.mimeType)}
                   </div>
                 )}
               </div>
 
-              {/* File Info */}
+              {/* Improved file info typography */}
               <div
                 className={cn(
-                  "flex-1",
-                  viewMode === "list" ? "min-w-0" : "text-center"
+                  "flex-1 min-w-0",
+                  viewMode === "list" ? "text-left" : "text-center"
                 )}
               >
                 <h3
                   className={cn(
-                    "font-medium truncate",
+                    "font-semibold text-card-foreground truncate text-sm mb-1",
                     viewMode === "list" ? "text-left" : ""
                   )}
+                  title={file.originalName}
                 >
                   {file.originalName}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {formatFileSize(file.size)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(file.createdAt).toLocaleDateString()}
-                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{formatFileSize(file.size)}</span>
+                  <span>•</span>
+                  <span>{new Date(file.createdAt).toLocaleDateString()}</span>
+                </div>
               </div>
 
-              {/* Actions */}
+              {/* Modern action buttons with better hover states */}
               <div
                 className={cn(
-                  "flex gap-2",
-                  viewMode === "grid" ? "justify-center mt-2" : "flex-shrink-0"
+                  "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                  viewMode === "grid" ? "justify-center mt-3" : "flex-shrink-0"
                 )}
               >
                 <button
@@ -320,7 +350,7 @@ export function FileManager({
                     e.stopPropagation();
                     openPreview(file);
                   }}
-                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200"
                   title="Preview"
                 >
                   <Eye className="w-4 h-4" />
@@ -331,7 +361,7 @@ export function FileManager({
                     e.stopPropagation();
                     downloadFile(file);
                   }}
-                  className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-secondary hover:bg-secondary/10 rounded-lg transition-all duration-200"
                   title="Download"
                 >
                   <Download className="w-4 h-4" />
@@ -342,7 +372,7 @@ export function FileManager({
                     e.stopPropagation();
                     deleteFile(file.id);
                   }}
-                  className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -382,12 +412,14 @@ function FilePreviewModal({
   const isImage = file.mimeType.startsWith("image/");
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div>
-            <h2 className="text-xl font-semibold">{file.originalName}</h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-popover rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl">
+        {/* Enhanced modal header */}
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-popover-foreground">
+              {file.originalName}
+            </h2>
             <p className="text-sm text-muted-foreground">
               {formatFileSize(file.size)} •{" "}
               {new Date(file.createdAt).toLocaleString()}
@@ -397,7 +429,7 @@ function FilePreviewModal({
           <div className="flex gap-2">
             <button
               onClick={onDownload}
-              className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-xl hover:bg-secondary/90 transition-colors font-medium"
             >
               <Download className="w-4 h-4" />
               Download
@@ -405,7 +437,7 @@ function FilePreviewModal({
 
             <button
               onClick={onDelete}
-              className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-xl hover:bg-destructive/90 transition-colors font-medium"
             >
               <Trash2 className="w-4 h-4" />
               Delete
@@ -413,41 +445,45 @@ function FilePreviewModal({
 
             <button
               onClick={onClose}
-              className="px-3 py-2 border rounded-lg hover:bg-accent transition-colors"
+              className="px-4 py-2 border border-border text-popover-foreground rounded-xl hover:bg-accent hover:text-accent-foreground transition-colors font-medium"
             >
               Close
             </button>
           </div>
         </div>
 
-        {/* Content */}
+        {/* Enhanced modal content */}
         <div className="p-6">
           {isImage ? (
-            <NextImage
-              src={file.url}
-              alt={file.originalName}
-              width={800}
-              height={600}
-              className="max-w-full h-auto mx-auto rounded-lg shadow-lg"
-            />
+            <div className="rounded-xl overflow-hidden bg-muted/30">
+              <NextImage
+                src={file.url}
+                alt={file.originalName}
+                width={800}
+                height={600}
+                className="max-w-full h-auto mx-auto"
+              />
+            </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-lg bg-muted flex items-center justify-center">
+            <div className="text-center py-16">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center">
                 {file.mimeType === "application/pdf" ? (
-                  <FileText className="w-12 h-12 text-red-600" />
+                  <FileText className="w-12 h-12 text-destructive" />
                 ) : (
-                  <File className="w-12 h-12 text-gray-600" />
+                  <File className="w-12 h-12 text-muted-foreground" />
                 )}
               </div>
-              <p className="text-lg font-medium mb-2">{file.originalName}</p>
-              <p className="text-muted-foreground mb-4">
+              <h3 className="text-lg font-semibold text-popover-foreground mb-2">
+                {file.originalName}
+              </h3>
+              <p className="text-muted-foreground mb-6">
                 Preview not available for this file type
               </p>
               <a
                 href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors font-medium"
               >
                 <Eye className="w-4 h-4" />
                 Open in New Tab
@@ -459,11 +495,3 @@ function FilePreviewModal({
     </div>
   );
 }
-
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
