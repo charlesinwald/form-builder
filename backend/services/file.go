@@ -31,7 +31,7 @@ func NewFileService(db *mongo.Database) *FileService {
 
 	baseURL := os.Getenv("FILE_BASE_URL")
 	if baseURL == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = "http://127.0.0.1:8080"
 	}
 
 	// Ensure upload directory exists
@@ -87,7 +87,7 @@ func (fs *FileService) UploadFile(file *multipart.FileHeader, userID string, for
 	}
 
 	// Generate public URL
-	fileURL := fmt.Sprintf("%s/api/v1/files/%s", fs.baseURL, filename)
+	fileURL := fmt.Sprintf("%s/api/v1/public/files/%s", fs.baseURL, filename)
 
 	// Create file record
 	fileUpload := &models.FileUpload{
@@ -168,7 +168,12 @@ func (fs *FileService) DeleteFile(fileID string, userID string) error {
 
 func (fs *FileService) GetUserFiles(userID string) ([]models.FileUpload, error) {
 	collection := fs.db.Collection("files")
-	cursor, err := collection.Find(context.Background(), bson.M{"userId": userID})
+	filter := bson.M{"userId": userID}
+	
+	// Add logging
+	fmt.Printf("FileService.GetUserFiles: querying with filter: %+v\n", filter)
+	
+	cursor, err := collection.Find(context.Background(), filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch user files: %v", err)
 	}
@@ -179,6 +184,7 @@ func (fs *FileService) GetUserFiles(userID string) ([]models.FileUpload, error) 
 		return nil, fmt.Errorf("failed to decode files: %v", err)
 	}
 
+	fmt.Printf("FileService.GetUserFiles: found %d files for userID '%s'\n", len(files), userID)
 	return files, nil
 }
 

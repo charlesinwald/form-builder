@@ -14,9 +14,9 @@ import {
 } from "../../../shared/types";
 import { AnalyticsData } from "../hooks/use-websocket-analytics";
 
-// Ensure the API URL has a protocol
+// Ensure the API URL has a protocol and force IPv4 localhost
 const API_BASE_URL = (() => {
-  const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+  const url = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080/api/v1";
   // If the URL doesn't start with http:// or https://, add http://
   if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
     return `http://${url}`;
@@ -277,17 +277,20 @@ class ApiService {
   async uploadFile(
     file: File,
     formId?: string,
-    fieldId?: string
+    fieldId?: string,
+    forcePublic?: boolean
   ): Promise<{ id: string; filename: string; url: string; size: number; mimeType: string }> {
     const formData = new FormData();
     formData.append('file', file);
     if (formId) formData.append('formId', formId);
     if (fieldId) formData.append('fieldId', fieldId);
 
-    const url = `${API_BASE_URL}/files/upload`;
+    // Use public upload endpoint if no auth token or if forcePublic is true
+    const usePublic = !authToken || forcePublic;
+    const url = usePublic ? `${API_BASE_URL}/public/files/upload` : `${API_BASE_URL}/files/upload`;
     const headers: Record<string, string> = {};
 
-    if (authToken) {
+    if (authToken && !forcePublic) {
       headers.Authorization = `Bearer ${authToken}`;
     }
 

@@ -347,20 +347,20 @@ export function PublicForm({
         );
 
       case "signature":
-        console.log('PublicForm: Rendering signature field for:', field.label);
         return (
-          <div key={field.id} className="space-y-2 border p-4 bg-blue-50">
-            <p className="text-sm text-blue-600">DEBUG: Signature field - {field.label}</p>
+          <div key={field.id} className="space-y-2">
             <SignaturePad 
               label={field.label}
               required={field.required}
               formId={form.id}
               fieldId={field.id}
               allowUpload={true}
+              publicUpload={true}
               onSignatureChange={(hasSignature, signatureData, fileUrl) => {
-                console.log('Original SignaturePad changed:', { hasSignature, signatureData: signatureData?.length, fileUrl });
+                console.log('PublicForm: Signature changed', { hasSignature, signatureData: signatureData && typeof signatureData === 'string' ? signatureData.substring(0, 50) + '...' : signatureData, fileUrl });
                 // Store either the signature data (base64) or file URL
                 const signatureValue = fileUrl || signatureData;
+                console.log('PublicForm: Setting signature value', { fieldId: field.id, value: signatureValue && typeof signatureValue === 'string' ? signatureValue.substring(0, 50) + '...' : signatureValue });
                 handleFieldChange(field.id, signatureValue);
               }}
             />

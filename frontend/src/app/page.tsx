@@ -45,27 +45,31 @@ export default function HomePage() {
   const { forms, saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const previousFormDataRef = useRef<FormData | null>(null);
 
   // Auto-save functionality
-  const performAutoSave = useCallback(async () => {
+  const performAutoSave = useCallback(async (formDataSnapshot?: FormData) => {
     if (!currentForm) {
       console.log("Auto-save skipped: no current form");
       return;
     }
 
+    // Use provided snapshot or current formData
+    const dataToSave = formDataSnapshot || formData;
+    
     console.log("Performing auto-save for form:", currentForm.id);
     console.log("Form data being saved:", { 
-      title: formData.title, 
-      description: formData.description, 
-      fieldsCount: formData.fields.length,
-      fields: formData.fields 
+      title: dataToSave.title, 
+      description: dataToSave.description, 
+      fieldsCount: dataToSave.fields.length,
+      fields: dataToSave.fields 
     });
     
     try {
       const updatedForm = await saveDraft(currentForm.id, {
-        title: formData.title,
-        description: formData.description,
-        fields: formData.fields,
+        title: dataToSave.title,
+        description: dataToSave.description,
+        fields: dataToSave.fields,
       });
       console.log("Auto-save successful - returned form:", { 
         id: updatedForm.id, 
@@ -74,9 +78,15 @@ export default function HomePage() {
         fields: updatedForm.fields 
       });
       // Update currentForm with the saved form data to keep UI in sync
-      setCurrentForm(updatedForm);
+      // Only update if the form ID matches (safety check)
+      if (updatedForm.id === currentForm.id) {
+        setCurrentForm(updatedForm);
+      } else {
+        console.warn("Auto-save returned form with different ID, not updating currentForm");
+      }
     } catch (error) {
       console.error("Auto-save failed:", error);
+      throw error; // Re-throw so the caller can handle it
     }
   }, [currentForm, formData, saveDraft]);
 
@@ -92,11 +102,14 @@ export default function HomePage() {
         status: "draft",
       }).then((newForm) => {
         setCurrentForm(newForm);
-        setFormData({
+        const newFormData = {
           title: newForm.title,
           description: newForm.description,
           fields: newForm.fields,
-        });
+        };
+        setFormData(newFormData);
+        // Initialize previous form data to prevent immediate autosave
+        previousFormDataRef.current = { ...newFormData };
         toast({
           title: "New form created",
           description: "Your draft form has been created",
@@ -112,24 +125,54 @@ export default function HomePage() {
     }
   }, [activeView, currentForm, createForm, toast]);
 
+  // Helper function to check if form data has actually changed
+  const hasFormDataChanged = useCallback((current: FormData, previous: FormData | null): boolean => {
+    if (!previous) return true;
+    
+    return (
+      current.title !== previous.title ||
+      current.description !== previous.description ||
+      JSON.stringify(current.fields) !== JSON.stringify(previous.fields)
+    );
+  }, []);
+
   // Auto-save when form data changes (debounced)
   useEffect(() => {
-    if (!currentForm) return;
+    if (!currentForm) {
+      previousFormDataRef.current = null;
+      return;
+    }
 
+    // Only proceed if there are actual changes
+    if (!hasFormDataChanged(formData, previousFormDataRef.current)) {
+      return;
+    }
+
+    // Clear existing timer
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    autoSaveTimerRef.current = setTimeout(() => {
-      performAutoSave();
-    }, 2000); // Auto-save after 2 seconds of inactivity
+    // Set new timer with debouncing
+    autoSaveTimerRef.current = setTimeout(async () => {
+      const currentFormDataSnapshot = { ...formData };
+      try {
+        await performAutoSave(currentFormDataSnapshot);
+        // Only update previous form data after successful save
+        previousFormDataRef.current = currentFormDataSnapshot;
+        console.log("Auto-save completed successfully, updated previousFormDataRef");
+      } catch (error) {
+        console.error("Auto-save failed, keeping previousFormDataRef unchanged:", error);
+        // Don't update previousFormDataRef so it will retry on the next change
+      }
+    }, 1000); // Reduced to 1 second for better UX since we now only save on actual changes
 
     return () => {
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [formData, currentForm, performAutoSave]);
+  }, [formData, currentForm, performAutoSave, hasFormDataChanged]);
 
   const handleGetStarted = () => {
     router.push("/auth");
@@ -157,11 +200,14 @@ export default function HomePage() {
       fields: form.fields 
     });
     setCurrentForm(form);
-    setFormData({
+    const newFormData = {
       title: form.title,
       description: form.description,
       fields: form.fields,
-    });
+    };
+    setFormData(newFormData);
+    // Initialize previous form data to prevent immediate autosave
+    previousFormDataRef.current = { ...newFormData };
     if (activeView !== "analytics") {
       setActiveView("builder");
     }
@@ -178,11 +224,14 @@ export default function HomePage() {
       });
       console.log("New form created:", newForm);
       setCurrentForm(newForm);
-      setFormData({
+      const newFormData = {
         title: newForm.title,
         description: newForm.description,
         fields: newForm.fields,
-      });
+      };
+      setFormData(newFormData);
+      // Initialize previous form data to prevent immediate autosave
+      previousFormDataRef.current = { ...newFormData };
       setActiveView("builder");
       toast({
         title: "New form created",
@@ -271,11 +320,14 @@ export default function HomePage() {
               onViewResponses={handleViewResponses}
               onEditForm={(form) => {
                 setCurrentForm(form);
-                setFormData({
+                const newFormData = {
                   title: form.title,
                   description: form.description,
                   fields: form.fields,
-                });
+                };
+                setFormData(newFormData);
+                // Initialize previous form data to prevent immediate autosave
+                previousFormDataRef.current = { ...newFormData };
                 setActiveView("builder");
               }}
             />
@@ -320,11 +372,14 @@ export default function HomePage() {
                       onViewResponses={() => handleViewResponses(form)}
                       onEdit={() => {
                         setCurrentForm(form);
-                        setFormData({
+                        const newFormData = {
                           title: form.title,
                           description: form.description,
                           fields: form.fields,
-                        });
+                        };
+                        setFormData(newFormData);
+                        // Initialize previous form data to prevent immediate autosave
+                        previousFormDataRef.current = { ...newFormData };
                         setActiveView("builder");
                       }}
                       context="analytics"

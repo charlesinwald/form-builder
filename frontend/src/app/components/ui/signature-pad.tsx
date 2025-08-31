@@ -1,7 +1,7 @@
 "use client";
 
 import { SignaturePad } from "@ark-ui/react/signature-pad";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { CheckCircle, AlertCircle, Upload, FileImage } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiService } from "@/lib/api";
@@ -15,6 +15,7 @@ interface SignaturePadProps {
   formId?: string;
   fieldId?: string;
   allowUpload?: boolean;
+  publicUpload?: boolean;
 }
 
 export function BasicSignaturePad({ 
@@ -25,46 +26,190 @@ export function BasicSignaturePad({
   disabled = false,
   formId,
   fieldId,
-  allowUpload = false
+  allowUpload = false,
+  publicUpload = false
 }: SignaturePadProps) {
   const [hasSignature, setHasSignature] = useState(false);
   const [signatureData, setSignatureData] = useState<string>("");
   const [uploadedFile, setUploadedFile] = useState<{ url: string; filename: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>("");
+  const [isDrawing, setIsDrawing] = useState(false);
   const signaturePadRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleDrawEnd = async (details: any) => {
-    if (details && details.getDataUrl) {
-      const dataUrl = details.getDataUrl('image/png');
+  const handleDrawEnd = useCallback(async (details: any) => {
+    console.log('SignaturePad: handleDrawEnd called with details:', details);
+    setHasSignature(true);
+    
+    // Try different methods to get signature data
+    let dataUrl: string | null = null;
+    
+    // Ark UI SignaturePad uses SVG, so try to get the data URL directly first
+    if (details && typeof details.getDataUrl === 'function') {
+      try {
+        // Try without format specification first (Ark UI default) - it returns a Promise!
+        const result = details.getDataUrl();
+        console.log('SignaturePad: Details getDataUrl result:', result, 'type:', typeof result);
+        
+        // Check if result is a Promise
+        if (result && typeof result === 'object' && typeof result.then === 'function') {
+          console.log('SignaturePad: getDataUrl returned a Promise, awaiting...');
+          dataUrl = await result;
+          console.log('SignaturePad: Awaited result:', typeof dataUrl, dataUrl && typeof dataUrl === 'string' ? dataUrl.substring(0, 50) + '...' : dataUrl);
+        }
+        // Check if result is a string (data URL)
+        else if (typeof result === 'string') {
+          dataUrl = result;
+          console.log('SignaturePad: Direct string result:', dataUrl.substring(0, 50) + '...');
+        }
+      } catch (error) {
+        console.error('Error calling details.getDataUrl without format:', error);
+      }
+    }
+    
+    // If that didn't work, try to find SVG element and convert it
+    if (!dataUrl && signaturePadRef.current) {
+      try {
+        const svg = signaturePadRef.current.querySelector('svg');
+        console.log('SignaturePad: Found SVG:', svg);
+        if (svg) {
+          // Convert SVG element to data URL
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
+          dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+          console.log('SignaturePad: Created SVG data URL, length:', dataUrl.length);
+        }
+      } catch (error) {
+        console.error('Error getting SVG data:', error);
+      }
+    }
+    
+    // If we got SVG data, convert it to PNG
+    if (dataUrl && typeof dataUrl === 'string' && (dataUrl.startsWith('data:image/svg+xml') || dataUrl.includes('svg'))) {
+      console.log('SignaturePad: Converting SVG to PNG');
+      try {
+        dataUrl = await convertSvgToPng(dataUrl);
+        console.log('SignaturePad: Converted PNG data URL length:', dataUrl?.length);
+      } catch (error) {
+        console.error('Error converting SVG to PNG:', error);
+        // Fall back to using the SVG data as-is for now
+      }
+    }
+    
+    if (dataUrl && typeof dataUrl === 'string' && dataUrl.startsWith('data:image/')) {
+      console.log('SignaturePad: Valid signature data found, length:', dataUrl.length);
       setSignatureData(dataUrl);
-      setHasSignature(true);
       
       // Auto-upload the signature if formId and fieldId are provided
       if (formId && fieldId) {
+        console.log('SignaturePad: Auto-uploading signature with formId:', formId, 'fieldId:', fieldId);
         try {
           setIsUploading(true);
           // Convert data URL to blob
           const response = await fetch(dataUrl);
           const blob = await response.blob();
+          console.log('SignaturePad: Created blob, size:', blob.size, 'type:', blob.type);
           const file = new File([blob], `signature_${Date.now()}.png`, { type: 'image/png' });
 
           // Upload the file
-          const uploadResult = await apiService.uploadFile(file, formId, fieldId);
+          console.log('SignaturePad: Uploading file...');
+          const uploadResult = await apiService.uploadFile(file, formId, fieldId, publicUpload);
+          console.log('SignaturePad: Upload successful:', uploadResult);
           setUploadedFile({ url: uploadResult.url, filename: uploadResult.filename });
           onSignatureChange?.(true, dataUrl, uploadResult.url);
         } catch (error) {
           console.error('Error auto-uploading signature:', error);
+          setUploadError(`Failed to save signature: ${error instanceof Error ? error.message : 'Unknown error'}`);
           // Fall back to just the signature data
           onSignatureChange?.(true, dataUrl, undefined);
         } finally {
           setIsUploading(false);
         }
       } else {
+        console.log('SignaturePad: No auto-upload (formId:', formId, 'fieldId:', fieldId, ')');
         onSignatureChange?.(true, dataUrl, undefined);
       }
+    } else {
+      console.log('SignaturePad: No valid signature data found');
+      onSignatureChange?.(true, undefined, undefined);
     }
+  }, [formId, fieldId, publicUpload, onSignatureChange]);
+
+  // Auto-save with debouncing when drawing stops
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    autoSaveTimerRef.current = setTimeout(() => {
+      console.log('SignaturePad: Auto-save triggered after drawing stopped');
+      handleDrawEnd(null);
+    }, 1000); // Wait 1 second after drawing stops
+  }, [handleDrawEnd]);
+
+  // Handle drawing start
+  const handleDrawStart = useCallback(() => {
+    console.log('SignaturePad: Drawing started');
+    setIsDrawing(true);
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+  }, []);
+
+  // Handle drawing end/stop
+  const handleDrawStop = useCallback(() => {
+    console.log('SignaturePad: Drawing stopped');
+    setIsDrawing(false);
+    triggerAutoSave();
+  }, [triggerAutoSave]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Helper function to convert SVG data URL to PNG
+  const convertSvgToPng = async (svgDataUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+        
+        // Set a reasonable size if the image dimensions are 0 or very small
+        const width = Math.max(img.width, img.naturalWidth, 600);
+        const height = Math.max(img.height, img.naturalHeight, 120);
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Fill with white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw the SVG image
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to PNG data URL
+        const pngDataUrl = canvas.toDataURL('image/png');
+        resolve(pngDataUrl);
+      };
+      img.onerror = (error) => {
+        console.error('SVG to PNG conversion failed:', error);
+        reject(new Error('Failed to load SVG image'));
+      };
+      img.src = svgDataUrl;
+    });
   };
 
   const handleClear = () => {
@@ -113,7 +258,7 @@ export function BasicSignaturePad({
       setIsUploading(true);
       setUploadError("");
 
-      const uploadResult = await apiService.uploadFile(file, formId, fieldId);
+      const uploadResult = await apiService.uploadFile(file, formId, fieldId, publicUpload);
       setUploadedFile({ url: uploadResult.url, filename: uploadResult.filename });
       setHasSignature(true);
       onSignatureChange?.(true, undefined, uploadResult.url);
@@ -127,7 +272,7 @@ export function BasicSignaturePad({
 
   return (
     <div className={cn("w-full", className)}>
-      <SignaturePad.Root onDrawEnd={handleDrawEnd}>
+      <SignaturePad.Root ref={signaturePadRef} onDrawEnd={handleDrawEnd}>
         <SignaturePad.Label className="text-sm font-medium text-foreground mb-2 block">
           {label} {required && <span className="text-destructive">*</span>}
         </SignaturePad.Label>
@@ -136,7 +281,13 @@ export function BasicSignaturePad({
             className={cn(
               "w-full h-full stroke-foreground fill-foreground",
               disabled && "pointer-events-none opacity-50"
-            )} 
+            )}
+            onPointerDown={handleDrawStart}
+            onPointerUp={handleDrawStop}
+            onMouseDown={handleDrawStart}
+            onMouseUp={handleDrawStop}
+            onTouchStart={handleDrawStart}
+            onTouchEnd={handleDrawStop}
           />
           {!disabled && (
             <SignaturePad.ClearTrigger 
@@ -151,33 +302,44 @@ export function BasicSignaturePad({
       </SignaturePad.Root>
 
       {/* Action buttons */}
-      {!disabled && allowUpload && (
+      {!disabled && (
         <div className="flex gap-2 mt-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+            onClick={() => handleDrawEnd(null)}
+            className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/80 rounded-md text-sm font-medium transition-colors"
           >
-            {isUploading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                Upload Image
-              </>
-            )}
+            Save Signature
           </button>
+          {allowUpload && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {isUploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    Upload Image
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       )}
 

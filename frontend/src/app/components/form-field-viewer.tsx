@@ -2,6 +2,7 @@
 
 import { FormField } from "../../../../shared/types";
 import { FileViewer } from "./file-viewer";
+import { normalizeFileUrl } from "@/lib/utils";
 
 interface FormFieldViewerProps {
   field: FormField;
@@ -30,11 +31,12 @@ export function FormFieldViewer({ field, value, className }: FormFieldViewerProp
           </div>
         );
       } else if (value.startsWith('http')) {
-        // File URL
+        // File URL - normalize it
+        const normalizedUrl = normalizeFileUrl(value);
         return (
           <div className={className}>
             <FileViewer
-              fileUrl={value}
+              fileUrl={normalizedUrl}
               filename="signature.png"
               mimeType="image/png"
               showPreview={true}
@@ -49,27 +51,29 @@ export function FormFieldViewer({ field, value, className }: FormFieldViewerProp
   // Handle file upload fields
   if (field.type === 'file') {
     if (typeof value === 'string' && value.startsWith('http')) {
-      // Single file URL
-      const filename = value.split('/').pop() || 'file';
+      // Single file URL - normalize it
+      const normalizedUrl = normalizeFileUrl(value);
+      const filename = normalizedUrl.split('/').pop() || 'file';
       return (
         <div className={className}>
           <FileViewer
-            fileUrl={value}
+            fileUrl={normalizedUrl}
             filename={filename}
             showPreview={true}
           />
         </div>
       );
     } else if (Array.isArray(value)) {
-      // Multiple files
+      // Multiple files - normalize URLs
       return (
         <div className={`space-y-2 ${className || ''}`}>
           {value.map((fileUrl, index) => {
-            const filename = fileUrl.split('/').pop() || `file-${index + 1}`;
+            const normalizedUrl = normalizeFileUrl(fileUrl);
+            const filename = normalizedUrl.split('/').pop() || `file-${index + 1}`;
             return (
               <FileViewer
                 key={index}
-                fileUrl={fileUrl}
+                fileUrl={normalizedUrl}
                 filename={filename}
                 showPreview={true}
               />

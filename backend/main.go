@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -149,7 +151,9 @@ func setupRoutes(app *fiber.App) {
 	// Public routes (no authentication required)
 	public := api.Group("/public")
 	public.Get("/forms/:id", getPublicForm)
-
+	public.Post("/files/upload", uploadPublicFile) // Public file upload for form submissions
+	public.Get("/files/:filename", serveFile)       // Public file serving
+	
 	// Responses routes (mixed - form submission is public, viewing is protected)
 	responses := api.Group("/responses")
 	responses.Post("/", createResponse) // Public - form submissions
@@ -192,7 +196,8 @@ func setupRoutes(app *fiber.App) {
 	files.Get("/user", getUserFiles)
 	files.Delete("/:id", deleteFile)
 
-	// Public file serving route
+	// Legacy file serving route for backward compatibility (no auth required)
+	// Note: This must be defined after protected routes to avoid conflicts
 	api.Get("/files/:filename", serveFile)
 }
 
@@ -558,7 +563,21 @@ func validateFormData(data map[string]interface{}, fields []models.FormField) er
 	for _, field := range fields {
 		if field.Required {
 			value, exists := data[field.ID]
-			if !exists || value == nil || (fmt.Sprintf("%v", value) == "") {
+			if !exists || value == nil {
+				return fmt.Errorf("%s is required", field.Label)
+			}
+			
+			// Special handling for signature fields
+			if field.Type == "signature" {
+				if str, ok := value.(string); ok {
+					// Check if it's a valid signature (data URL or file URL)
+					if str == "" || (!isDataURL(str) && !isFileURL(str)) {
+						return fmt.Errorf("%s is required", field.Label)
+					}
+				} else {
+					return fmt.Errorf("%s is required", field.Label)
+				}
+			} else if fmt.Sprintf("%v", value) == "" {
 				return fmt.Errorf("%s is required", field.Label)
 			}
 		}
@@ -655,6 +674,19 @@ func validateFieldValue(value interface{}, field models.FormField) error {
 func isValidEmail(email string) bool {
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	matched, _ := regexp.MatchString(pattern, email)
+	return matched
+}
+
+func isDataURL(str string) bool {
+	// Check if it's a data URL for image (PNG or SVG)
+	matched1, _ := regexp.MatchString(`^data:image/(png|svg\+xml|jpeg|jpg|gif);base64,`, str)
+	matched2, _ := regexp.MatchString(`^data:image/svg\+xml;charset=utf-8,`, str)
+	return matched1 || matched2
+}
+
+func isFileURL(str string) bool {
+	// Check if it's a file URL (relative or absolute path to an uploaded file)
+	matched, _ := regexp.MatchString(`^(/uploads/|https?://.*\.(png|jpg|jpeg|gif|svg))$`, str)
 	return matched
 }
 
@@ -1134,6 +1166,53 @@ func uploadFile(c *fiber.Ctx) error {
 	return c.Status(201).JSON(response)
 }
 
+func uploadPublicFile(c *fiber.Ctx) error {
+	// Get file from form data
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "No file provided",
+		})
+	}
+
+	// Get optional form and field IDs
+	formID := c.FormValue("formId")
+	fieldID := c.FormValue("fieldId")
+
+	// For public uploads, try to get userID from auth if available, otherwise use empty
+	userID := ""
+	// Check if user is authenticated (optional auth)
+	authHeader := c.Get("Authorization")
+	if authHeader != "" {
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) == 2 && tokenParts[0] == "Bearer" {
+			token := tokenParts[1]
+			if claims, err := authService.ValidateToken(token); err == nil {
+				userID = claims.UserID // Use authenticated user ID
+			}
+		}
+	}
+
+	// Upload file using service
+	uploadedFile, err := fileService.UploadFile(file, userID, formID, fieldID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Return file response
+	response := models.FileUploadResponse{
+		ID:       uploadedFile.ID.Hex(),
+		Filename: uploadedFile.Filename,
+		URL:      uploadedFile.URL,
+		Size:     uploadedFile.Size,
+		MimeType: uploadedFile.MimeType,
+	}
+
+	return c.Status(201).JSON(response)
+}
+
 func serveFile(c *fiber.Ctx) error {
 	filename := c.Params("filename")
 	
@@ -1142,6 +1221,29 @@ func serveFile(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{
 			"error": "File not found",
 		})
+	}
+
+	// Set CORS headers to prevent ORB (Opaque Response Blocking) errors
+	c.Set("Access-Control-Allow-Origin", "*")
+	c.Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	c.Set("Access-Control-Allow-Headers", "Content-Type")
+	
+	// Set appropriate content type based on file extension
+	if ext := filepath.Ext(filename); ext != "" {
+		switch ext {
+		case ".png":
+			c.Set("Content-Type", "image/png")
+		case ".jpg", ".jpeg":
+			c.Set("Content-Type", "image/jpeg")
+		case ".gif":
+			c.Set("Content-Type", "image/gif")
+		case ".svg":
+			c.Set("Content-Type", "image/svg+xml")
+		case ".webp":
+			c.Set("Content-Type", "image/webp")
+		default:
+			c.Set("Content-Type", "application/octet-stream")
+		}
 	}
 
 	return c.SendFile(filePath)
@@ -1165,12 +1267,19 @@ func deleteFile(c *fiber.Ctx) error {
 
 func getUserFiles(c *fiber.Ctx) error {
 	userID := middleware.GetUserID(c)
+	log.Printf("getUserFiles: userID = '%s'", userID)
 
 	files, err := fileService.GetUserFiles(userID)
 	if err != nil {
+		log.Printf("getUserFiles: error getting files for user %s: %v", userID, err)
 		return c.Status(500).JSON(fiber.Map{
 			"error": err.Error(),
 		})
+	}
+
+	log.Printf("getUserFiles: found %d files for user %s", len(files), userID)
+	for i, file := range files {
+		log.Printf("getUserFiles: file %d: id=%s, filename=%s, userId=%s", i, file.ID.Hex(), file.Filename, file.UserID)
 	}
 
 	return c.JSON(files)

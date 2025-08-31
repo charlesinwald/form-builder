@@ -129,3 +129,4 @@ vendor/
 
 # Go workspace file
 go.work
+backend/uploads

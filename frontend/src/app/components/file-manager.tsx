@@ -1,22 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  File, 
-  Image, 
-  Download, 
-  Trash2, 
-  Eye, 
-  Calendar, 
+import {
+  File,
+  Image,
+  Download,
+  Trash2,
+  Eye,
+  Calendar,
   User,
   Search,
   Filter,
   Grid,
   List,
   FileText,
-  FileImage
+  FileImage,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import NextImage from "next/image";
+import { cn, normalizeFileUrl } from "@/lib/utils";
 import { apiService } from "@/lib/api";
 import { FileUpload } from "../../../../shared/types";
 
@@ -27,11 +28,11 @@ interface FileManagerProps {
   selectable?: boolean;
 }
 
-export function FileManager({ 
-  formId, 
-  fieldId, 
-  onFileSelect, 
-  selectable = false 
+export function FileManager({
+  formId,
+  fieldId,
+  onFileSelect,
+  selectable = false,
 }: FileManagerProps) {
   const [files, setFiles] = useState<FileUpload[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,17 +52,25 @@ export function FileManager({
       setLoading(true);
       setError("");
       const userFiles = await apiService.getUserFiles();
-      
+
       let filteredFiles = userFiles;
-      
+
       // Filter by form/field if specified
       if (formId) {
-        filteredFiles = userFiles.filter(file => file.formId === formId);
+        filteredFiles = userFiles.filter((file) => file.formId === formId);
       }
       if (fieldId) {
-        filteredFiles = filteredFiles.filter(file => file.fieldId === fieldId);
+        filteredFiles = filteredFiles.filter(
+          (file) => file.fieldId === fieldId
+        );
       }
-      
+
+      // Fix any URLs that might be pointing to the wrong endpoint
+      filteredFiles = filteredFiles.map(file => ({
+        ...file,
+        url: normalizeFileUrl(file.url)
+      }));
+
       setFiles(filteredFiles);
     } catch (err) {
       console.error("Error loading files:", err);
@@ -73,10 +82,10 @@ export function FileManager({
 
   const deleteFile = async (fileId: string) => {
     if (!confirm("Are you sure you want to delete this file?")) return;
-    
+
     try {
       await apiService.deleteFile(fileId);
-      setFiles(files.filter(file => file.id !== fileId));
+      setFiles(files.filter((file) => file.id !== fileId));
       if (selectedFile?.id === fileId) {
         setSelectedFile(null);
         setShowPreview(false);
@@ -88,16 +97,16 @@ export function FileManager({
   };
 
   const downloadFile = (file: FileUpload) => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = file.url;
     link.download = file.originalName;
     link.click();
   };
 
   const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) {
+    if (mimeType.startsWith("image/")) {
       return <FileImage className="w-8 h-8 text-blue-600" />;
-    } else if (mimeType === 'application/pdf') {
+    } else if (mimeType === "application/pdf") {
       return <FileText className="w-8 h-8 text-red-600" />;
     } else {
       return <File className="w-8 h-8 text-gray-600" />;
@@ -105,21 +114,23 @@ export function FileManager({
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const filteredFiles = files.filter(file => {
-    const matchesSearch = file.originalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         file.filename.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = filterType === "all" || 
-                       (filterType === "images" && file.mimeType.startsWith('image/')) ||
-                       (filterType === "documents" && !file.mimeType.startsWith('image/'));
-    
+  const filteredFiles = files.filter((file) => {
+    const matchesSearch =
+      file.originalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      file.filename.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesType =
+      filterType === "all" ||
+      (filterType === "images" && file.mimeType.startsWith("image/")) ||
+      (filterType === "documents" && !file.mimeType.startsWith("image/"));
+
     return matchesSearch && matchesType;
   });
 
@@ -149,13 +160,17 @@ export function FileManager({
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <h2 className="text-2xl font-bold">File Manager</h2>
-        
+
         <div className="flex gap-2">
           <button
             onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
             className="p-2 border rounded-lg hover:bg-accent transition-colors"
           >
-            {viewMode === "grid" ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
+            {viewMode === "grid" ? (
+              <List className="w-4 h-4" />
+            ) : (
+              <Grid className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
@@ -172,7 +187,7 @@ export function FileManager({
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-        
+
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
@@ -197,36 +212,42 @@ export function FileManager({
           <p>No files found</p>
         </div>
       ) : (
-        <div className={cn(
-          viewMode === "grid" 
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-            : "space-y-2"
-        )}>
+        <div
+          className={cn(
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              : "space-y-2"
+          )}
+        >
           {filteredFiles.map((file) => (
             <div
               key={file.id}
               onClick={() => handleFileSelect(file)}
               className={cn(
                 "border rounded-lg p-4 transition-colors",
-                selectable 
-                  ? "cursor-pointer hover:bg-accent hover:border-primary" 
+                selectable
+                  ? "cursor-pointer hover:bg-accent hover:border-primary"
                   : "cursor-pointer hover:bg-accent",
                 viewMode === "list" ? "flex items-center gap-4" : "space-y-3"
               )}
             >
               {/* File Icon/Preview */}
-              <div className={cn(
-                "flex items-center justify-center",
-                viewMode === "grid" ? "mb-2" : "flex-shrink-0"
-              )}>
-                {file.mimeType.startsWith('image/') ? (
+              <div
+                className={cn(
+                  "flex items-center justify-center",
+                  viewMode === "grid" ? "mb-2" : "flex-shrink-0"
+                )}
+              >
+                {file.mimeType.startsWith("image/") ? (
                   <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                    <img
+                    <NextImage
                       src={file.url}
                       alt={file.originalName}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
                   </div>
@@ -238,14 +259,18 @@ export function FileManager({
               </div>
 
               {/* File Info */}
-              <div className={cn(
-                "flex-1",
-                viewMode === "list" ? "min-w-0" : "text-center"
-              )}>
-                <h3 className={cn(
-                  "font-medium truncate",
-                  viewMode === "list" ? "text-left" : ""
-                )}>
+              <div
+                className={cn(
+                  "flex-1",
+                  viewMode === "list" ? "min-w-0" : "text-center"
+                )}
+              >
+                <h3
+                  className={cn(
+                    "font-medium truncate",
+                    viewMode === "list" ? "text-left" : ""
+                  )}
+                >
                   {file.originalName}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -257,10 +282,12 @@ export function FileManager({
               </div>
 
               {/* Actions */}
-              <div className={cn(
-                "flex gap-2",
-                viewMode === "grid" ? "justify-center mt-2" : "flex-shrink-0"
-              )}>
+              <div
+                className={cn(
+                  "flex gap-2",
+                  viewMode === "grid" ? "justify-center mt-2" : "flex-shrink-0"
+                )}
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -271,7 +298,7 @@ export function FileManager({
                 >
                   <Eye className="w-4 h-4" />
                 </button>
-                
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -282,7 +309,7 @@ export function FileManager({
                 >
                   <Download className="w-4 h-4" />
                 </button>
-                
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -319,9 +346,14 @@ interface FilePreviewModalProps {
   onDownload: () => void;
 }
 
-function FilePreviewModal({ file, onClose, onDelete, onDownload }: FilePreviewModalProps) {
-  const isImage = file.mimeType.startsWith('image/');
-  
+function FilePreviewModal({
+  file,
+  onClose,
+  onDelete,
+  onDownload,
+}: FilePreviewModalProps) {
+  const isImage = file.mimeType.startsWith("image/");
+
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
@@ -330,10 +362,11 @@ function FilePreviewModal({ file, onClose, onDelete, onDownload }: FilePreviewMo
           <div>
             <h2 className="text-xl font-semibold">{file.originalName}</h2>
             <p className="text-sm text-muted-foreground">
-              {formatFileSize(file.size)} • {new Date(file.createdAt).toLocaleString()}
+              {formatFileSize(file.size)} •{" "}
+              {new Date(file.createdAt).toLocaleString()}
             </p>
           </div>
-          
+
           <div className="flex gap-2">
             <button
               onClick={onDownload}
@@ -342,7 +375,7 @@ function FilePreviewModal({ file, onClose, onDelete, onDownload }: FilePreviewMo
               <Download className="w-4 h-4" />
               Download
             </button>
-            
+
             <button
               onClick={onDelete}
               className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -350,7 +383,7 @@ function FilePreviewModal({ file, onClose, onDelete, onDownload }: FilePreviewMo
               <Trash2 className="w-4 h-4" />
               Delete
             </button>
-            
+
             <button
               onClick={onClose}
               className="px-3 py-2 border rounded-lg hover:bg-accent transition-colors"
@@ -363,15 +396,17 @@ function FilePreviewModal({ file, onClose, onDelete, onDownload }: FilePreviewMo
         {/* Content */}
         <div className="p-6">
           {isImage ? (
-            <img
+            <NextImage
               src={file.url}
               alt={file.originalName}
+              width={800}
+              height={600}
               className="max-w-full h-auto mx-auto rounded-lg shadow-lg"
             />
           ) : (
             <div className="text-center py-12">
               <div className="w-24 h-24 mx-auto mb-4 rounded-lg bg-muted flex items-center justify-center">
-                {file.mimeType === 'application/pdf' ? (
+                {file.mimeType === "application/pdf" ? (
                   <FileText className="w-12 h-12 text-red-600" />
                 ) : (
                   <File className="w-12 h-12 text-gray-600" />
@@ -399,9 +434,9 @@ function FilePreviewModal({ file, onClose, onDelete, onDownload }: FilePreviewMo
 }
 
 const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };

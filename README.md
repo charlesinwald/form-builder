@@ -11,7 +11,7 @@ A dynamic, customizable form builder application with real-time analytics, built
 - **Field Configuration**: Set required fields, placeholders, and validation rules
 - **Real-time Preview**: See form changes instantly as you build
 - **Form Templates**: Start with predefined form structures
-- **Auto-save**: Automatic saving of form drafts every 2 seconds
+- **Smart Auto-save**: Intelligent saving triggered by actual form changes with 1-second debouncing
 
 ### 📊 **Real-time Analytics Dashboard**
 
