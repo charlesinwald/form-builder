@@ -1,3 +1,3 @@
 git pull
-./scripts/build.sh
+./build-backend.sh
 pm2 restart all
