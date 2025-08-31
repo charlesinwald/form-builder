@@ -319,7 +319,7 @@ export function ResponsesView({ form, onBack }: ResponsesViewProps) {
                 </TableHeader>
                 <TableBody>
                   {responses.map((response) => (
-                    <TableRow key={response.id}>
+                    <TableRow key={response.id} onClick={() => setSelectedResponse(response)} className="cursor-pointer">
                       <TableCell>
                         {format(
                           new Date(response.createdAt),
