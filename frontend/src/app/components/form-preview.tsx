@@ -16,10 +16,15 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { Calendar } from "@/app/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/components/ui/popover";
 import { format, addDays } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { SignaturePad } from "@/app/components/ui/signature-pad";
+import { FileUpload } from "@/app/components/ui/file-upload";
 import { cn } from "@/lib/utils";
 import { FormField as SharedFormField } from "../../../../shared/types";
 
@@ -28,7 +33,6 @@ interface FormData {
   description: string;
   fields: SharedFormField[];
 }
-
 
 interface FormPreviewProps {
   formData: FormData;
@@ -207,8 +211,8 @@ export function FormPreview({ formData }: FormPreviewProps) {
                         size="sm"
                         className="flex-1"
                         onClick={() => {
-                          const newDate = addDays(new Date(), preset.value)
-                          updateResponse(field.id, newDate)
+                          const newDate = addDays(new Date(), preset.value);
+                          updateResponse(field.id, newDate);
                         }}
                       >
                         {preset.label}
@@ -222,10 +226,44 @@ export function FormPreview({ formData }: FormPreviewProps) {
         );
       case "signature":
         return (
-          <SignaturePad 
+          <SignaturePad
             label=""
             required={field.required}
-            onSignatureChange={(hasSignature) => updateResponse(field.id, hasSignature)}
+            onSignatureChange={(hasSignature) =>
+              updateResponse(field.id, hasSignature)
+            }
+          />
+        );
+      case "file":
+        return (
+          <FileUpload
+            label=""
+            required={false}
+            formId={"preview"}
+            fieldId={field.id}
+            accept={field.fileOptions?.accept || "*/*"}
+            multiple={field.fileOptions?.multiple || false}
+            maxSize={field.fileOptions?.maxSize || 15}
+            onFileChange={(hasFile, fileUrl) => {
+              if (hasFile && fileUrl) {
+                const currentValue = responses[field.id];
+                if (
+                  field.fileOptions?.multiple &&
+                  Array.isArray(currentValue)
+                ) {
+                  updateResponse(field.id, [
+                    ...(currentValue as string[]),
+                    fileUrl,
+                  ]);
+                } else if (field.fileOptions?.multiple) {
+                  updateResponse(field.id, [fileUrl]);
+                } else {
+                  updateResponse(field.id, fileUrl);
+                }
+              } else if (!hasFile) {
+                updateResponse(field.id, field.fileOptions?.multiple ? [] : "");
+              }
+            }}
           />
         );
       default:
