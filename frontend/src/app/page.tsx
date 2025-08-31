@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "./components/auth/protected-route";
 import { LandingPage } from "@/app/components/landing-page";
@@ -44,8 +44,6 @@ export default function HomePage() {
 
   const { forms, saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const previousFormDataRef = useRef<FormData | null>(null);
 
   // Auto-save functionality
   const performAutoSave = useCallback(async (formDataSnapshot?: FormData) => {
@@ -108,8 +106,6 @@ export default function HomePage() {
           fields: newForm.fields,
         };
         setFormData(newFormData);
-        // Initialize previous form data to prevent immediate autosave
-        previousFormDataRef.current = { ...newFormData };
         toast({
           title: "New form created",
           description: "Your draft form has been created",
@@ -125,54 +121,13 @@ export default function HomePage() {
     }
   }, [activeView, currentForm, createForm, toast]);
 
-  // Helper function to check if form data has actually changed
-  const hasFormDataChanged = useCallback((current: FormData, previous: FormData | null): boolean => {
-    if (!previous) return true;
-    
-    return (
-      current.title !== previous.title ||
-      current.description !== previous.description ||
-      JSON.stringify(current.fields) !== JSON.stringify(previous.fields)
-    );
-  }, []);
-
-  // Auto-save when form data changes (debounced)
-  useEffect(() => {
-    if (!currentForm) {
-      previousFormDataRef.current = null;
-      return;
+  // Save immediately on explicit user changes only
+  const handleFormDataChange = useCallback((updated: FormData) => {
+    setFormData(updated);
+    if (currentForm) {
+      void performAutoSave({ ...updated });
     }
-
-    // Only proceed if there are actual changes
-    if (!hasFormDataChanged(formData, previousFormDataRef.current)) {
-      return;
-    }
-
-    // Clear existing timer
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-
-    // Set new timer with debouncing
-    autoSaveTimerRef.current = setTimeout(async () => {
-      const currentFormDataSnapshot = { ...formData };
-      try {
-        await performAutoSave(currentFormDataSnapshot);
-        // Only update previous form data after successful save
-        previousFormDataRef.current = currentFormDataSnapshot;
-        console.log("Auto-save completed successfully, updated previousFormDataRef");
-      } catch (error) {
-        console.error("Auto-save failed, keeping previousFormDataRef unchanged:", error);
-        // Don't update previousFormDataRef so it will retry on the next change
-      }
-    }, 1000); // Reduced to 1 second for better UX since we now only save on actual changes
-
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, [formData, currentForm, performAutoSave, hasFormDataChanged]);
+  }, [currentForm, performAutoSave]);
 
   const handleGetStarted = () => {
     router.push("/auth");
@@ -206,8 +161,6 @@ export default function HomePage() {
       fields: form.fields,
     };
     setFormData(newFormData);
-    // Initialize previous form data to prevent immediate autosave
-    previousFormDataRef.current = { ...newFormData };
     if (activeView !== "analytics") {
       setActiveView("builder");
     }
@@ -230,8 +183,6 @@ export default function HomePage() {
         fields: newForm.fields,
       };
       setFormData(newFormData);
-      // Initialize previous form data to prevent immediate autosave
-      previousFormDataRef.current = { ...newFormData };
       setActiveView("builder");
       toast({
         title: "New form created",
@@ -252,11 +203,6 @@ export default function HomePage() {
 
     setIsPublishing(true);
     try {
-      // Clear any pending auto-save to prevent conflicts
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-
       // First save current changes as draft to ensure all data is saved
       await saveDraft(currentForm.id, {
         title: formData.title,
@@ -303,7 +249,7 @@ export default function HomePage() {
       <div className="flex-1 flex flex-col">
         <Header
           formTitle={formData.title}
-          onTitleChange={(title) => setFormData((prev) => ({ ...prev, title }))}
+          onTitleChange={(title) => handleFormDataChange({ ...formData, title })}
           onPreview={() => setActiveView("preview")}
           onPublish={handlePublishForm}
           onShare={() => setShowShareModal(true)}
@@ -326,14 +272,12 @@ export default function HomePage() {
                   fields: form.fields,
                 };
                 setFormData(newFormData);
-                // Initialize previous form data to prevent immediate autosave
-                previousFormDataRef.current = { ...newFormData };
                 setActiveView("builder");
               }}
             />
           )}
           {activeView === "builder" && (
-            <FormBuilder formData={formData} onFormDataChange={setFormData} />
+            <FormBuilder formData={formData} onFormDataChange={handleFormDataChange} />
           )}
           {activeView === "preview" && <FormPreview formData={formData} />}
           {activeView === "analytics" &&
@@ -378,8 +322,6 @@ export default function HomePage() {
                           fields: form.fields,
                         };
                         setFormData(newFormData);
-                        // Initialize previous form data to prevent immediate autosave
-                        previousFormDataRef.current = { ...newFormData };
                         setActiveView("builder");
                       }}
                       context="analytics"
