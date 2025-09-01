@@ -118,7 +118,7 @@ export function FormField({
       case "signature":
         return (
           <div className="pointer-events-none">
-            <SignaturePad 
+            <SignaturePad
               label={field.label}
               required={field.required}
               disabled={true}
@@ -153,8 +153,9 @@ export function FormField({
             <Input
               value={field.label}
               onChange={(e) => onUpdate({ label: e.target.value })}
-              className="border-none p-0 font-medium focus-visible:ring-0"
+              className="border-none p-0 font-medium focus-visible:ring-0 cursor-text hover:bg-muted/20 rounded-sm -mx-1 px-1"
               onClick={(e) => e.stopPropagation()}
+              aria-label="Field label"
             />
             {field.required && (
               <span className="text-destructive text-sm">*</span>
@@ -212,6 +213,7 @@ export function FormField({
                   value={field.placeholder || ""}
                   onChange={(e) => onUpdate({ placeholder: e.target.value })}
                   placeholder="Enter placeholder text..."
+                  className="cursor-text hover:bg-muted/20"
                 />
               </div>
             )}
@@ -227,7 +229,7 @@ export function FormField({
                       <Input
                         value={option}
                         onChange={(e) => updateOption(index, e.target.value)}
-                        className="flex-1"
+                        className="flex-1 cursor-text hover:bg-muted/20"
                       />
                       <Button
                         variant="ghost"
@@ -267,6 +269,7 @@ export function FormField({
                       })
                     }
                     placeholder="e.g. image/*,application/pdf"
+                    className="cursor-text hover:bg-muted/20"
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -300,6 +303,7 @@ export function FormField({
                         },
                       })
                     }
+                    className="cursor-text hover:bg-muted/20"
                   />
                 </div>
               </div>

@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-dashboard";
 import { FormCard } from "./components/form-card";
+import { Sheet, SheetContent } from "@/app/components/ui/sheet";
 
 interface FormData {
   title: string;
@@ -41,6 +42,7 @@ export default function HomePage() {
   });
   const [isPublishing, setIsPublishing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const { forms, saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
@@ -249,14 +251,34 @@ export default function HomePage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen bg-background">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          onNewForm={handleNewForm}
-        />
+      <div className="flex min-h-screen bg-background">
+        {/* Desktop/Tablet Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            onNewForm={handleNewForm}
+          />
+        </div>
 
-        <div className="flex-1 flex flex-col">
+        {/* Mobile Sidebar Sheet */}
+        <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+          <SheetContent side="left" className="p-0">
+            <Sidebar
+              activeView={activeView}
+              onViewChange={(view) => {
+                setActiveView(view);
+                setIsMobileSidebarOpen(false);
+              }}
+              onNewForm={() => {
+                setIsMobileSidebarOpen(false);
+                void handleNewForm();
+              }}
+            />
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex-1 flex flex-col min-w-0">
           <Header
             formTitle={formData.title}
             onTitleChange={(title) =>
@@ -268,9 +290,10 @@ export default function HomePage() {
             isFormDraft={currentForm?.status === "draft"}
             isFormPublished={currentForm?.status === "published"}
             isPublishing={isPublishing}
+            onToggleSidebar={() => setIsMobileSidebarOpen(true)}
           />
 
-          <main className="flex-1 overflow-hidden">
+          <main className="flex-1 overflow-y-auto min-h-0 relative">
             {activeView === "dashboard" && (
               <FormsDashboard
                 onFormSelect={handleFormSelect}
@@ -316,7 +339,7 @@ export default function HomePage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {forms.map((form) => (
                       <FormCard
                         key={form.id}

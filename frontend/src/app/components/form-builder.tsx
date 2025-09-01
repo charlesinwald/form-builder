@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import { Card } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { FieldToolbox } from "@/app/components/field-toolbox";
 import { FormField } from "@/app/components/form-field";
-import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DroppableProvided,
+  DraggableProvided,
+  DraggableStateSnapshot,
+} from "@hello-pangea/dnd";
 import { Plus } from "lucide-react";
+import { Sheet, SheetContent } from "@/app/components/ui/sheet";
 import { FormField as SharedFormField } from "../../../../shared/types";
 
 interface FormData {
@@ -23,6 +32,7 @@ interface FormBuilderProps {
 
 export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
 
   const addField = (type: SharedFormField["type"]) => {
     const newField: SharedFormField = {
@@ -40,13 +50,16 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
 
     console.log("FormBuilder: Adding new field:", newField);
     console.log("FormBuilder: Current fields before add:", formData.fields);
-    
+
     const updatedFormData = {
       ...formData,
       fields: [...formData.fields, newField],
     };
-    
-    console.log("FormBuilder: Updated fields after add:", updatedFormData.fields);
+
+    console.log(
+      "FormBuilder: Updated fields after add:",
+      updatedFormData.fields
+    );
     onFormDataChange(updatedFormData);
   };
 
@@ -67,7 +80,10 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
     setSelectedFieldId(null);
   };
 
-  const handleDragEnd = (result: { destination?: { index: number } | null; source: { index: number } }) => {
+  const handleDragEnd = (result: {
+    destination?: { index: number } | null;
+    source: { index: number };
+  }) => {
     if (!result.destination) return;
 
     const items = Array.from(formData.fields);
@@ -82,13 +98,29 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
 
   return (
     <div className="flex h-full">
-      {/* Field Toolbox */}
-      <div className="w-64 bg-muted/30 border-r border-border p-4">
-        <FieldToolbox onAddField={addField} />
+      {/* Field Toolbox - desktop */}
+      <div className="hidden md:block w-64 bg-muted/30 border-r border-border p-4">
+        <FieldToolbox
+          onAddField={(type) => {
+            addField(type);
+          }}
+        />
       </div>
 
+      {/* Field Toolbox - mobile sheet */}
+      <Sheet open={isToolboxOpen} onOpenChange={setIsToolboxOpen}>
+        <SheetContent side="left" className="p-4 w-full" label="Field types">
+          <FieldToolbox
+            onAddField={(type) => {
+              addField(type);
+              setIsToolboxOpen(false);
+            }}
+          />
+        </SheetContent>
+      </Sheet>
+
       {/* Form Canvas */}
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="flex-1 p-4 sm:p-6 overflow-auto">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Form Header */}
           <Card className="p-6">
@@ -98,17 +130,19 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
                 onChange={(e) =>
                   onFormDataChange({ ...formData, title: e.target.value })
                 }
-                className="text-2xl font-inter font-bold border-none p-0 focus-visible:ring-0"
-                placeholder="Form Title"
+                className="text-2xl font-inter font-bold border-none p-0 focus-visible:ring-0 cursor-text hover:bg-muted/20 rounded-sm -mx-1 px-1"
+                placeholder="Form title (tap to edit)"
+                aria-label="Form title"
               />
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
                   onFormDataChange({ ...formData, description: e.target.value })
                 }
-                placeholder="Form description (optional)"
-                className="border-none p-0 focus-visible:ring-0 resize-none"
+                placeholder="Form description (optional) — tap to edit"
+                className="border-none p-0 focus-visible:ring-0 resize-none cursor-text hover:bg-muted/20 rounded-sm -mx-1 px-1"
                 rows={2}
+                aria-label="Form description"
               />
             </div>
           </Card>
@@ -128,7 +162,10 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
                       draggableId={field.id}
                       index={index}
                     >
-                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                      {(
+                        provided: DraggableProvided,
+                        snapshot: DraggableStateSnapshot
+                      ) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
@@ -175,6 +212,17 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
             </Card>
           )}
         </div>
+
+        {/* Mobile floating action button to open toolbox */}
+        <Button
+          className="md:hidden fixed bottom-6 right-6 rounded-full h-12 w-12 shadow-lg"
+          variant="secondary"
+          size="icon"
+          onClick={() => setIsToolboxOpen(true)}
+          aria-label="Add field"
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
       </div>
     </div>
   );

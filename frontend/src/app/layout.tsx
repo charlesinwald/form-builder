@@ -21,6 +21,12 @@ export const metadata: Metadata = {
     "form builder, survey creator, feedback forms, online forms, form analytics, real-time analytics",
   authors: [{ name: "Charles Inwald" }],
   robots: "index, follow",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
@@ -29,9 +35,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(inter.variable, "bg-background")}>
+    <html lang="en" className={cn(inter.variable, "bg-background")}>        
       <body
-        className="font-inter antialiased"
+        className="font-inter antialiased min-h-screen"
         style={{ fontFamily: "var(--font-inter)" }}
       >
         <AuthProvider>

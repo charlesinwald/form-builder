@@ -21,9 +21,9 @@ export function Sidebar({ activeView, onViewChange, onNewForm }: SidebarProps) {
   ];
 
   return (
-    <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="p-4 border-b border-sidebar-border">
-        <h1 className="text-4xl font-inter font-black tracking-tight">
+    <div className="w-full md:w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-full">
+      <div className="p-3 sm:p-4 border-b border-sidebar-border">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-inter font-black tracking-tight">
           <span className="bg-gradient-to-b from-cyan-600 via-primary to-teal-700 bg-clip-text text-transparent">
             Form
           </span>
@@ -31,32 +31,32 @@ export function Sidebar({ activeView, onViewChange, onNewForm }: SidebarProps) {
             Craft
           </span>
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Professional Form Builder
         </p>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
             <Button
               key={item.id}
               variant={activeView === item.id ? "default" : "ghost"}
-              className="w-full justify-start gap-3"
+              className="w-full justify-start gap-2 sm:gap-3 text-sm"
               onClick={() => onViewChange(item.id)}
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{item.label}</span>
             </Button>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
-        <Button className="w-full gap-2" size="sm" onClick={onNewForm}>
-          <Plus className="h-4 w-4" />
-          New Form
+      <div className="p-3 sm:p-4 border-t border-sidebar-border">
+        <Button className="w-full gap-2 text-sm" size="sm" onClick={onNewForm}>
+          <Plus className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">New Form</span>
         </Button>
       </div>
     </div>
