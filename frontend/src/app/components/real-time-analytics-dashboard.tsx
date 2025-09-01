@@ -193,6 +193,53 @@ export function RealTimeAnalyticsDashboard({
 
   // Format trend data for line chart
   const trendData = analytics?.responseTrends || [];
+  
+  // Debug: Log the trend data to understand the format
+  console.log('Analytics data:', analytics);
+  console.log('Trend data:', trendData);
+  
+  // Process trend data and fill in actual response counts
+  const processedTrendData = (() => {
+    if (!analytics?.recentResponses) return trendData;
+    
+    // Create a map of hour -> count from actual responses
+    const responseHourCounts = new Map<string, number>();
+    
+    analytics.recentResponses.forEach(response => {
+      const responseTime = new Date(response.submittedAt);
+      const hourKey = responseTime.toISOString().substring(0, 13) + ':00:00'; // Round to hour
+      responseHourCounts.set(hourKey, (responseHourCounts.get(hourKey) || 0) + 1);
+    });
+    
+    // Generate full 24-hour trend data for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+    
+    const fullTrendData = Array.from({ length: 24 }, (_, i) => {
+      const hourTime = new Date(today.getTime() + i * 60 * 60 * 1000);
+      const hourKey = hourTime.toISOString().substring(0, 13) + ':00:00';
+      const count = responseHourCounts.get(hourKey) || 0;
+      
+      return {
+        time: hourTime.toISOString(),
+        count: count,
+        label: hourTime.toLocaleTimeString('en-US', { 
+          hour: 'numeric',
+          hour12: true 
+        })
+      };
+    });
+    
+    // Always use the full 24-hour data to ensure complete timeline
+    return fullTrendData;
+  })();
+  
+  const displayTrendData = processedTrendData;
+  
+  // Debug: Log the processed data
+  console.log('Processed trend data:', displayTrendData);
+  console.log('Display trend data length:', displayTrendData.length);
+  console.log('Last few items:', displayTrendData.slice(-5));
 
   // Format field analytics for bar chart
   const fieldData = analytics?.fieldAnalytics
@@ -463,8 +510,9 @@ export function RealTimeAnalyticsDashboard({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 20, bottom: 5 }}>
+              <div className="w-full overflow-x-auto">
+                <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={displayTrendData} margin={{ top: 20, right: 20, left: 20, bottom: 70 }}>
                   <defs>
                     <linearGradient
                       id="colorResponse"
@@ -480,25 +528,22 @@ export function RealTimeAnalyticsDashboard({
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
                     dataKey="label"
-                    tick={{ fontSize: 9 }}
-                    angle={-35}
+                    tick={{ fontSize: 8 }}
+                    angle={-45}
                     textAnchor="end"
-                    height={60}
-                    interval="preserveStartEnd"
+                    height={70}
+                    interval={0}
+                    minTickGap={15}
                     tickFormatter={(value) => {
                       if (typeof value === 'string') {
-                        // For timestamps, show abbreviated format like "Aug 29 9:00"
                         try {
                           const date = new Date(value);
                           if (!isNaN(date.getTime())) {
-                            const month = date.toLocaleDateString('en-US', { month: 'short' });
-                            const day = date.getDate();
                             const time = date.toLocaleTimeString('en-US', { 
                               hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: false 
+                              hour12: true 
                             });
-                            return `${month} ${day} ${time}`;
+                            return time;
                           }
                         } catch (e) {
                           // Fallback to original value if parsing fails
@@ -507,12 +552,35 @@ export function RealTimeAnalyticsDashboard({
                       return value;
                     }}
                   />
-                  <YAxis tick={{ fontSize: 10 }} />
+                  <YAxis 
+                    tick={{ fontSize: 10 }} 
+                    domain={[0, 'dataMax']}
+                    allowDecimals={false}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--background))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
+                    }}
+                    labelFormatter={(value) => {
+                      if (typeof value === 'string') {
+                        try {
+                          const date = new Date(value);
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleString('en-US', { 
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true 
+                            });
+                          }
+                        } catch (e) {
+                          // Fallback to original value if parsing fails
+                        }
+                      }
+                      return value;
                     }}
                   />
                   <Area
@@ -526,6 +594,7 @@ export function RealTimeAnalyticsDashboard({
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -599,26 +668,68 @@ export function RealTimeAnalyticsDashboard({
               <CardTitle>Detailed Response Trends</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <RechartsLineChart data={trendData} margin={{ top: 5, right: 60, left: 20, bottom: 60 }}>
+              <div className="w-full overflow-x-auto">
+                <ResponsiveContainer width="100%" height={400}>
+                <RechartsLineChart data={displayTrendData} margin={{ top: 5, right: 60, left: 20, bottom: 80 }}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     className="stroke-muted"
                   />
                   <XAxis 
                     dataKey="label" 
-                    tick={{ fill: "currentColor", fontSize: 10 }}
+                    tick={{ fill: "currentColor", fontSize: 9 }}
                     angle={-45}
                     textAnchor="end"
-                    height={60}
-                    interval="preserveStartEnd"
+                    height={80}
+                    interval={0}
+                    minTickGap={20}
+                    tickFormatter={(value) => {
+                      if (typeof value === 'string') {
+                        try {
+                          const date = new Date(value);
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleTimeString('en-US', { 
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true 
+                            });
+                          }
+                        } catch (e) {
+                          // Fallback to original value if parsing fails
+                        }
+                      }
+                      return value;
+                    }}
                   />
-                  <YAxis tick={{ fill: "currentColor", fontSize: 12 }} />
+                  <YAxis 
+                    tick={{ fill: "currentColor", fontSize: 12 }} 
+                    domain={[0, 'dataMax']}
+                    allowDecimals={false}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--background))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
+                    }}
+                    labelFormatter={(value) => {
+                      if (typeof value === 'string') {
+                        try {
+                          const date = new Date(value);
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleString('en-US', { 
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true 
+                            });
+                          }
+                        } catch (e) {
+                          // Fallback to original value if parsing fails
+                        }
+                      }
+                      return value;
                     }}
                   />
                   <Legend />
@@ -634,6 +745,7 @@ export function RealTimeAnalyticsDashboard({
                   />
                 </RechartsLineChart>
               </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

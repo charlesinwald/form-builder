@@ -34,6 +34,7 @@ interface FormFieldData {
   id: string;
   type: "text" | "textarea" | "select" | "radio" | "checkbox" | "rating" | "date" | "signature";
   label: string;
+  description?: string;
   placeholder?: string;
   required: boolean;
   options?: string[];
@@ -415,12 +416,19 @@ export function PublicFormRenderer({
           <div className="space-y-6">
             {formData.fields.map((field) => (
               <div key={field.id} className="space-y-3">
-                <Label className="text-base font-medium text-foreground">
-                  {field.label}
-                  {field.required && (
-                    <span className="text-destructive ml-1">*</span>
+                <div className="space-y-1">
+                  <Label className="text-base font-medium text-foreground">
+                    {field.label}
+                    {field.required && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
+                  </Label>
+                  {field.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {field.description}
+                    </p>
                   )}
-                </Label>
+                </div>
                 {renderField(field)}
               </div>
             ))}

@@ -52,6 +52,7 @@ type FormField struct {
 	ID               string                 `json:"id" bson:"id"`
 	Type             string                 `json:"type" bson:"type"`
 	Label            string                 `json:"label" bson:"label"`
+	Description      string                 `json:"description,omitempty" bson:"description,omitempty"`
 	Required         bool                   `json:"required" bson:"required"`
 	Options          []string               `json:"options,omitempty" bson:"options,omitempty"`
 	Validation       map[string]interface{} `json:"validation,omitempty" bson:"validation,omitempty"`

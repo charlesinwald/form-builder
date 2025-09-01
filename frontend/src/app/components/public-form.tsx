@@ -147,10 +147,17 @@ export function PublicForm({
       case "text":
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label}{" "}
-              {fieldRequired && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium">
+                {field.label}{" "}
+                {fieldRequired && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <Input
               id={field.id}
               type={field.type}
@@ -171,10 +178,17 @@ export function PublicForm({
       case "textarea":
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label}{" "}
-              {fieldRequired && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium">
+                {field.label}{" "}
+                {fieldRequired && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <Textarea
               id={field.id}
               placeholder={field.placeholder}
@@ -195,10 +209,17 @@ export function PublicForm({
       case "select":
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} className="text-sm font-medium">
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <Select
               value={value as string}
               onValueChange={(val: string) => handleFieldChange(field.id, val)}
@@ -228,10 +249,17 @@ export function PublicForm({
       case "radio":
         return (
           <div key={field.id} className="space-y-3">
-            <Label className="text-sm font-medium">
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <RadioGroup
               value={value as string}
               onValueChange={(val: string) => handleFieldChange(field.id, val)}
@@ -255,10 +283,17 @@ export function PublicForm({
       case "checkbox":
         return (
           <div key={field.id} className="space-y-3">
-            <Label className="text-sm font-medium">
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <div
               className={`space-y-2 ${
                 error ? "border border-destructive rounded-md p-3" : ""
@@ -315,10 +350,17 @@ export function PublicForm({
       case "rating":
         return (
           <div key={field.id} className="space-y-2">
-            <Label className="text-sm font-medium">
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <div className="flex space-x-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -347,10 +389,17 @@ export function PublicForm({
       case "date":
         return (
           <div key={field.id} className="space-y-2">
-            <Label className="text-sm font-medium">
-              {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -410,8 +459,19 @@ export function PublicForm({
       case "signature":
         return (
           <div key={field.id} className="space-y-2">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <SignaturePad 
-              label={field.label}
+              label=""
               required={field.required}
               formId={form.id}
               fieldId={field.id}
@@ -432,8 +492,19 @@ export function PublicForm({
       case "file":
         return (
           <div key={field.id} className="space-y-2">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">
+                {field.label}{" "}
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
             <FileUpload
-              label={field.label}
+              label=""
               required={field.required}
               formId={form.id}
               fieldId={field.id}

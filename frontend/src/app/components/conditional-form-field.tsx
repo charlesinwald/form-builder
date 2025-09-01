@@ -327,10 +327,17 @@ export function ConditionalFormField({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={field.id} className="text-sm font-medium">
-        {field.label}{" "}
-        {isRequired && <span className="text-destructive">*</span>}
-      </Label>
+      <div className="space-y-1">
+        <Label htmlFor={field.id} className="text-sm font-medium">
+          {field.label}{" "}
+          {isRequired && <span className="text-destructive">*</span>}
+        </Label>
+        {field.description && (
+          <p className="text-sm text-muted-foreground">
+            {field.description}
+          </p>
+        )}
+      </div>
       {renderFieldInput()}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

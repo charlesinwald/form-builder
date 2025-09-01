@@ -302,12 +302,19 @@ export function FormPreview({ formData }: FormPreviewProps) {
           {/* Form Fields */}
           {formData.fields.map((field) => (
             <div key={field.id} className="space-y-2">
-              <Label className="text-base font-medium">
-                {field.label}
-                {field.required && (
-                  <span className="text-destructive ml-1">*</span>
+              <div className="space-y-1">
+                <Label className="text-base font-medium">
+                  {field.label}
+                  {field.required && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
+                </Label>
+                {field.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {field.description}
+                  </p>
                 )}
-              </Label>
+              </div>
               {renderField(field)}
             </div>
           ))}

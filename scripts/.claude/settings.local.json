@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/home/charles/Code/form-builder-monorepo/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/shared/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/components/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/components/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/components/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/form/[id]/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/lib/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/hooks/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/models/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/models/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/analytics/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/frontend/src/app/components/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

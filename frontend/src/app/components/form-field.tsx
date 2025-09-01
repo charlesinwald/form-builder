@@ -195,7 +195,14 @@ export function FormField({
         </div>
 
         {/* Field Preview */}
-        <div>{renderFieldPreview()}</div>
+        <div className="space-y-2">
+          {field.description && (
+            <p className="text-sm text-muted-foreground">
+              {field.description}
+            </p>
+          )}
+          <div>{renderFieldPreview()}</div>
+        </div>
 
         {/* Field Settings */}
         {showSettings && (
@@ -212,6 +219,20 @@ export function FormField({
                   onUpdate({ required: checked })
                 }
               />
+            </div>
+
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={field.description || ""}
+                onChange={(e) => onUpdate({ description: e.target.value })}
+                placeholder="Optional description to help users understand this field..."
+                className="cursor-text hover:bg-muted/20"
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This will appear below the field label to provide additional context
+              </p>
             </div>
 
             {(field.type === "text" || field.type === "textarea") && (

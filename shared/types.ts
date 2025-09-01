@@ -35,6 +35,7 @@ export interface FormField {
   id: string;
   type: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'date' | 'rating' | 'signature' | 'file';
   label: string;
+  description?: string;
   required: boolean;
   options?: string[];
   validation?: {

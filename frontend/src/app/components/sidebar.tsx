@@ -97,10 +97,10 @@ export function Sidebar({ activeView, onViewChange, onNewForm }: SidebarProps) {
               onClick={onNewForm}
               tooltip="New Form"
               size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className={cn("bg-primary text-primary-foreground hover:bg-primary/90", state !== "expanded" && "justify-center")}
             >
               <Plus className="h-5 w-5" />
-              <span>New Form</span>
+              {state === "expanded" && <span>New Form</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
