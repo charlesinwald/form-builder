@@ -1,5 +1,36 @@
 // Shared TypeScript types for the form builder application
 
+export interface ConditionalRule {
+  id: string;
+  fieldId: string; // Field to check
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty';
+  value: string | number | boolean | string[];
+  logicalOperator?: 'AND' | 'OR'; // For combining multiple rules
+}
+
+export interface ConditionalLogic {
+  id: string;
+  action: 'show' | 'hide' | 'require' | 'disable';
+  rules: ConditionalRule[];
+  targetType: 'field' | 'section' | 'page';
+  targetId: string; // ID of the field, section, or page to affect
+}
+
+export interface FormSection {
+  id: string;
+  title: string;
+  description?: string;
+  fields: string[]; // Array of field IDs
+  conditionalLogic?: ConditionalLogic[];
+}
+
+export interface FormPage {
+  id: string;
+  title: string;
+  sections: string[]; // Array of section IDs
+  conditionalLogic?: ConditionalLogic[];
+}
+
 export interface FormField {
   id: string;
   type: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'date' | 'rating' | 'signature' | 'file';
@@ -18,6 +49,8 @@ export interface FormField {
     multiple?: boolean;
     maxSize?: number; // in MB
   };
+  sectionId?: string; // Optional section assignment
+  conditionalLogic?: ConditionalLogic[];
 }
 
 export interface Form {
@@ -25,11 +58,14 @@ export interface Form {
   title: string;
   description: string;
   fields: FormField[];
+  sections?: FormSection[];
+  pages?: FormPage[];
   status: 'draft' | 'published' | 'archived';
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
   userId: string;
+  conditionalLogic?: ConditionalLogic[];
 }
 
 export interface FormResponse {

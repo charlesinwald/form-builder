@@ -13,6 +13,7 @@ import { SignaturePad } from "@/app/components/ui/signature-pad";
 import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormField as SharedFormField } from "../../../../shared/types";
+import { ConditionalLogicEditor } from "./conditional-logic-editor";
 
 interface FormFieldProps {
   field: SharedFormField;
@@ -20,6 +21,7 @@ interface FormFieldProps {
   onSelect: () => void;
   onUpdate: (updates: Partial<SharedFormField>) => void;
   onDelete: () => void;
+  allFields: SharedFormField[];
 }
 
 export function FormField({
@@ -28,6 +30,7 @@ export function FormField({
   onSelect,
   onUpdate,
   onDelete,
+  allFields,
 }: FormFieldProps) {
   const [showSettings, setShowSettings] = useState(false);
 
@@ -308,6 +311,13 @@ export function FormField({
                 </div>
               </div>
             )}
+
+            <ConditionalLogicEditor
+              fields={allFields}
+              currentFieldId={field.id}
+              conditionalLogic={field.conditionalLogic || []}
+              onUpdate={(conditionalLogic) => onUpdate({ conditionalLogic })}
+            />
           </div>
         )}
       </div>

@@ -15,7 +15,8 @@
       "Bash(grep:*)",
       "Bash(pkill:*)",
       "Bash(kill:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "WebFetch(domain:127.0.0.1)"
     ],
     "deny": [],
     "ask": []

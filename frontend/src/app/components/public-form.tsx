@@ -29,6 +29,7 @@ import { SimpleSignaturePad } from "@/app/components/ui/simple-signature-pad";
 import { FileUpload } from "@/app/components/ui/file-upload";
 import { Form, FormField } from "../../../../shared/types";
 import { cn } from "@/lib/utils";
+import { isFieldVisible, isFieldRequired, isFieldDisabled, getVisibleFields } from "@/lib/conditional-logic";
 
 interface PublicFormProps {
   form: Form;
@@ -45,7 +46,15 @@ export function PublicForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateField = (field: FormField, value: unknown): string | null => {
-    if (field.required) {
+    // Only validate visible fields
+    if (!isFieldVisible(field, formData, form.fields)) {
+      return null;
+    }
+
+    // Check if field is required (considering conditional logic)
+    const fieldRequired = isFieldRequired(field, formData, form.fields);
+    
+    if (fieldRequired) {
       if (field.type === "signature") {
         // Check if signature data exists (either base64 data, file URL, or boolean true)
         if (!value || 
@@ -102,10 +111,24 @@ export function PublicForm({
   };
 
   const renderField = (field: FormField) => {
+    // Check if field should be visible
+    if (!isFieldVisible(field, formData, form.fields)) {
+      return null;
+    }
+
     const value = formData[field.id] || "";
     const error = errors[field.id];
+    const fieldRequired = isFieldRequired(field, formData, form.fields);
+    const fieldDisabled = isFieldDisabled(field, formData, form.fields);
 
-    console.log('PublicForm: Rendering field:', { id: field.id, type: field.type, label: field.label });
+    console.log('PublicForm: Rendering field:', { 
+      id: field.id, 
+      type: field.type, 
+      label: field.label,
+      visible: true,
+      required: fieldRequired,
+      disabled: fieldDisabled
+    });
 
     switch (field.type) {
       case "text":
@@ -113,7 +136,7 @@ export function PublicForm({
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id} className="text-sm font-medium">
               {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
+              {fieldRequired && <span className="text-destructive">*</span>}
             </Label>
             <Input
               id={field.id}
@@ -121,9 +144,11 @@ export function PublicForm({
               placeholder={field.placeholder}
               value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              disabled={fieldDisabled}
               className={cn(
                 "bg-background border-2 hover:border-border transition-colors",
-                error ? "border-destructive" : "!border-muted-foreground"
+                error ? "border-destructive" : "!border-muted-foreground",
+                fieldDisabled && "opacity-60 cursor-not-allowed"
               )}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -135,16 +160,18 @@ export function PublicForm({
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id} className="text-sm font-medium">
               {field.label}{" "}
-              {field.required && <span className="text-destructive">*</span>}
+              {fieldRequired && <span className="text-destructive">*</span>}
             </Label>
             <Textarea
               id={field.id}
               placeholder={field.placeholder}
               value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              disabled={fieldDisabled}
               className={cn(
                 "!bg-background !border-2 hover:!border-border transition-colors",
-                error ? "!border-destructive" : "!border-muted-foreground"
+                error ? "!border-destructive" : "!border-muted-foreground",
+                fieldDisabled && "opacity-60 cursor-not-allowed"
               )}
               rows={4}
             />

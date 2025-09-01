@@ -182,6 +182,7 @@ export function FormBuilder({ formData, onFormDataChange }: FormBuilderProps) {
                               updateField(field.id, updates)
                             }
                             onDelete={() => deleteField(field.id)}
+                            allFields={formData.fields}
                           />
                         </div>
                       )}
