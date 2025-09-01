@@ -49,6 +49,10 @@ export interface FormField {
     multiple?: boolean;
     maxSize?: number; // in MB
   };
+  checkboxOptions?: {
+    maxSelection?: number; // Maximum number of checkboxes that can be selected
+    minSelection?: number; // Minimum number of checkboxes that must be selected
+  };
   sectionId?: string; // Optional section assignment
   conditionalLogic?: ConditionalLogic[];
 }

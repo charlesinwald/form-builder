@@ -27,6 +27,7 @@ import { SignaturePad } from "@/app/components/ui/signature-pad";
 import { FileUpload } from "@/app/components/ui/file-upload";
 import { cn } from "@/lib/utils";
 import { FormField as SharedFormField } from "../../../../shared/types";
+import { TransformerCheckbox } from "./ui/custom-checkbox";
 
 interface FormData {
   title: string;
@@ -123,7 +124,7 @@ export function FormPreview({ formData }: FormPreviewProps) {
           <div className="space-y-2">
             {field.options?.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <input
+                {/* <input
                   type="checkbox"
                   id={`${field.id}-${index}`}
                   value={option}
@@ -139,6 +140,19 @@ export function FormPreview({ formData }: FormPreviewProps) {
                     updateResponse(field.id, newValues);
                   }}
                   className="text-primary"
+                /> */}
+                <TransformerCheckbox
+                  id={`${field.id}-${index}`}
+                  checked={(responses[field.id] as string[])?.includes(option) || false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    const currentValues = (responses[field.id] as string[]) || [];
+                    if (checked) {
+                      updateResponse(field.id, [...currentValues, option]);
+                    } else {
+                      updateResponse(field.id, currentValues.filter((v) => v !== option));
+                    }
+                  }}
                 />
                 <Label
                   htmlFor={`${field.id}-${index}`}

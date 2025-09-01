@@ -90,6 +90,19 @@ export function useConditionalForm(form: Form): ConditionalFormState {
       }
     }
 
+    // Checkbox-specific validation
+    if (field.type === "checkbox" && Array.isArray(fieldValue)) {
+      const selectedCount = fieldValue.length;
+      
+      if (field.checkboxOptions?.minSelection && selectedCount < field.checkboxOptions.minSelection) {
+        return `Please select at least ${field.checkboxOptions.minSelection} option${field.checkboxOptions.minSelection > 1 ? 's' : ''}`;
+      }
+      
+      if (field.checkboxOptions?.maxSelection && selectedCount > field.checkboxOptions.maxSelection) {
+        return `Please select no more than ${field.checkboxOptions.maxSelection} option${field.checkboxOptions.maxSelection > 1 ? 's' : ''}`;
+      }
+    }
+
     return null;
   }, [formData, form.fields]);
 

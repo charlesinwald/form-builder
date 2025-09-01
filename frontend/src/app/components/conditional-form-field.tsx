@@ -5,7 +5,7 @@ import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Label } from "@/app/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/app/components/ui/radio-group";
-import { Checkbox } from "@/app/components/ui/checkbox";
+import { TransformerCheckbox } from "@/app/components/ui/custom-checkbox";
 import {
   Select,
   SelectContent,
@@ -41,7 +41,7 @@ export function ConditionalFormField({
   isDisabled,
   formId,
 }: ConditionalFormFieldProps) {
-  const fieldValue = value || "";
+  const fieldValue = field.type === "checkbox" ? (value || []) : (value || "");
 
   const renderFieldInput = () => {
     switch (field.type) {
@@ -142,26 +142,46 @@ export function ConditionalFormField({
               isDisabled && "opacity-60"
             )}
           >
-            {field.options?.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${field.id}-${option}`}
-                  checked={(fieldValue as string[])?.includes(option) || false}
-                  disabled={isDisabled}
-                  onCheckedChange={(checked: boolean) => {
-                    const currentValues = (fieldValue as string[]) || [];
-                    if (checked) {
-                      onChange([...currentValues, option]);
-                    } else {
-                      onChange(currentValues.filter((v) => v !== option));
-                    }
-                  }}
-                />
-                <Label htmlFor={`${field.id}-${option}`} className="text-sm">
-                  {option}
-                </Label>
-              </div>
-            ))}
+{field.options?.map((option) => {
+              const currentValues = (fieldValue as string[]) || [];
+              const isChecked = currentValues.includes(option);
+              const maxReached = field.checkboxOptions?.maxSelection 
+                ? currentValues.length >= field.checkboxOptions.maxSelection 
+                : false;
+              const shouldDisable = isDisabled || (maxReached && !isChecked);
+
+              return (
+                <div key={option} className="flex items-center space-x-2">
+                  <TransformerCheckbox
+                    id={`${field.id}-${option}`}
+                    checked={isChecked}
+                    disabled={shouldDisable}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      if (checked) {
+                        onChange([...currentValues, option]);
+                      } else {
+                        onChange(currentValues.filter((v) => v !== option));
+                      }
+                    }}
+                  />
+                  <Label 
+                    htmlFor={`${field.id}-${option}`} 
+                    className={cn(
+                      "text-sm",
+                      shouldDisable && "text-muted-foreground"
+                    )}
+                  >
+                    {option}
+                  </Label>
+                </div>
+              );
+            })}
+            {field.checkboxOptions?.maxSelection && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {(fieldValue as string[] || []).length} of {field.checkboxOptions.maxSelection} selections
+              </p>
+            )}
           </div>
         );
 

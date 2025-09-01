@@ -37,6 +37,17 @@ type FormPage struct {
 	ConditionalLogic []ConditionalLogic `json:"conditionalLogic,omitempty" bson:"conditionalLogic,omitempty"`
 }
 
+type CheckboxOptions struct {
+	MaxSelection *int `json:"maxSelection,omitempty" bson:"maxSelection,omitempty"`
+	MinSelection *int `json:"minSelection,omitempty" bson:"minSelection,omitempty"`
+}
+
+type FileOptions struct {
+	Accept   *string `json:"accept,omitempty" bson:"accept,omitempty"`
+	Multiple *bool   `json:"multiple,omitempty" bson:"multiple,omitempty"`
+	MaxSize  *int    `json:"maxSize,omitempty" bson:"maxSize,omitempty"` // in MB
+}
+
 type FormField struct {
 	ID               string                 `json:"id" bson:"id"`
 	Type             string                 `json:"type" bson:"type"`
@@ -45,6 +56,8 @@ type FormField struct {
 	Options          []string               `json:"options,omitempty" bson:"options,omitempty"`
 	Validation       map[string]interface{} `json:"validation,omitempty" bson:"validation,omitempty"`
 	Placeholder      string                 `json:"placeholder,omitempty" bson:"placeholder,omitempty"`
+	CheckboxOptions  *CheckboxOptions       `json:"checkboxOptions,omitempty" bson:"checkboxOptions,omitempty"`
+	FileOptions      *FileOptions           `json:"fileOptions,omitempty" bson:"fileOptions,omitempty"`
 	SectionID        string                 `json:"sectionId,omitempty" bson:"sectionId,omitempty"`
 	ConditionalLogic []ConditionalLogic     `json:"conditionalLogic,omitempty" bson:"conditionalLogic,omitempty"`
 }

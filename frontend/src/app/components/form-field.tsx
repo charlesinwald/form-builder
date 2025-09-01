@@ -14,6 +14,7 @@ import { GripVertical, Settings, Trash2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormField as SharedFormField } from "../../../../shared/types";
 import { ConditionalLogicEditor } from "./conditional-logic-editor";
+import { TransformerCheckbox } from "./ui/custom-checkbox";
 
 interface FormFieldProps {
   field: SharedFormField;
@@ -85,7 +86,7 @@ export function FormField({
           <div className="space-y-2">
             {field.options?.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <input type="radio" disabled className="text-primary" />
+                <TransformerCheckbox disabled />
                 <span className="text-sm">{option}</span>
               </div>
             ))}
@@ -96,7 +97,11 @@ export function FormField({
           <div className="space-y-2">
             {field.options?.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <input type="checkbox" disabled className="text-primary" />
+                {/* <input type="checkbox" disabled className="text-primary" /> */}
+                <TransformerCheckbox
+                  // checked={field.options?.includes(option)}
+                  disabled
+                />
                 <span className="text-sm">{option}</span>
               </div>
             ))}
@@ -252,6 +257,57 @@ export function FormField({
                     <Plus className="h-4 w-4 mr-2" />
                     Add Option
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {field.type === "checkbox" && (
+              <div className="space-y-3">
+                <div>
+                  <Label>Maximum selections allowed</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={field.options?.length || 10}
+                    value={field.checkboxOptions?.maxSelection || ""}
+                    onChange={(e) => {
+                      const maxSelection = e.target.value ? Number(e.target.value) : undefined;
+                      onUpdate({
+                        checkboxOptions: {
+                          maxSelection,
+                          minSelection: field.checkboxOptions?.minSelection,
+                        },
+                      });
+                    }}
+                    placeholder="No limit"
+                    className="cursor-text hover:bg-muted/20"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Leave empty for no limit
+                  </p>
+                </div>
+                <div>
+                  <Label>Minimum selections required</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={field.checkboxOptions?.maxSelection || field.options?.length || 10}
+                    value={field.checkboxOptions?.minSelection || ""}
+                    onChange={(e) => {
+                      const minSelection = e.target.value ? Number(e.target.value) : undefined;
+                      onUpdate({
+                        checkboxOptions: {
+                          maxSelection: field.checkboxOptions?.maxSelection,
+                          minSelection,
+                        },
+                      });
+                    }}
+                    placeholder="0"
+                    className="cursor-text hover:bg-muted/20"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Set to 0 or leave empty for no minimum requirement
+                  </p>
                 </div>
               </div>
             )}
