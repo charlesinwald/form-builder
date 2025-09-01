@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/componen
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
-import { Copy, Check, ExternalLink, Globe } from "lucide-react"
+import { Copy, Check, ExternalLink, Globe, QrCode } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { QRCodeComponent } from "./qr-code"
 
 interface ShareFormModalProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ interface ShareFormModalProps {
 
 export function ShareFormModal({ isOpen, onClose, formId, formTitle }: ShareFormModalProps) {
   const [copied, setCopied] = useState(false)
+  const [showQR, setShowQR] = useState(false)
   const { toast } = useToast()
 
   const shareUrl = `${window.location.origin}/form/${formId}`
@@ -89,6 +91,27 @@ export function ShareFormModal({ isOpen, onClose, formId, formTitle }: ShareForm
             <p className="text-sm text-muted-foreground">
               Anyone with this link can fill out your form. Make sure your form is published.
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label>QR Code</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowQR(!showQR)}
+                className="h-6 px-2 text-xs"
+              >
+                <QrCode className="h-3 w-3 mr-1" />
+                {showQR ? 'Hide' : 'Show'}
+              </Button>
+            </div>
+            {showQR && (
+              <div className="flex justify-center p-4 bg-muted rounded-lg">
+                <QRCodeComponent value={shareUrl} size={200} />
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2 justify-end">

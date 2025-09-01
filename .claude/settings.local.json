@@ -14,7 +14,8 @@
       "Bash(go build:*)",
       "Bash(grep:*)",
       "Bash(pkill:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []
