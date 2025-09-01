@@ -20,6 +20,7 @@ import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-dashboard";
 import { FormCard } from "./components/form-card";
 import { Sheet, SheetContent } from "@/app/components/ui/sheet";
+import { SidebarProvider, SidebarInset } from "./components/ui/sidebar";
 
 interface FormData {
   title: string;
@@ -258,9 +259,10 @@ export default function HomePage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-background">
-        {/* Desktop/Tablet Sidebar */}
-        <div className="hidden md:block">
+      <SidebarProvider>
+        <div className="flex min-h-screen bg-background w-full">
+          {/* Desktop/Tablet Sidebar */}
+          <div className="hidden md:block">
           <Sidebar
             activeView={activeView}
             onViewChange={setActiveView}
@@ -285,22 +287,21 @@ export default function HomePage() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex-1 flex flex-col min-w-0 md:ml-64">
-          <Header
-            formTitle={formData.title}
-            onTitleChange={(title) =>
-              handleFormDataChange({ ...formData, title })
-            }
-            onPreview={() => setActiveView("preview")}
-            onPublish={handlePublishForm}
-            onShare={() => setShowShareModal(true)}
-            isFormDraft={currentForm?.status === "draft"}
-            isFormPublished={currentForm?.status === "published"}
-            isPublishing={isPublishing}
-            onToggleSidebar={() => setIsMobileSidebarOpen(true)}
-          />
-
-          <main className="flex-1 overflow-y-auto min-h-0 relative">
+          <SidebarInset>
+            <Header
+              formTitle={formData.title}
+              onTitleChange={(title) =>
+                handleFormDataChange({ ...formData, title })
+              }
+              onPreview={() => setActiveView("preview")}
+              onPublish={handlePublishForm}
+              onShare={() => setShowShareModal(true)}
+              isFormDraft={currentForm?.status === "draft"}
+              isFormPublished={currentForm?.status === "published"}
+              isPublishing={isPublishing}
+              onToggleSidebar={() => setIsMobileSidebarOpen(true)}
+            />
+            <main className="flex-1 overflow-y-auto min-h-0 relative">
             {activeView === "dashboard" && (
               <FormsDashboard
                 onFormSelect={handleFormSelect}
@@ -425,8 +426,8 @@ export default function HomePage() {
                 onBack={() => setActiveView("dashboard")}
               />
             )}
-          </main>
-        </div>
+            </main>
+          </SidebarInset>
 
         {/* Modals */}
         {currentForm && (
@@ -437,7 +438,8 @@ export default function HomePage() {
             formTitle={formData.title}
           />
         )}
-      </div>
+        </div>
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }

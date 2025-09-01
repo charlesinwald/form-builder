@@ -14,6 +14,7 @@ import {
 import { Share, Eye, Globe, LogOut, User, File, Menu } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { SidebarTrigger } from "@/app/components/ui/sidebar";
 
 interface HeaderProps {
   formTitle: string;
@@ -108,6 +109,7 @@ export function Header({
     <header className="sticky top-0 z-50 bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 backdrop-blur-sm bg-card/95">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <SidebarTrigger className="hidden md:flex" />
           {onToggleSidebar && (
             <Button
               variant="ghost"
