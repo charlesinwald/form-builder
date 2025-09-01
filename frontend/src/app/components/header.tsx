@@ -4,7 +4,7 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu";
-import { Share, Eye, Globe, LogOut, User, File } from "lucide-react";
+import { Share, Eye, Globe, LogOut, User, File, Menu } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
 import { useRouter } from "next/navigation";
 
@@ -19,6 +19,7 @@ interface HeaderProps {
   isFormDraft?: boolean;
   isFormPublished?: boolean;
   isPublishing?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export function Header({
@@ -31,6 +32,7 @@ export function Header({
   isFormDraft = true,
   isFormPublished = false,
   isPublishing = false,
+  onToggleSidebar,
 }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -47,9 +49,9 @@ export function Header({
 
   if (!showFormControls) {
     return (
-      <header className="bg-card border-b border-border px-6 py-4">
+      <header className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-inter font-bold text-foreground">
+          <h2 className="text-lg sm:text-xl font-inter font-bold text-foreground">
             Forms Dashboard
           </h2>
           
@@ -94,77 +96,84 @@ export function Header({
   }
 
   return (
-    <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <Input
-          value={formTitle}
-          onChange={(e) => onTitleChange(e.target.value)}
-          className="text-lg font-medium bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-          placeholder="Form Title"
-        />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-2 bg-transparent"
-          onClick={onPreview}
-        >
-          <Eye className="h-4 w-4" />
-          Preview
-        </Button>
-        
-        {isFormDraft && onPublish && (
-          <Button size="sm" className="gap-2" onClick={onPublish} disabled={isPublishing}>
-            <Globe className="h-4 w-4" />
-            {isPublishing ? "Publishing..." : "Publish"}
-          </Button>
-        )}
-        
-        {isFormPublished && (
-          <Button size="sm" className="gap-2" onClick={onShare}>
-            <Share className="h-4 w-4" />
-            Share
-          </Button>
-        )}
-        
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>{userInitials}</AvatarFallback>
-              </Avatar>
+    <header className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          {onToggleSidebar && (
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleSidebar} aria-label="Open menu">
+              <Menu className="h-5 w-5" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/files')}>
-              <File className="mr-2 h-4 w-4" />
-              <span>My Files</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+          <Input
+            value={formTitle}
+            onChange={(e) => onTitleChange(e.target.value)}
+            className="text-base sm:text-lg font-medium bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            placeholder="Form Title"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 bg-transparent hidden xs:flex"
+            onClick={onPreview}
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Preview</span>
+            <span className="sm:hidden">Preview</span>
+          </Button>
+          {isFormDraft && onPublish && (
+            <Button size="sm" className="gap-2" onClick={onPublish} disabled={isPublishing}>
+              <Globe className="h-4 w-4" />
+              {isPublishing ? "Publishing..." : <span className="hidden sm:inline">Publish</span>}
+              <span className="sm:hidden">{isPublishing ? "..." : "Publish"}</span>
+            </Button>
+          )}
+          {isFormPublished && (
+            <Button size="sm" className="gap-2" onClick={onShare}>
+              <Share className="h-4 w-4" />
+              <span className="hidden sm:inline">Share</span>
+              <span className="sm:hidden">Share</span>
+            </Button>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>{userInitials}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/files')}>
+                <File className="mr-2 h-4 w-4" />
+                <span>My Files</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

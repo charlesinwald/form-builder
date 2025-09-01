@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-dashboard";
 import { FormCard } from "./components/form-card";
+import { Sheet, SheetContent } from "@/app/components/ui/sheet";
 
 interface FormData {
   title: string;
@@ -41,6 +42,7 @@ export default function HomePage() {
   });
   const [isPublishing, setIsPublishing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const { forms, saveDraft, createForm, publishForm, refetch } = useForms();
   const { toast } = useToast();
@@ -250,11 +252,31 @@ export default function HomePage() {
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-background">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          onNewForm={handleNewForm}
-        />
+        {/* Desktop/Tablet Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            onNewForm={handleNewForm}
+          />
+        </div>
+
+        {/* Mobile Sidebar Sheet */}
+        <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+          <SheetContent side="left" className="p-0">
+            <Sidebar
+              activeView={activeView}
+              onViewChange={(view) => {
+                setActiveView(view);
+                setIsMobileSidebarOpen(false);
+              }}
+              onNewForm={() => {
+                setIsMobileSidebarOpen(false);
+                void handleNewForm();
+              }}
+            />
+          </SheetContent>
+        </Sheet>
 
         <div className="flex-1 flex flex-col">
           <Header
@@ -268,6 +290,7 @@ export default function HomePage() {
             isFormDraft={currentForm?.status === "draft"}
             isFormPublished={currentForm?.status === "published"}
             isPublishing={isPublishing}
+            onToggleSidebar={() => setIsMobileSidebarOpen(true)}
           />
 
           <main className="flex-1 overflow-hidden">
