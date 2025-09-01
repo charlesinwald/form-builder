@@ -246,6 +246,13 @@ export default function HomePage() {
 
   const handleViewResponses = (form: Form) => {
     setCurrentForm(form);
+    // Also update formData so that if user navigates to preview/builder from responses view,
+    // the form context is maintained properly
+    setFormData({
+      title: form.title,
+      description: form.description,
+      fields: form.fields,
+    });
     setActiveView("responses");
   };
 
