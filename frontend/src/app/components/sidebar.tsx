@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/app/components/ui/button";
-import { BarChart3, Eye, Settings, Plus, Home } from "lucide-react";
+import { ChartBar,BarChart3, Eye, Settings, Plus, Home } from "lucide-react";
 
 interface SidebarProps {
   activeView: "dashboard" | "builder" | "preview" | "analytics" | "responses";
@@ -17,7 +17,7 @@ export function Sidebar({ activeView, onViewChange, onNewForm }: SidebarProps) {
     { id: "builder" as const, label: "Form Builder", icon: Settings },
     { id: "preview" as const, label: "Preview", icon: Eye },
     { id: "analytics" as const, label: "Analytics", icon: BarChart3 },
-    { id: "responses" as const, label: "Responses", icon: BarChart3 },
+    { id: "responses" as const, label: "Responses", icon: ChartBar },
   ];
 
   return (
