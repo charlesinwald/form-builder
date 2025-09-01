@@ -16,7 +16,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FormCraft - Professional Form Builder",
   description:
-    "Create, manage, and analyze feedback forms with real-time analytics",
+    "Create, manage, and analyze feedback forms with real-time analytics. Build beautiful forms, collect responses, and gain insights with our powerful form builder platform.",
+  keywords:
+    "form builder, survey creator, feedback forms, online forms, form analytics, real-time analytics",
+  authors: [{ name: "Charles Inwald" }],
+  robots: "index, follow",
 };
 
 export default function RootLayout({
