@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "FormCraft - Professional Form Builder",
   description:
     "Create, manage, and analyze feedback forms with real-time analytics",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(inter.variable, "bg-background")}>
+    <html lang="en" className={cn(inter.variable, "bg-background")}>        
       <body
-        className="font-inter antialiased"
+        className="font-inter antialiased min-h-screen"
         style={{ fontFamily: "var(--font-inter)" }}
       >
         <AuthProvider>
