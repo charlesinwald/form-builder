@@ -21,7 +21,7 @@ export function Sidebar({ activeView, onViewChange, onNewForm }: SidebarProps) {
   ];
 
   return (
-    <div className="w-full md:w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-full">
+    <div className="w-full md:w-64 bg-sidebar border-r border-sidebar-border flex flex-col h-screen md:fixed md:left-0 md:top-0">
       <div className="p-3 sm:p-4 border-b border-sidebar-border">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-inter font-black tracking-tight">
           <span className="bg-gradient-to-b from-cyan-600 via-primary to-teal-700 bg-clip-text text-transparent">
