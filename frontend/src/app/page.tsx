@@ -283,6 +283,7 @@ export default function HomePage() {
                 setIsMobileSidebarOpen(false);
                 void handleNewForm();
               }}
+              isMobile={true}
             />
           </SheetContent>
         </Sheet>
