@@ -43,12 +43,12 @@ export default function PublicFormPage() {
     }
   }, [formId])
 
-  const handleSubmit = async (data: Record<string, unknown>) => {
+  const handleSubmit = async (data: Record<string, unknown>, sessionData?: any) => {
     setIsSubmitting(true)
     setSubmitError(null)
     
     try {
-      await apiService.submitFormResponse(formId, data)
+      await apiService.submitFormResponse(formId, data, sessionData)
       setIsSubmitted(true)
     } catch (err) {
       console.error('Error submitting form:', err)

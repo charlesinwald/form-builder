@@ -158,6 +158,10 @@ func setupRoutes(app *fiber.App) {
 	responses := api.Group("/responses")
 	responses.Post("/", createResponse) // Public - form submissions
 
+	// Session tracking routes (public - for form analytics)
+	sessions := api.Group("/sessions")
+	sessions.Post("/start", startFormSession) // Public - track form starts
+
 	// WebSocket endpoint (authentication handled within the handler via token query param)
 	api.Get("/ws", ws.HandleWebSocket(wsHub, authService))
 
@@ -420,8 +424,10 @@ func deleteForm(c *fiber.Ctx) error {
 
 func createResponse(c *fiber.Ctx) error {
 	var req struct {
-		FormID string                 `json:"formId" validate:"required"`
-		Data   map[string]interface{} `json:"data" validate:"required"`
+		FormID    string                 `json:"formId" validate:"required"`
+		Data      map[string]interface{} `json:"data" validate:"required"`
+		SessionID string                 `json:"sessionId,omitempty"`
+		StartedAt *time.Time             `json:"startedAt,omitempty"`
 	}
 
 	if err := c.BodyParser(&req); err != nil {
@@ -477,13 +483,35 @@ func createResponse(c *fiber.Ctx) error {
 		})
 	}
 
+	// Calculate completion time if session tracking is provided
+	var completionTime *float64
+	now := time.Now()
+	if req.StartedAt != nil {
+		duration := now.Sub(*req.StartedAt).Seconds()
+		completionTime = &duration
+	}
+
 	// Create form response
 	response := models.FormResponse{
-		FormID:    formObjID,
-		Data:      req.Data,
-		CreatedAt: time.Now(),
-		IPAddress: c.IP(),
-		UserAgent: c.Get("User-Agent"),
+		FormID:         formObjID,
+		Data:           req.Data,
+		CreatedAt:      now,
+		IPAddress:      c.IP(),
+		UserAgent:      c.Get("User-Agent"),
+		SessionID:      req.SessionID,
+		StartedAt:      req.StartedAt,
+		CompletionTime: completionTime,
+		IsComplete:     true, // Submission means completion
+	}
+
+	// Update session if provided
+	if req.SessionID != "" {
+		sessionsCollection := database.Collection("sessions")
+		sessionsCollection.UpdateOne(
+			context.Background(),
+			bson.M{"sessionId": req.SessionID, "formId": formObjID},
+			bson.M{"$set": bson.M{"isActive": false, "lastSeen": now}},
+		)
 	}
 
 	// Insert response into database
@@ -527,6 +555,88 @@ func createResponse(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{
 		"message": "Response submitted successfully",
 		"id":      response.ID.Hex(),
+	})
+}
+
+func startFormSession(c *fiber.Ctx) error {
+	var req struct {
+		FormID    string `json:"formId" validate:"required"`
+		SessionID string `json:"sessionId" validate:"required"`
+	}
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	if req.FormID == "" || req.SessionID == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "FormID and SessionID are required",
+		})
+	}
+
+	// Convert form ID to ObjectID
+	formObjID, err := primitive.ObjectIDFromHex(req.FormID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Invalid form ID",
+		})
+	}
+
+	// Verify the form exists and is published
+	formsCollection := database.Collection("forms")
+	var form models.Form
+	err = formsCollection.FindOne(context.Background(), bson.M{
+		"_id":      formObjID,
+		"status":   "published",
+		"isActive": true,
+	}).Decode(&form)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.Status(404).JSON(fiber.Map{
+				"error": "Form not found or not published",
+			})
+		}
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to verify form",
+		})
+	}
+
+	// Create or update session
+	sessionsCollection := database.Collection("sessions")
+	now := time.Now()
+
+	// Upsert the session (create if doesn't exist, update if exists)
+	_, err = sessionsCollection.UpdateOne(
+		context.Background(),
+		bson.M{"sessionId": req.SessionID, "formId": formObjID},
+		bson.M{
+			"$set": bson.M{
+				"lastSeen":  now,
+				"ipAddress": c.IP(),
+				"userAgent": c.Get("User-Agent"),
+				"isActive":  true,
+			},
+			"$setOnInsert": bson.M{
+				"sessionId": req.SessionID,
+				"formId":    formObjID,
+				"startedAt": now,
+			},
+		},
+		options.Update().SetUpsert(true),
+	)
+	if err != nil {
+		log.Printf("Error creating/updating session: %v", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Failed to track session",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success":   true,
+		"sessionId": req.SessionID,
+		"startedAt": now,
 	})
 }
 

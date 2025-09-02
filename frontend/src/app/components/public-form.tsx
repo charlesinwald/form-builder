@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormSession } from "@/hooks/use-form-session";
 import {
   Card,
   CardContent,
@@ -33,7 +34,7 @@ import { isFieldVisible, isFieldRequired, isFieldDisabled, getVisibleFields } fr
 
 interface PublicFormProps {
   form: Form;
-  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  onSubmit: (data: Record<string, unknown>, sessionData?: any) => Promise<void>;
   isSubmitting?: boolean;
 }
 
@@ -44,6 +45,15 @@ export function PublicForm({
 }: PublicFormProps) {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Track form session for analytics
+  const { getSessionDataForSubmission } = useFormSession({
+    formId: form.id,
+    autoStart: true,
+    onError: (error) => {
+      console.warn("Session tracking error:", error);
+    },
+  });
 
   const validateField = (field: FormField, value: unknown): string | null => {
     // Only validate visible fields
@@ -107,7 +117,8 @@ export function PublicForm({
     if (Object.keys(newErrors).length === 0) {
       try {
         console.log("Submitting form data:", formData);
-        await onSubmit(formData);
+        const sessionData = getSessionDataForSubmission();
+        await onSubmit(formData, sessionData);
       } catch (error) {
         console.error("Form submission error:", error);
       }

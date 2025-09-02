@@ -253,13 +253,24 @@ class ApiService {
 
   async submitFormResponse(
     formId: string,
-    data: Record<string, unknown>
+    data: Record<string, unknown>,
+    sessionData?: { sessionId?: string; startedAt?: Date }
   ): Promise<{ message: string; id: string }> {
+    const payload: any = { formId, data };
+    
+    // Add session tracking data if available
+    if (sessionData?.sessionId) {
+      payload.sessionId = sessionData.sessionId;
+    }
+    if (sessionData?.startedAt) {
+      payload.startedAt = sessionData.startedAt.toISOString();
+    }
+    
     return this.request<{ message: string; id: string }>(
       "/responses",
       {
         method: "POST",
-        body: JSON.stringify({ formId, data }),
+        body: JSON.stringify(payload),
       },
       false
     );

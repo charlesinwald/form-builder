@@ -125,11 +125,63 @@ func (s *AnalyticsService) GetFormAnalytics(formID string) (*AnalyticsData, erro
 	// Get field analytics
 	fieldAnalytics := s.getFieldAnalytics(ctx, responsesCollection, objID)
 
-	// Calculate completion rate (simplified - you might want to track incomplete submissions)
-	completionRate := 100.0 // Assuming all stored responses are complete
-
-	// Calculate average time (simplified - would need to track session time)
-	averageTime := 120.0 // Default 2 minutes
+	// Calculate completion rate and average time
+	log.Printf("DEBUG: Starting analytics calculation for form %s", formID)
+	
+	// Debug: Check what responses exist
+	totalResponsesInDB, _ := responsesCollection.CountDocuments(ctx, bson.M{"formId": objID})
+	log.Printf("DEBUG: Total responses in DB: %d", totalResponsesInDB)
+	
+	// Debug: Check responses with session data
+	responsesWithSessions, _ := responsesCollection.CountDocuments(ctx, bson.M{
+		"formId": objID,
+		"sessionId": bson.M{"$exists": true, "$ne": ""},
+	})
+	log.Printf("DEBUG: Responses with session data: %d", responsesWithSessions)
+	
+	// Debug: Check responses with completion time
+	responsesWithTime, _ := responsesCollection.CountDocuments(ctx, bson.M{
+		"formId": objID,
+		"completionTime": bson.M{"$exists": true, "$ne": nil},
+	})
+	log.Printf("DEBUG: Responses with completion time: %d", responsesWithTime)
+	
+	// Debug: Check responses with isComplete field
+	responsesWithComplete, _ := responsesCollection.CountDocuments(ctx, bson.M{
+		"formId": objID,
+		"isComplete": bson.M{"$exists": true},
+	})
+	log.Printf("DEBUG: Responses with isComplete field: %d", responsesWithComplete)
+	
+	// Debug: Check responses marked as complete
+	completedResponsesDebug, _ := responsesCollection.CountDocuments(ctx, bson.M{
+		"formId": objID,
+		"isComplete": true,
+	})
+	log.Printf("DEBUG: Responses marked as complete: %d", completedResponsesDebug)
+	
+	// Migration: Update existing responses to have isComplete = true if they don't have the field
+	if responsesWithComplete < totalResponsesInDB {
+		log.Printf("DEBUG: Migrating %d responses to add isComplete field", totalResponsesInDB - responsesWithComplete)
+		updateResult, err := responsesCollection.UpdateMany(
+			ctx,
+			bson.M{
+				"formId": objID,
+				"isComplete": bson.M{"$exists": false},
+			},
+			bson.M{"$set": bson.M{"isComplete": true}},
+		)
+		if err != nil {
+			log.Printf("DEBUG: Error updating responses: %v", err)
+		} else {
+			log.Printf("DEBUG: Updated %d responses with isComplete field", updateResult.ModifiedCount)
+		}
+	}
+	
+	completionRate := s.calculateCompletionRate(ctx, responsesCollection, objID)
+	log.Printf("DEBUG: Got completion rate: %.2f%%", completionRate)
+	averageTime := s.calculateAverageTime(ctx, responsesCollection, objID)
+	log.Printf("DEBUG: Got average time: %.2f seconds", averageTime)
 
 	// Get peak hour
 	peakHour := s.getPeakHour(ctx, responsesCollection, objID)
@@ -400,6 +452,159 @@ func (s *AnalyticsService) getPeakHour(ctx context.Context, collection *mongo.Co
 	}
 
 	return 14 // Default to 2 PM
+}
+
+// calculateCompletionRate calculates the actual completion rate
+func (s *AnalyticsService) calculateCompletionRate(ctx context.Context, collection *mongo.Collection, formID primitive.ObjectID) float64 {
+	log.Printf("DEBUG: Calculating completion rate for form %s", formID.Hex())
+	
+	// Count total unique sessions (started forms)
+	sessionsCollection := s.db.Collection("sessions")
+	totalSessions, err := sessionsCollection.CountDocuments(ctx, bson.M{"formId": formID})
+	if err != nil {
+		log.Printf("DEBUG: Error counting total sessions: %v", err)
+		totalSessions = 0
+	}
+	log.Printf("DEBUG: Total sessions: %d", totalSessions)
+
+	// Count completed responses
+	completedResponses, err := collection.CountDocuments(ctx, bson.M{
+		"formId":     formID,
+		"isComplete": true,
+	})
+	if err != nil {
+		log.Printf("DEBUG: Error counting completed responses: %v", err)
+		return 100.0
+	}
+	log.Printf("DEBUG: Completed responses: %d", completedResponses)
+
+	// If we have no session tracking data, estimate based on responses
+	if totalSessions == 0 {
+		// For forms without session tracking, assume 100% completion rate for existing responses
+		log.Printf("DEBUG: No sessions found, assuming existing responses represent 100%% completion rate")
+		return 100.0
+	}
+
+	// Calculate completion rate: responses / unique sessions
+	// Cap at 100% to handle edge cases where tracking might be inconsistent
+	if totalSessions > 0 {
+		rate := (float64(completedResponses) / float64(totalSessions)) * 100.0
+		if rate > 100.0 {
+			log.Printf("DEBUG: Rate exceeds 100%% (%d/%d), capping at 100%%", completedResponses, totalSessions)
+			rate = 100.0
+		}
+		log.Printf("DEBUG: Completion rate: %.2f%% (%d/%d)", rate, completedResponses, totalSessions)
+		return rate
+	}
+
+	log.Printf("DEBUG: Returning 0%% completion rate")
+	return 0.0
+}
+
+// calculateAverageTime calculates the actual average completion time
+func (s *AnalyticsService) calculateAverageTime(ctx context.Context, collection *mongo.Collection, formID primitive.ObjectID) float64 {
+	log.Printf("DEBUG: Calculating average time for form %s", formID.Hex())
+	
+	// Get all completed responses with completion times
+	cursor, err := collection.Find(ctx, bson.M{
+		"formId":         formID,
+		"isComplete":     true,
+		"completionTime": bson.M{"$exists": true, "$ne": nil},
+	})
+	if err != nil {
+		log.Printf("DEBUG: Error getting completion times: %v", err)
+		return 120.0 // Default 2 minutes
+	}
+	defer cursor.Close(ctx)
+
+	var totalTime float64
+	var count int
+
+	log.Printf("DEBUG: Searching for responses with completion times...")
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			log.Printf("DEBUG: Error decoding document: %v", err)
+			continue
+		}
+
+		if completionTime, ok := doc["completionTime"].(float64); ok {
+			log.Printf("DEBUG: Found completion time: %.2f seconds", completionTime)
+			totalTime += completionTime
+			count++
+		} else {
+			log.Printf("DEBUG: Document missing completionTime or wrong type: %+v", doc["completionTime"])
+		}
+	}
+
+	log.Printf("DEBUG: Found %d responses with completion times, total time: %.2f", count, totalTime)
+	if count > 0 {
+		avgTime := totalTime / float64(count)
+		log.Printf("DEBUG: Calculated average time: %.2f seconds", avgTime)
+		return avgTime
+	}
+
+	// Fallback: try to calculate from startedAt and createdAt
+	log.Printf("DEBUG: No completion times found, trying fallback with startedAt/createdAt")
+	cursor, err = collection.Find(ctx, bson.M{
+		"formId":    formID,
+		"startedAt": bson.M{"$exists": true, "$ne": nil},
+	})
+	if err != nil {
+		log.Printf("DEBUG: Fallback query failed: %v", err)
+		return 120.0 // Default 2 minutes
+	}
+	defer cursor.Close(ctx)
+
+	totalTime = 0
+	count = 0
+
+	for cursor.Next(ctx) {
+		var doc bson.M
+		if err := cursor.Decode(&doc); err != nil {
+			log.Printf("DEBUG: Error decoding fallback document: %v", err)
+			continue
+		}
+
+		startedAt, startOk := doc["startedAt"].(primitive.DateTime)
+		createdAt, endOk := doc["createdAt"].(primitive.DateTime)
+
+		log.Printf("DEBUG: Checking document - startOk: %v, endOk: %v", startOk, endOk)
+		if startOk && endOk {
+			duration := createdAt.Time().Sub(startedAt.Time()).Seconds()
+			log.Printf("DEBUG: Calculated duration: %.2f seconds", duration)
+			if duration > 0 && duration < 3600 { // Ignore unrealistic times (> 1 hour)
+				totalTime += duration
+				count++
+				log.Printf("DEBUG: Added to average - count: %d, totalTime: %.2f", count, totalTime)
+			}
+		}
+	}
+
+	log.Printf("DEBUG: Fallback calculation - count: %d, totalTime: %.2f", count, totalTime)
+	if count > 0 {
+		avgTime := totalTime / float64(count)
+		log.Printf("DEBUG: Fallback average time: %.2f seconds", avgTime)
+		return avgTime
+	}
+
+	// Last resort: estimate based on form complexity for existing responses
+	totalResponsesWithoutTime, _ := collection.CountDocuments(ctx, bson.M{
+		"formId": formID,
+		"isComplete": true,
+		"completionTime": bson.M{"$exists": false},
+	})
+	
+	if totalResponsesWithoutTime > 0 {
+		log.Printf("DEBUG: Found %d responses without timing data, using estimated average", totalResponsesWithoutTime)
+		// Estimate: 30 seconds base + 15 seconds per field (reasonable for signature forms)
+		estimatedTime := 30.0 + (float64(5) * 15.0) // Assuming ~5 fields average
+		log.Printf("DEBUG: Using estimated time: %.2f seconds", estimatedTime)
+		return estimatedTime
+	}
+
+	log.Printf("DEBUG: No data found, returning default 120 seconds")
+	return 120.0 // Default 2 minutes
 }
 
 // Helper functions
