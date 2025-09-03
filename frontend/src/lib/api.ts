@@ -57,8 +57,10 @@ class ApiService {
       ...options,
     };
 
+    console.log('🌐 API: Sending request with config:', config);
     let response = await fetch(url, config);
-    console.log('API: Response status:', response.status, 'for', endpoint);
+    console.log('📡 API: Response status:', response.status, 'for', endpoint);
+    console.log('📡 API: Response headers:', Object.fromEntries(response.headers.entries()));
 
     // If unauthorized and we have a refresh token, try to refresh
     if (response.status === 401 && refreshToken && useAuth) {
@@ -78,7 +80,14 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.log('API: Error response:', errorData);
+      console.error('❌ API: Error response:', errorData);
+      console.error('❌ API: Response status text:', response.statusText);
+      console.error('❌ API: Full response details:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url,
+        headers: Object.fromEntries(response.headers.entries())
+      });
       throw new Error(
         errorData.error || `HTTP error! status: ${response.status}`
       );
@@ -256,24 +265,41 @@ class ApiService {
     data: Record<string, unknown>,
     sessionData?: { sessionId?: string; startedAt?: Date }
   ): Promise<{ message: string; id: string }> {
+    console.log("🚀 APIService: submitFormResponse called");
+    console.log("🆔 APIService: Form ID:", formId);
+    console.log("📝 APIService: Form data:", data);
+    console.log("📊 APIService: Session data:", sessionData);
+    
     const payload: any = { formId, data };
     
     // Add session tracking data if available
     if (sessionData?.sessionId) {
       payload.sessionId = sessionData.sessionId;
+      console.log("📋 APIService: Added session ID:", sessionData.sessionId);
     }
     if (sessionData?.startedAt) {
       payload.startedAt = sessionData.startedAt.toISOString();
+      console.log("⏰ APIService: Added start time:", sessionData.startedAt.toISOString());
     }
     
-    return this.request<{ message: string; id: string }>(
-      "/responses",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-      false
-    );
+    console.log("📦 APIService: Final payload:", payload);
+    console.log("🌐 APIService: Making request to /responses endpoint");
+    
+    try {
+      const result = await this.request<{ message: string; id: string }>(
+        "/responses",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+        false
+      );
+      console.log("🎉 APIService: Request successful:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ APIService: Request failed:", error);
+      throw error;
+    }
   }
 
   async getFormResponses(formId: string): Promise<FormResponse[]> {

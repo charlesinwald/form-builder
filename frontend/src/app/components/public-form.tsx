@@ -97,11 +97,37 @@ export function PublicForm({
       }
     }
 
+    // Email validation
+    if (field.type === "email" && value && typeof value === "string") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        return "Please enter a valid email address";
+      }
+    }
+
+    // Number validation
+    if (field.type === "number" && value && typeof value === "string") {
+      const numValue = parseFloat(value);
+      if (isNaN(numValue)) {
+        return "Please enter a valid number";
+      }
+      if (field.validation?.min !== undefined && numValue < field.validation.min) {
+        return `Value must be at least ${field.validation.min}`;
+      }
+      if (field.validation?.max !== undefined && numValue > field.validation.max) {
+        return `Value must be at most ${field.validation.max}`;
+      }
+    }
+
     return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("🚀 PublicForm: handleSubmit called");
     e.preventDefault();
+
+    console.log("📝 PublicForm: Form data before validation:", formData);
+    console.log("📋 PublicForm: Form fields:", form.fields);
 
     // Validate all fields
     const newErrors: Record<string, string> = {};
@@ -109,19 +135,26 @@ export function PublicForm({
       const error = validateField(field, formData[field.id]);
       if (error) {
         newErrors[field.id] = error;
+        console.log(`❌ PublicForm: Validation error for field ${field.id}:`, error);
       }
     });
 
     setErrors(newErrors);
+    console.log("🔍 PublicForm: Validation errors:", newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        console.log("Submitting form data:", formData);
+        console.log("✅ PublicForm: Validation passed, submitting form data:", formData);
         const sessionData = getSessionDataForSubmission();
+        console.log("📊 PublicForm: Session data:", sessionData);
+        console.log("🎯 PublicForm: Calling onSubmit...");
         await onSubmit(formData, sessionData);
+        console.log("🎉 PublicForm: Form submission completed successfully");
       } catch (error) {
-        console.error("Form submission error:", error);
+        console.error("❌ PublicForm: Form submission error:", error);
       }
+    } else {
+      console.log("⚠️ PublicForm: Form has validation errors, not submitting");
     }
   };
 
@@ -176,6 +209,70 @@ export function PublicForm({
               value={value as string}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               disabled={fieldDisabled}
+              className={cn(
+                "bg-background border-2 hover:border-border transition-colors",
+                error ? "border-destructive" : "!border-muted-foreground",
+                fieldDisabled && "opacity-60 cursor-not-allowed"
+              )}
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        );
+
+      case "email":
+        return (
+          <div key={field.id} className="space-y-2">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium">
+                {field.label}{" "}
+                {fieldRequired && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              type="email"
+              placeholder={field.placeholder}
+              value={value as string}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              disabled={fieldDisabled}
+              className={cn(
+                "bg-background border-2 hover:border-border transition-colors",
+                error ? "border-destructive" : "!border-muted-foreground",
+                fieldDisabled && "opacity-60 cursor-not-allowed"
+              )}
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        );
+
+      case "number":
+        return (
+          <div key={field.id} className="space-y-2">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium">
+                {field.label}{" "}
+                {fieldRequired && <span className="text-destructive">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              type="number"
+              placeholder={field.placeholder}
+              value={value as string}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              disabled={fieldDisabled}
+              min={field.validation?.min}
+              max={field.validation?.max}
               className={cn(
                 "bg-background border-2 hover:border-border transition-colors",
                 error ? "border-destructive" : "!border-muted-foreground",

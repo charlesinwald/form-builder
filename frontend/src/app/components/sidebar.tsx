@@ -13,20 +13,24 @@ import {
   useSidebar,
 } from "@/app/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { ChartBar, BarChart3, Eye, Settings, Plus, Home } from "lucide-react";
+import { ChartBar, BarChart3, Eye, Settings, Plus, Home, Bot } from "lucide-react";
 
 interface SidebarProps {
-  activeView: "dashboard" | "builder" | "preview" | "analytics" | "responses";
+  activeView: "dashboard" | "builder" | "preview" | "analytics" | "responses" | "ai-assistant";
   onViewChange: (
-    view: "dashboard" | "builder" | "preview" | "analytics" | "responses"
+    view: "dashboard" | "builder" | "preview" | "analytics" | "responses" | "ai-assistant"
   ) => void;
   onNewForm: () => void;
   isMobile?: boolean;
 }
 
 export function Sidebar({ activeView, onViewChange, onNewForm, isMobile = false }: SidebarProps) {
+  // Always call the hook at the top level
+  const { state: sidebarState } = useSidebar();
+  
   const navItems = [
     { id: "dashboard" as const, label: "All Forms", icon: Home },
+    { id: "ai-assistant" as const, label: "AI Assistant", icon: Bot },
     { id: "builder" as const, label: "Form Builder", icon: Settings },
     { id: "preview" as const, label: "Preview", icon: Eye },
     { id: "analytics" as const, label: "Analytics", icon: BarChart3 },
@@ -91,15 +95,6 @@ export function Sidebar({ activeView, onViewChange, onNewForm, isMobile = false 
   }
   
   // Desktop sidebar - use UI library components
-  // Try to get sidebar state, but handle the case where it's not available
-  let sidebarState = "expanded";
-  try {
-    const { state } = useSidebar();
-    sidebarState = state;
-  } catch {
-    // useSidebar hook not available, default to expanded
-    sidebarState = "expanded";
-  }
   
   return (
     <UISidebar collapsible="icon" className="border-r">

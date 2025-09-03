@@ -44,16 +44,29 @@ export default function PublicFormPage() {
   }, [formId])
 
   const handleSubmit = async (data: Record<string, unknown>, sessionData?: any) => {
+    console.log("🚀 PublicFormPage: handleSubmit called with data:", data);
+    console.log("📊 PublicFormPage: Session data:", sessionData);
+    console.log("🆔 PublicFormPage: Form ID:", formId);
+    
     setIsSubmitting(true)
     setSubmitError(null)
     
     try {
-      await apiService.submitFormResponse(formId, data, sessionData)
+      console.log("📡 PublicFormPage: Calling apiService.submitFormResponse...");
+      const result = await apiService.submitFormResponse(formId, data, sessionData)
+      console.log("🎉 PublicFormPage: Submission successful:", result);
       setIsSubmitted(true)
     } catch (err) {
-      console.error('Error submitting form:', err)
+      console.error('❌ PublicFormPage: Error submitting form:', err)
+      console.error('❌ PublicFormPage: Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        response: (err as any)?.response,
+        status: (err as any)?.status
+      });
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit form')
     } finally {
+      console.log("🏁 PublicFormPage: Setting isSubmitting to false");
       setIsSubmitting(false)
     }
   }
@@ -96,7 +109,9 @@ export default function PublicFormPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              {error || 'The form you are looking for is not available or has been removed.'}
+              {error?.includes('not published') || error?.includes('not found') 
+                ? 'This form is not published yet or may have been removed. Please contact the form owner to make it available for submissions.' 
+                : error || 'The form you are looking for is not available or has been removed.'}
             </p>
             <Link href="/">
               <Button className="gap-2">

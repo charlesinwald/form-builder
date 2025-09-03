@@ -21,6 +21,8 @@ import { RealTimeAnalyticsDashboard } from "./components/real-time-analytics-das
 import { FormCard } from "./components/form-card";
 import { Sheet, SheetContent } from "@/app/components/ui/sheet";
 import { SidebarProvider, SidebarInset } from "./components/ui/sidebar";
+import { AIFormChat } from "./components/ai-form-chat";
+import { FormGenerationResponse } from "@/lib/ai-service";
 
 interface FormData {
   title: string;
@@ -33,7 +35,7 @@ export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const [activeView, setActiveView] = useState<
-    "dashboard" | "builder" | "preview" | "analytics" | "responses"
+    "dashboard" | "builder" | "preview" | "analytics" | "responses" | "ai-assistant"
   >("dashboard");
   const [currentForm, setCurrentForm] = useState<Form | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -211,6 +213,74 @@ export default function HomePage() {
     }
   };
 
+  const handleAIFormGenerated = async (aiFormData: FormGenerationResponse) => {
+    try {
+      console.log("Creating form from AI generation...", aiFormData);
+      
+      // Create a new form with AI-generated data
+      const newForm = await createForm({
+        title: aiFormData.title,
+        description: aiFormData.description,
+        fields: aiFormData.fields,
+        status: "draft",
+      });
+      
+      console.log("AI-generated form created:", newForm);
+      setCurrentForm(newForm);
+      setFormData({
+        title: newForm.title,
+        description: newForm.description,
+        fields: newForm.fields,
+      });
+      
+      // Switch to builder view to show the generated form
+      setActiveView("builder");
+      
+      toast({
+        title: "Form generated successfully!",
+        description: `"${aiFormData.title}" has been created with ${aiFormData.fields.length} fields`,
+      });
+    } catch (error) {
+      console.error("Failed to create AI-generated form:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create form from AI generation",
+      });
+    }
+  };
+
+  const handleFormImproved = async (improvedFields: FormField[]) => {
+    if (!currentForm) return;
+    
+    try {
+      console.log("Applying AI improvements to form...", improvedFields);
+      
+      const updatedFormData = {
+        ...formData,
+        fields: improvedFields,
+      };
+      
+      // Save the improved form
+      const updatedForm = await saveDraft(currentForm.id, updatedFormData);
+      
+      setFormData(updatedFormData);
+      setCurrentForm(updatedForm);
+      
+      toast({
+        title: "Form improved!",
+        description: "AI suggestions have been applied to your form",
+      });
+    } catch (error) {
+      console.error("Failed to apply AI improvements:", error);
+      toast({
+        variant: "destructive",
+        title: "Error", 
+        description: "Failed to apply AI improvements",
+      });
+    }
+  };
+
   const handlePublishForm = async () => {
     if (!currentForm || isPublishing) return;
 
@@ -319,6 +389,19 @@ export default function HomePage() {
                   setActiveView("builder");
                 }}
               />
+            )}
+            {activeView === "ai-assistant" && (
+              <div className="h-full p-6">
+                <AIFormChat
+                  onFormGenerated={handleAIFormGenerated}
+                  currentForm={currentForm ? {
+                    title: currentForm.title,
+                    description: currentForm.description,
+                    fields: currentForm.fields
+                  } : undefined}
+                  onFormImproved={handleFormImproved}
+                />
+              </div>
             )}
             {activeView === "builder" && (
               <FormBuilder
