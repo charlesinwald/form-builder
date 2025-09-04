@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Ensure AI dependencies work in production
+  experimental: {
+    serverComponentsExternalPackages: ['@google/generative-ai']
+  },
+  
   images: {
     remotePatterns: [
       // IPv4 localhost (127.0.0.1) - preferred for new URLs

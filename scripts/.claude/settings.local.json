@@ -81,7 +81,8 @@
       "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
       "Bash(killall:*)",
       "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
-      "Read(/home/charles/Code/form-builder-monorepo/shared/**)"
+      "Read(/home/charles/Code/form-builder-monorepo/shared/**)",
+      "Read(/home/charles/Code/form-builder-monorepo/backend/**)"
     ],
     "deny": [],
     "ask": []
