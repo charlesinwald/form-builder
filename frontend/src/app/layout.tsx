@@ -14,11 +14,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FormCraft - Professional Form Builder",
+  title: "FormCraft - AI Form Builder | Create Forms in Minutes",
   description:
-    "Create, manage, and analyze feedback forms with real-time analytics. Build beautiful forms, collect responses, and gain insights with our powerful form builder platform.",
+    "Build professional AI-powered forms with drag-drop editor. Real-time analytics, unlimited responses. Try FormCraft today!",
   keywords:
-    "form builder, survey creator, feedback forms, online forms, form analytics, real-time analytics",
+    "AI form builder, survey creator, feedback forms, online forms, form analytics, real-time analytics, artificial intelligence forms",
   authors: [{ name: "Charles Inwald" }],
   robots: "index, follow",
   viewport: {

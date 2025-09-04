@@ -24,7 +24,7 @@ export function FormFieldViewer({ field, value, className }: FormFieldViewerProp
           <div className={`border rounded-lg p-3 bg-card ${className || ''}`}>
             <img 
               src={value} 
-              alt="Digital Signature" 
+              alt="Digital signature image captured from form submission" 
               className="max-w-[300px] h-auto border rounded shadow-sm"
             />
             <p className="text-xs text-muted-foreground mt-2">✍️ Digital signature</p>

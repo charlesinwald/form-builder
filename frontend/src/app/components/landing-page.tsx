@@ -36,40 +36,40 @@ interface LandingPageProps {
 export function LandingPage({ onGetStarted }: LandingPageProps) {
   const features = [
     {
-      icon: <FormInput className="w-8 h-8" />,
-      title: "Easy Drag & Drop",
+      icon: <Sparkles className="w-8 h-8" />,
+      title: "AI-Powered Generation",
       description:
-        "Simply drag fields where you want them. No coding or technical skills required - just point and click.",
+        "Describe your needs and let AI create professional forms instantly. No more starting from scratch - just intelligent form building.",
+    },
+    {
+      icon: <FormInput className="w-8 h-8" />,
+      title: "Smart Drag & Drop",
+      description:
+        "Simply drag fields where you want them. AI suggests optimal layouts and field types for better user experience.",
     },
     {
       icon: <BarChart3 className="w-8 h-8" />,
-      title: "See Results Live",
+      title: "Real-Time Analytics",
       description:
-        "Watch responses come in real-time with beautiful charts and insights that help you understand your data.",
-    },
-    {
-      icon: <Zap className="w-8 h-8" />,
-      title: "Lightning Fast",
-      description:
-        "Forms load instantly and responses are processed immediately. Your users will love the smooth experience.",
+        "Watch responses come in real-time with AI-powered insights that help you understand trends and patterns in your data.",
     },
     {
       icon: <Smartphone className="w-8 h-8" />,
-      title: "Works on Any Device",
+      title: "Mobile-First Design",
       description:
-        "Your forms look perfect on phones, tablets, and computers. Reach your audience wherever they are.",
+        "Your forms look perfect on phones, tablets, and computers. AI optimizes layouts for every device automatically.",
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "Safe & Secure",
+      title: "Enterprise Security",
       description:
-        "Your data is protected with enterprise-grade security. Focus on your business, not security concerns.",
+        "Your data is protected with bank-level security and AI-powered threat detection. Focus on your business with confidence.",
     },
     {
       icon: <Heart className="w-8 h-8" />,
-      title: "Beautiful & Professional",
+      title: "AI-Enhanced UX",
       description:
-        "Create forms that match your brand with customizable themes and professional layouts.",
+        "Create forms that convert better with AI suggestions for field placement, styling, and user flow optimization.",
     },
   ];
 
@@ -161,22 +161,21 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 className="px-4 py-2 text-sm font-medium"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Easy Form Builder for Everyone
+                AI-Powered Form Builder for Everyone
               </Badge>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold text-white drop-shadow-lg mb-8 leading-tight">
-              Create Beautiful Forms
+              AI-Powered Form Builder
               <br />
               <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                In Minutes
+                Create Forms in Minutes
               </span>
             </h1>
 
             <p className="text-xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-              Whether you need contact forms, surveys, or event registrations,
-              create professional forms without any technical skills. Collect
-              responses and see results in real-time.
+              Build professional forms with AI assistance. Whether you need contact forms, surveys, or event registrations,
+              our intelligent form builder creates professional forms instantly. Collect responses and see results in real-time.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

@@ -82,7 +82,11 @@
       "Bash(killall:*)",
       "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
       "Read(/home/charles/Code/form-builder-monorepo/shared/**)",
-      "Read(/home/charles/Code/form-builder-monorepo/backend/**)"
+      "Read(/home/charles/Code/form-builder-monorepo/backend/**)",
+      "Bash(chmod:*)",
+      "Read(//home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(//home/charles/Code/form-builder-monorepo/frontend/**)",
+      "Read(//home/charles/Code/form-builder-monorepo/frontend/**)"
     ],
     "deny": [],
     "ask": []
