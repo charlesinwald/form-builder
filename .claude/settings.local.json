@@ -16,7 +16,11 @@
       "Bash(pkill:*)",
       "Bash(kill:*)",
       "Bash(npm run lint)",
-      "WebFetch(domain:127.0.0.1)"
+      "WebFetch(domain:127.0.0.1)",
+      "mcp__vercel__list_teams",
+      "mcp__vercel__list_projects",
+      "mcp__vercel__list_deployments",
+      "mcp__vercel__get_deployment_build_logs"
     ],
     "deny": [],
     "ask": []
