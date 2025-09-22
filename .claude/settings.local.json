@@ -20,7 +20,11 @@
       "mcp__vercel__list_teams",
       "mcp__vercel__list_projects",
       "mcp__vercel__list_deployments",
-      "mcp__vercel__get_deployment_build_logs"
+      "mcp__vercel__get_deployment_build_logs",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix TypeScript error in RealTimeAnalyticsDashboard label function\n\nAdd proper type annotation for the percent parameter in the Pie chart label function, making it optional to match the PieLabelProps interface. Use nullish coalescing operator (??) to handle undefined percent values safely.\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix TypeScript error in RealTimeAnalyticsDashboard label function\n\nReplace complex type annotation with simple props handling to avoid TypeScript compatibility issues with Recharts PieLabelRenderProps interface. Use defensive programming with fallback values for name and percent properties.\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
